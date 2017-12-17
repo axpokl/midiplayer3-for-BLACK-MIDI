@@ -676,7 +676,7 @@ begin if(IsKeynoteBlack(k)=1)then GetKeynoteC:=chancb[chan] else GetKeynoteC:=ch
 
 procedure SetDrawFont(sz:double);
 begin
-fw:=max(1,round((GetKeynoteW1()-2)*sz)-1);
+fw:=max(1,round((GetKeynoteW1()-2)*sz));
 fh:=max(1,round(fw*2.2));
 SetFontSize(fw,fh);
 SetFont();
