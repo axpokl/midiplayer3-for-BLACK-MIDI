@@ -577,8 +577,8 @@ for chani:=0 to maxchan-1 do
       end;
 end;
 
-var w:longword=600;
-var h:longword=400;
+var w:longword;
+var h:longword;
 var fw,fh:longword;
 var frametime:double;
 var printtime:double;
@@ -1065,6 +1065,8 @@ InitializeCriticalSection(cs1);
 InitializeCriticalSection(cs2);
 OpenKey();
 DoCommandLine();
+w:=2*GetScrWidth()div 3;
+h:=2*GetScrHeight()div 3;
 CreateWin(w,h,black1);
 _wc.HIcon:=LoadImage(0,'midiplayer.ico',IMAGE_ICON,0,0,LR_LOADFROMFILE);
 sendmessage(_hw,WM_SETICON,ICON_SMALL,longint(_wc.HIcon));
