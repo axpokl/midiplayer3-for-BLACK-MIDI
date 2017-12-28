@@ -133,11 +133,12 @@ var cs1:TRTLCriticalSection;
 var cs2:TRTLCriticalSection;
 
 type tevent=record track,curtick,msg,tempo,chord:longword;ticktime:double;end;
-const maxevent=$100000;
+const maxevent=$1000000;
 var event:array[0..maxevent-1]of tevent;
 var eventi:longint;
 var eventn:longword=0;
-var event0:array of tevent;
+//var event0:array of tevent;
+var event0:array[0..maxevent-1]of tevent;
 var eventj:longword;
 var eventk:longint;
 
@@ -350,8 +351,8 @@ if tpq>0 then
 eventn:=eventi;
 track0[0]:=0;
 for tracki:=1 to trackn-1 do track0[tracki]:=track1[tracki-1];
-setlength(event0,0);
-setlength(event0,eventn);
+//setlength(event0,0);
+//setlength(event0,eventn);
 eventj:=0;
 while (eventj<eventn) do
   begin
@@ -445,7 +446,7 @@ while eventk>=0 do
   end;
 for eventk:=eventi to min(eventj,eventn-1) do
   if event0[eventk].msg and $F0<>$90 then
-    begin  
+    begin
     if event0[eventk].msg and $F0 shr 4<$F then
       if(event0[eventk].msg and $F0 shr 4=$B)
       and(event0[eventk].msg shr 8 and $FF=$07)then
@@ -481,7 +482,7 @@ var notech:array[$00..$7F]of byte;
 
 type tnotemap=record note:byte;note0,note1:double;notec:longword;chord:byte;end;
 
-const maxnotemap=$100000;
+const maxnotemap=maxevent;
 var notemap:array[0..maxnotemap]of tnotemap;
 var notemapi:longint;
 var notemapn:longword;
@@ -533,7 +534,7 @@ if event0[ei].msg and $F<>$9 then
   if event0[ei].msg and $F0=$90 then
     begin
     notech[notei]:=event0[ei].chord;
-    notei:=event0[ei].msg shr 8 and $FF;
+    notei:=event0[ei].msg shr 8 and $7F;
     kbd0:=min(notei,kbd0);
     kbd1:=max(notei,kbd1);
     notec[notei]:=event0[ei].track or event0[ei].msg and $F shl 8;
@@ -547,7 +548,7 @@ if event0[ei].msg and $F<>$9 then
   if event0[ei].msg and $F0=$80 then
     begin
     notech[notei]:=event0[ei].chord;
-    notei:=event0[ei].msg shr 8 and $FF;
+    notei:=event0[ei].msg shr 8 and $7F;
     note1[notei]:=event0[ei].ticktime;
     AddNoteMap(notei);
     end;
@@ -872,9 +873,9 @@ GetDrawTime();
 DrawNoteLine();
 DrawMessureLineAll();
 DrawNoteAll();
+DrawKeyboard();
 DrawTime();
 DrawChord();
-DrawKeyboard();
 DrawBPM();
 DrawLoop();
 DrawFPS();
@@ -1087,7 +1088,7 @@ if GetMidiTime()>finaltime then
     end;
 if eventi<eventn then
   begin
-  if GetMidiTime()>event0[eventi].ticktime then
+  while GetMidiTime()>event0[eventi].ticktime do
     begin
 //    with event0[eventi] do writeln(eventi,#9,track,#9,curtick,#9,ticktime:0:10,#9,msg,#9,tempo,#9,msg and $F0 shr 4);
     if event0[eventi].msg and $F0 shr 4<$F then
@@ -1100,6 +1101,7 @@ if eventi<eventn then
       if(event0[eventi].msg and $FFFF=$51FF)then tempo:=event0[eventi].tempo;
     chord:=event0[eventi].chord;
     eventi:=eventi+1;
+    if eventi>=eventn then break;
     end;
   end;
 until not(iswin());
