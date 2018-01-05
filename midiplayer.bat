@@ -25,11 +25,11 @@ copy midiplayer.png midiplayer\source\midiplayer.png
 copy midiplayer.txt midiplayer\source\midiplayer.txt
 windres -i midiplayer.rc -o midiplayer_c\midiplayer\midiplayer.o
 g++ -o midiplayer\midiplayer_c.exe midiplayer_c\midiplayer\midiplayer.cpp midiplayer_c\midiplayer\WinMM.Lib midiplayer_c\midiplayer\ShLwApi.Lib midiplayer_c\midiplayer\disp.lib midiplayer_c\midiplayer\midiplayer.o -static -mwindows -Os
+del midiplayer_c\midiplayer\midiplayer.o
 copy midiplayer_c\midiplayer\disp.dll midiplayer\disp.dll
 xcopy midiplayer_c\* midiplayer\source\midiplayer_c\* /s /e /y /r
 zip -q -r midiplayer.zip midiplayer
 rmdir midiplayer /s /q
-del midiplayer_c\midiplayer\midiplayer.o
 del *.res
 del *.ppu
 del *.o
