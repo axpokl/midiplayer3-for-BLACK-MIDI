@@ -2,11 +2,11 @@ del *.ppu
 del *.o
 del *.or
 del *.a
-del midiplayer.exe
+del *.exe
 del midiplayer.zip
 windres -i midiplayer.rc -o midiplayer.res
 fpc -WG midiplayer.pas -omidiplayer.exe -Os
-start midiplayer.exe
+::start midiplayer.exe
 if not exist midiplayer.exe pause
 if not exist midiplayer.exe exit
 mkdir midiplayer
