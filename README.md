@@ -1,8 +1,13 @@
-midiplayer by ax_pokl. 
+Black MIDI midiplayer
+for windows by ax_pokl
+witten in Free Pascal
 =============
-* Drag file to play. 
-* Support command line. 
-* Support mid and rmi file. 
+
+How to Play
+-------------
+* Drag file to play
+* Support command line
+* Support mid and rmi file
 
 Mouse Control
 -------------

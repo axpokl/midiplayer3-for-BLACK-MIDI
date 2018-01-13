@@ -1,7 +1,10 @@
-midiplayer by ax_pokl. 
-Drag file to play. 
-Support command line. 
-Support mid and rmi file. 
+Black MIDI midiplayer
+for windows by ax_pokl
+witten in Free Pascal
+
+Drag file to play
+Support command line
+Support mid and rmi file
 
 MLeft	Seek/Keyboard
 MRight	Pause
