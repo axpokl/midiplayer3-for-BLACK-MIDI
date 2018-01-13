@@ -46,6 +46,7 @@ RegSetValueEx(regkey,PChar(kname),0,REG_DWORD,@i,sizeof(DWORD));
 end;
 
 var fnames:ansistring='midiplayer by ax_pokl';
+var rs:ansistring;
 var framerate:longword=120;
 var loop:longword=1;
 var midipos:longword;
@@ -59,6 +60,7 @@ var hwm:longword;
 const mult0=400;
 var mult:longword=100;
 var autofresh:longword=0;
+var midiOuti:longword=0;
 
 procedure PlayMidi(fname:ansistring);forward;
 
@@ -77,6 +79,8 @@ SetKeyI('kbdcb',kbdcb);
 SetKeyI('kchb',kchb);
 SetKeyI('mult',mult);
 SetKeyI('autofresh',autofresh);
+SetKeyI('midiouti',midiouti);
+SetKeyI('framerate',framerate);
 end;
 
 procedure loadfile();
@@ -90,6 +94,8 @@ GetKeyI('kbdcb',kbdcb);
 GetKeyI('kchb',kchb);
 GetKeyI('mult',mult);
 GetKeyI('autofresh',autofresh);
+GetKeyI('midiouti',midiouti);
+GetKeyI('framerate',framerate);
 if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
 if fileexists(fnames) then begin PlayMidi(fnames);SetMidiTime(midipos/1000-1);end;
 end;
@@ -1286,10 +1292,13 @@ SetMidiTime(-1);
 SetMidiTime(tmptime);
 end;
 
-procedure ResetMidiHard();
+procedure ResetMidiHard(i:longword);
+var n:longword;
 begin
+n:=midiOutGetNumDevs();
+if n>0 then midiOuti:=i mod n else midiOuti:=0;
 midiOutClose(midiOut);
-midiOutOpen(@midiOut,0,0,0,0);
+midiOutOpen(@midiOut,midiOuti,0,0,0);
 ResetMidiSoft();
 end;
 
@@ -1334,7 +1343,7 @@ if ismsg(WM_USER) then
   end;
 if isDropFile() then
   PlayMidi(GetDropFile());
-if GetSize()<>sz then
+if (GetSize>0) and (GetSize()<>sz) then
   begin
   sz:=GetSize();
   initb:=false;
@@ -1345,7 +1354,7 @@ if iskey() then
   k_ctrl:=GetKeyState(VK_CONTROL)<0;
   if iskey(K_F1) then newthread(@helpproc);
   if iskey(K_F2) then PlayMidi(fnames);
-  if iskey(K_F3) then ResetMidiHard();
+  if iskey(K_F3) then if not(k_shift) then ResetMidiHard(midiOuti) else ResetMidiHard(midiOuti+1);
   if iskey(K_F4) then if not(k_shift) then bnoteb:=true else autofresh:=1-autofresh;
   if iskey(K_F5) then framerate:=max(5,framerate-((framerate-1) div 60+1));
   if iskey(K_F6) then framerate:=min(480,framerate+(framerate div 60+1));
@@ -1453,13 +1462,14 @@ end;
 begin
 OpenKey();
 DoCommandLine();
-assign(fevent0,GetTempDir(false)+'fevent0.dat');DeleteFile(GetTempDir(false)+'fevent0.dat');fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
-assign(fevent,GetTempDir(false)+'fevent.dat');DeleteFile(GetTempDir(false)+'fevent.dat');fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
-assign(fnote,GetTempDir(false)+'fnote.dat');DeleteFile(GetTempDir(false)+'fnote.dat');fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);bjfnote:=-1;
+randomize();rs:=i2hs(longword(random($FFFFFFFF)));
+assign(fevent0,GetTempDir(false)+'fevent0'+rs);DeleteFile(GetTempDir(false)+'fevent0');fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
+assign(fevent,GetTempDir(false)+'fevent'+rs);DeleteFile(GetTempDir(false)+'fevent');fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+assign(fnote,GetTempDir(false)+'fnote'+rs);DeleteFile(GetTempDir(false)+'fnote');fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);bjfnote:=-1;
 InitDraw();
 SetMidiVol(volamax-2);
-ResetMidiHard();
 loadfile();
+ResetMidiHard(midiOuti);
 repeat
 if isnextmsg then DoAct() else Delay(1);
 if GetMidiTime()>finaltime then
@@ -1471,7 +1481,7 @@ if GetMidiTime()>finaltime then
 EnterCriticalSection(csfevent0);
 if eventi<eventn then
   begin
-  msgbufn:=-1;
+  msgbufn:=-$100;
   while GetMidiTime()>GetFEvent0TickTime(eventi) do
     begin
     if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
@@ -1508,10 +1518,10 @@ if eventi<eventn then
           if not({(event0[eventi].msg and $F<>$9) and}
                  (event0[eventi].msg and $F0=$90) and
                  (event0[eventi].msg shr 16 and $F0=0)) then
-          if (msgbufn=-1) then
+          if (msgbufn<0) then
             begin
             midiOutShortMsg(midiOut,event0[eventi].msg);
-            msgbufn:=0;
+            msgbufn:=msgbufn+1;
             end
           else if msgbufn<maxbuf-1 then
             begin
@@ -1557,9 +1567,9 @@ if msgbufn>=0 then
   midiOutUnPrepareHeader(midiOut,@msghdr,sizeof(msghdr));
   end;
 until not(iswin());
-close(fevent0);DeleteFile(GetTempDir(false)+'fevent0.dat');
-close(fevent);DeleteFile(GetTempDir(false)+'fevent.dat');
-close(fnote);DeleteFile(GetTempDir(false)+'fnote.dat');
+close(fevent0);DeleteFile(GetTempDir(false)+'fevent0'+rs);
+close(fevent);DeleteFile(GetTempDir(false)+'fevent'+rs);
+close(fnote);DeleteFile(GetTempDir(false)+'fnote'+rs);
 midiOutClose(midiOut);
 savefile();
 CloseKey();

@@ -1,0 +1,47 @@
+{{ProgramInfobox/Draft
+|title=midiplayer3 for BLACK MIDI
+|image=[[File:Midiplayer.png|thumb]]
+|imagewidth=
+|Developer=ax_pokl
+|Programming language=Pascal
+|IDE=Free Pascal 3.0.0
+|Platform=Windows
+|CPU Architecture=x86<br />x64
+|Current Status=Active
+|Release date=2018 January
+|Current version=midiplayer3
+|License Type=Open Source(GPL)
+|Download page=http://www.axpokl.com/midiplayer3.zip
+}}
+'''Midiplayer3 for BLACK MIDI''' is a visualized MIDI player similar with '''Synthesia'''. It is a fast lightweight program that uses temporary files instead of memory caches to play large MIDI files.
+
+Latest version:<br />http://www.axpokl.com/midiplayer3.zip
+
+Source code:<br />https://github.com/axpokl/midiplayer3-for-BLACK-MIDI
+
+
+Max notes: ~60 Million
+
+Max notes (with 4GB Patch): ~120 Million
+
+==Pros and Cons==
+
+'''Pros'''
+*Open source program.
+*Visualized and easy to use.
+*Very fast to seek.
+*Always give the right output(e.g. piano pedal).
+*Fast event output to midi driver.
+*Requires very few memory space(less than 10M).
+*Uses unique color formulas to display chord information
+*Can also display individual colors through tracks and channels.
+*Uses different threads to play MIDI events and draw graphics.
+'''Cons'''
+*Requires a lot of time and disk space to create large temporary files.
+*Lags when notes are dense(but canrender the graphics first to make it fluent).
+*Only available on the Windows Platform
+*Can't change the track or channel color.
+
+'''Trivia'''
+*Uses the Windows GUI to draw graphics.
+*There was a old verion of midiplayer3 which use memory cache and plays normal MIDI file.

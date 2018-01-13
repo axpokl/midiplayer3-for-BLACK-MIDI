@@ -31,7 +31,7 @@ Other Functions
 -------------
 * F1	Help
 * F2	File Reset
-* F3	Hardware Reset
+* F3	Hardware Reset [Shift=Change MIDI Device]
 * F4	Bar Reset [Shift=Auto Reset]
 * F5/F6	FPS [5-480(Default=120)]
 * F7/F8	Bar Size	[0%-1000%][Shift/Ctrl]
