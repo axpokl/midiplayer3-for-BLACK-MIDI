@@ -1,6 +1,4 @@
-Black MIDI midiplayer
-for windows by ax_pokl
-witten in Free Pascal
+Free Pascal midiplayer3 for Black MIDI by ax_pokl
 =============
 
 How to Play
