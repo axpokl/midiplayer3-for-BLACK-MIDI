@@ -1229,7 +1229,7 @@ AdjustWindowRect(rect,_style,false);
 _w:=right-left;
 _h:=bottom-top;
 end;
-_hw:=CreateWindow(LPTSTR(DWORD(_wca)),nil,
+_hw:=CreateWindow(_wc.lpszClassName,nil,
 _style,_x,_y,_w,_h,0,0,MainInstance,nil);
 end;
 
