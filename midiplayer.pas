@@ -392,7 +392,7 @@ if tpq>0 then
   begin
   curtick:=0;
   repeat
-  addEvent(trackn,max(0,curtick-1),$5AFF,0,0);
+  addEvent(trackn,curtick,$5AFF,0,0);
   curtick:=curtick+tpq;
   until curtick>finaltick;
   track1[trackn]:=eventi;

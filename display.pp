@@ -2685,9 +2685,9 @@ begin GetMouseWinX:=GetMouseAbsX-GetPosX;end;
 function GetMouseWinY():longint;
 begin GetMouseWinY:=GetMouseAbsY-GetPosY;end;
 function GetMousePosX():longint;
-begin GetMousePosX:=GetMouseWinX-GetBorderWidth;end;
+begin GetMousePosX:=GetMouseWinX;if not(_style and WS_POPUP=WS_POPUP) then GetMousePosX:=GetMousePosX-GetBorderWidth;end;
 function GetMousePosY():longint;
-begin GetMousePosY:=GetMouseWinY-GetBorderHeight-GetBorderTitle;end;
+begin GetMousePosY:=GetMouseWinY;if not(_style and WS_POPUP=WS_POPUP) then GetMousePosY:=GetMousePosY-GetBorderHeight-GetBorderTitle;end;
 
 // Audio Function ÒôÆµº¯Êý
 
