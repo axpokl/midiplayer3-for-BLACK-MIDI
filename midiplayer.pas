@@ -1,161 +1,19 @@
 {$R midiplayer.res}
-//{$APPTYPE GUI}
 program midiplayer;
 uses Windows,MMSystem,Display,Sysutils;
 
-var regkey:HKEY;
+var maxevent:longword=$1;
+var fb:boolean=true;
+var fbi:longword=0;
 
-procedure OpenKey();
-begin
-RegCreateKeyEx(HKEY_CURRENT_USER,
-PChar('SoftWare\ax_midi_player'),
-0,nil,0,KEY_ALL_ACCESS,nil,regkey,nil);
-end;
-
-procedure CloseKey();
-begin
-RegCloseKey(regkey);
-end;
-
-procedure GetKeyS(kname:ansistring;var s:ansistring);
-var regtype:longword=REG_SZ;
-var ca:array[0..$100-1]of byte;
-var size:longword=$100;
-begin
-if RegQueryValueEx(regkey,PChar(kname),nil,@regtype,@ca,@size)=ERROR_SUCCESS then
-  s:=PChar(@ca);
-end;
-
-procedure GetKeyI(kname:ansistring;var i:longword);
-var regtype:longword=REG_DWORD;
-var ca:array[0..3] of byte;
-var size:longword=4;
-begin
-if RegQueryValueEx(regkey,PChar(kname),nil,@regtype,@ca,@size)=ERROR_SUCCESS then
-  i:=ca[3] shl 24 or ca[2] shl 16 or ca[1] shl 8 or ca[0]
-end;
-
-procedure SetKeyS(kname:ansistring;s:ansistring);
-begin
-RegSetValueEx(regkey,PChar(kname),0,REG_SZ,PChar(s),length(PChar(s)));
-end;
-
-procedure SetKeyI(kname:ansistring;i:longword);
-begin
-RegSetValueEx(regkey,PChar(kname),0,REG_DWORD,@i,sizeof(DWORD));
-end;
-
-var fnames:ansistring='midiplayer by ax_pokl';
-var rs:ansistring;
-var framerate:longword=120;
-var loop:longword=1;
-var midipos:longword;
-var voli:longword;
-var kbdcb:longword=0;
-var kchb:longword=0;
-var para:ansistring;
-var parai:longword;
-var fdir:ansistring;
-var hwm:longword;
-const mult0=400;
-var mult:longword=100;
-var autofresh:longword=0;
-var midiOuti:longword=0;
-
-procedure PlayMidi(fname:ansistring);forward;
-
-procedure SetMidiTime(settime:single);forward;
-
-function GetMidiTime():single;forward;
-
-procedure savefile();
-begin
-SetKeyS('fnames',fnames);
-SetKeyI('framerate',framerate);
-SetKeyI('midipos',round((GetMidiTime()+1)*1000));
-SetKeyI('voli',voli);
-SetKeyI('loop',loop);
-SetKeyI('kbdcb',kbdcb);
-SetKeyI('kchb',kchb);
-SetKeyI('mult',mult);
-SetKeyI('autofresh',autofresh);
-SetKeyI('midiouti',midiouti);
-SetKeyI('framerate',framerate);
-end;
-
-procedure loadfile();
-begin
-GetKeyS('fnames',fnames);
-GetKeyI('framerate',framerate);
-GetKeyI('midipos',midipos);
-GetKeyI('voli',voli);
-GetKeyI('loop',loop);
-GetKeyI('kbdcb',kbdcb);
-GetKeyI('kchb',kchb);
-GetKeyI('mult',mult);
-GetKeyI('autofresh',autofresh);
-GetKeyI('midiouti',midiouti);
-GetKeyI('framerate',framerate);
-if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
-if fileexists(fnames) then begin PlayMidi(fnames);SetMidiTime(midipos/1000-1);end;
-end;
-
-const find_max=$10000;
-var find_info:TSearchRec;
-var find_count:longword;
-var find_current:longword;
-var find_result:array[0..find_max] of ansistring;
-
-procedure find_file(s:ansistring);
-var dir:ansistring;
-begin
-find_current:=0;
-find_result[0]:='';
-repeat
-find_current:=find_current+1;
-if find_current>find_count then break;
-until find_result[find_current]=s;
-if find_current>find_count then
-  begin
-  find_count:=0;
-  dir:=ExtractFilePath(s);
-  if findfirst(dir+'*',0,find_info)=0 then
-    begin
-    find_count:=find_count+1;
-    find_result[find_count]:=dir+find_info.name;
-    if find_result[find_count]=s then find_current:=find_count;
-    while findnext(find_info)=0 do
-      begin
-      find_count:=find_count+1;
-      find_result[find_count]:=dir+find_info.name;
-      if find_result[find_count]=s then find_current:=find_count;
-      end;
-    end;
-  end;
-end;
-
-function get_file(n:longword):ansistring;
-begin
-if n<1 then n:=n+find_count;
-if n>find_count then n:=n-find_count;
-find_current:=n;
-get_file:=find_result[find_current];
-end;
-
-var cs1:TRTLCriticalSection;
-var cs2:TRTLCriticalSection;
-var cs3:TRTLCriticalSection;
-var cs4:TRTLCriticalSection;
-var csfevent0:TRTLCriticalSection;
-
-var drawr:single;
+{$i freg.inc}
+{$i flist.inc}
 
 type tevent=record track:byte;curtick,msg,tempo:longword;chord:shortint;ticktime:single;end;
-const maxevent=$1;
-var event:packed array[0..maxevent-1]of tevent;
+var event:packed array of tevent;
 var eventi:longint;
 var eventn:longword=0;
-var event0:packed array[0..maxevent-1]of tevent;
+var event0:packed array of tevent;
 var eventj:longword;
 var eventk:longint;
 
@@ -165,6 +23,8 @@ var eventmn:longword;
 var eventmi:longword;
 var eventmj:longword;
 var eventmk:longword;
+
+const maxeventseek=$1000;
 
 const maxtrack=$100;
 const maxchan=$1000;
@@ -199,6 +59,12 @@ var sig:longword;
 
 const loops:array[0..2]of char=('N','S','A');
 
+var cs1:TRTLCriticalSection;
+var cs2:TRTLCriticalSection;
+var cs3:TRTLCriticalSection;
+var cs4:TRTLCriticalSection;
+var csfevent0:TRTLCriticalSection;
+
 var len0,head:longword;
 var fpos,flen:longword;
 var dvs:word;
@@ -216,12 +82,21 @@ var finaltick:longword;
 var chord:byte=7;
 var tempo0:longword;
 var tempo00:longword;
+var drawr:single;
 
-var fb:boolean=true;
+type tnotemap=record note:byte;note0,note1:single;notec:longword;chord:byte;end;
+var notemap:packed array of tnotemap;
+var notemapi:longint;
+var notemapn:longword;
+var notemapx:longword;
+
 var fi:longint;
+var fni:longint;
+var fni0:longint;
 
-{$I fevent.inc}
-{$I fevent0.inc}
+{$i fevent.inc}
+{$i fevent0.inc}
+{$i fnote.inc}
 
 procedure DrawTitle();forward;
 
@@ -263,6 +138,12 @@ procedure AddEvent(tr:byte;cu,ms,tm:longword;ch:shortint);
 var fi:longint;
 begin
 if fb then begin fi:=eventi;eventi:=0;end;
+if not(fb) then if maxevent<=eventi then
+  begin
+  maxevent:=maxevent shl 1;
+  setlength(event,maxevent);
+  setlength(event0,maxevent);
+  end;
 with event[eventi] do
   begin
   track:=tr;
@@ -308,7 +189,7 @@ if GetFilePos<len0 then
 eventi:=0;
 tracki:=0;
 finaltick:=0;
-close(fevent);feventw:=true;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+if fb then begin close(fevent);feventw:=true;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
 while GetFilePos<len0 do
   begin
   curtick:=0;
@@ -398,13 +279,13 @@ if tpq>0 then
   track1[trackn]:=eventi;
   trackn:=trackn+1;
   end;
-FlushFEvent(0);
-close(fevent);feventw:=false;reset(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+if fb then FlushFEvent(0);
+if fb then begin close(fevent);feventw:=false;reset(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
 eventn:=eventi;
 track0[0]:=0;
 for tracki:=1 to trackn-1 do track0[tracki]:=track1[tracki-1];
 EnterCriticalSection(csfevent0);
-close(fevent0);fevent0w:=true;rewrite(fevent0);bjfevent0:=-1;
+if fb then begin close(fevent0);fevent0w:=true;rewrite(fevent0);bjfevent0:=-1;end;
 eventj:=0;
 while (eventj<eventn) do
   begin
@@ -421,7 +302,7 @@ while (eventj<eventn) do
   track0[trackj]:=track0[trackj]+1;
   eventj:=eventj+1;
   end;
-FlushFEvent0();
+if fb then FlushFEvent0();
 drawr:=0;
 tempo:=5000000;
 finaltime:=0;
@@ -462,8 +343,8 @@ for fi:=0 to eventn-1 do
 eventmn:=eventmi;
 drawr:=0;
 if tempo00=0 then tempo00:=5000000;
-FlushFEvent0();
-close(fevent0);fevent0w:=false;reset(fevent0);bjfevent0:=-1;
+if fb then FlushFEvent0();
+if fb then begin close(fevent0);fevent0w:=false;reset(fevent0);bjfevent0:=-1;end;
 LeaveCriticalSection(csfevent0);
 end;
 
@@ -542,7 +423,7 @@ if eventn>0 then if GetFEvent0Ticktime(eventj)<settime then
   eventj:=min(eventj+1,eventn);
 tempo0:=tempo00;
 for fi:=0 to min(eventj,eventn-1) do
-if (fi<maxfevent0n) or (fi>min(eventj,eventn-1)-maxfevent0n) then
+if (fi<maxeventseek) or (fi>min(eventj,eventn-1)-maxeventseek) then
   begin
   if not(fb) then eventk:=fi else begin eventk:=0;event0[eventk]:=GetFEvent0(fi);end;
   if event0[eventk].msg and $F0 shr 4<$F then
@@ -583,17 +464,6 @@ var noteb:array[0..maxnote]of boolean;
 var notem:array[0..maxnote]of longword;
 var notei:longword;
 
-type tnotemap=record note:byte;note0,note1:single;notec:longword;chord:byte;end;
-const maxnotemap=maxevent;
-var notemap:packed array[0..maxnotemap]of tnotemap;
-var notemapi:longint;
-var notemapn:longword;
-var notemapx:longword;
-
-var fni:longint;
-var fni0:longint;
-{$I fnote.inc}
-
 const black0=$0F0F0F;
 const black1=$0F0F0F;
 const gray0=$1F1F1F;
@@ -631,7 +501,8 @@ notemapi:=0;
 kbd0:=kbd0n;
 kbd1:=kbd1n;
 EnterCriticalSection(csfevent0);
-close(fnote);fnotew:=true;rewrite(fnote);bjfnote:=-1;
+notemap:=nil;setlength(notemap,maxevent);
+if fb then begin close(fnote);fnotew:=true;rewrite(fnote);bjfnote:=-1;end;
 for fi:=0 to eventn-1 do
   begin
   if eventn>0 then if fi and $FFF=0 then begin drawr:=fi/eventn;DrawTitle();end;
@@ -658,9 +529,9 @@ for fi:=0 to eventn-1 do
       end;
     end;
   end;
-FlushFNote();
 drawr:=0;
-close(fnote);fnotew:=false;reset(fnote);bjfnote:=-1;
+if fb then FlushFNote();
+if fb then begin close(fnote);fnotew:=false;reset(fnote);bjfnote:=-1;end;
 LeaveCriticalSection(csfevent0);
 notemapn:=notemapi;
 for chani:=0 to maxchan-1 do
@@ -817,7 +688,7 @@ for keyi:=0 to $7F do
     h:=0;
     end;
   end;
-if flushb then FlushFNote();
+if fb then if flushb then FlushFNote();
 end;
 
 procedure DrawBNote(ni:longword;b:shortint);
@@ -1034,7 +905,7 @@ pauseb0:=pauseb;
 if pauseb0=false then PauseMidi();
 InitBnote0(force);
 InitFNoteDraw(0,notemapn-1);
-FlushFNote();
+if fb then FlushFNote();
 scrtime:=(GetHeight()-round(GetKeynoteW0()*kleny0))/(mult*GetWidth()/mult0);
 delaytime:=scrtime;
 if not(force) then
@@ -1139,7 +1010,6 @@ if y>0 then
   h0:=min(h0,GetHeight()-h);
   DrawBMP(bnote[0,bnotei],0,y0,GetWidth(),h0,0,h,GetWidth(),h0);
   DrawBMP(bnote[1,bnotei],0,y0,GetWidth(),h0,0,h,GetWidth(),h0);
-//  Line(0,h,GetWidth,0,Red);
   bnotei:=bnotei-1;
   h:=h+h0;
   y0:=0;
@@ -1311,6 +1181,9 @@ if(fileexists(fname))then
   find_file(fname);
   fnames:=fname;
   EnterCriticalSection(cs2);
+  maxevent:=1;
+  event:=nil;setlength(event,maxevent);
+  event0:=nil;setlength(event0,maxevent);
   LoadMidi(fname);
   PrepareMidi();
   LeaveCriticalSection(cs2);
@@ -1434,6 +1307,9 @@ if hwm<>0 then
     SendMessage(hwm,WM_USER,0,2);
     halt;
     end;
+if ParamStr(2)<>'' then fb:=false;
+if(fileexists(ExtractFileDir(ParamStr(0))+'\FORCE_MEMORY')) then fb:=false;
+GetKeyI('fbi',fbi);if fbi>0 then fb:=false;
 end;
 
 procedure InitCS();
@@ -1463,9 +1339,12 @@ begin
 OpenKey();
 DoCommandLine();
 randomize();rs:=i2hs(longword(random($FFFFFFFF)));
-assign(fevent0,GetTempDir(false)+'fevent0'+rs);DeleteFile(GetTempDir(false)+'fevent0');fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
-assign(fevent,GetTempDir(false)+'fevent'+rs);DeleteFile(GetTempDir(false)+'fevent');fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
-assign(fnote,GetTempDir(false)+'fnote'+rs);DeleteFile(GetTempDir(false)+'fnote');fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);bjfnote:=-1;
+if fb then
+  begin
+  assign(fevent0,GetTempDir(false)+'fevent0'+rs);DeleteFile(GetTempDir(false)+'fevent0');fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
+  assign(fevent,GetTempDir(false)+'fevent'+rs);DeleteFile(GetTempDir(false)+'fevent');fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+  assign(fnote,GetTempDir(false)+'fnote'+rs);DeleteFile(GetTempDir(false)+'fnote');fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);bjfnote:=-1;
+  end;
 InitDraw();
 SetMidiVol(volamax-2);
 loadfile();
@@ -1516,9 +1395,7 @@ if eventi<eventn then
               end;
             end;
           LeaveCriticalSection(cs3);
-          if not({(event0[eventi].msg and $F<>$9) and}
-                 (event0[eventi].msg and $F0=$90) and
-                 (event0[eventi].msg shr 16 and $F0=0)) then
+          if not((event0[eventi].msg and $F0=$90) and (event0[eventi].msg shr 16 and $F0=0)) then
           if (msgbufn<0) then
             begin
             midiOutShortMsg(midiOut,event0[eventi].msg);
@@ -1570,9 +1447,12 @@ if msgbufn>=0 then
   midiOutUnPrepareHeader(midiOut,@msghdr,sizeof(msghdr));
   end;
 until not(iswin());
-close(fevent0);DeleteFile(GetTempDir(false)+'fevent0'+rs);
-close(fevent);DeleteFile(GetTempDir(false)+'fevent'+rs);
-close(fnote);DeleteFile(GetTempDir(false)+'fnote'+rs);
+if fb then
+  begin
+  close(fevent0);DeleteFile(GetTempDir(false)+'fevent0'+rs);
+  close(fevent);DeleteFile(GetTempDir(false)+'fevent'+rs);
+  close(fnote);DeleteFile(GetTempDir(false)+'fnote'+rs);
+  end;
 midiOutClose(midiOut);
 savefile();
 CloseKey();

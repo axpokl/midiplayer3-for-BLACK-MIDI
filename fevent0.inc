@@ -34,9 +34,14 @@ end;
 
 function GetFEvent0(i:longint):tevent;inline;
 begin
-GetFEvent0Block(i);
-bifevent0:=i and (maxfevent0n-1);
-GetFEvent0:=bfevent0[bifevent0];
+if fb then
+  begin
+  GetFEvent0Block(i);
+  bifevent0:=i and (maxfevent0n-1);
+  GetFEvent0:=bfevent0[bifevent0];
+  end
+else
+  GetFEvent0:=event0[i];
 end;
 
 procedure SetFEvent0(e:tevent;i:longint);inline;
@@ -53,6 +58,8 @@ end;
 
 function GetFEvent0TickTime(i:longint):single;inline;
 begin
-if fb then GetFEvent0TickTime:=GetFEvent0(i).ticktime
-else GetFEvent0TickTime:=event0[i].ticktime;
+if fb then
+  GetFEvent0TickTime:=GetFEvent0(i).ticktime
+else
+  GetFEvent0TickTime:=event0[i].ticktime;
 end;

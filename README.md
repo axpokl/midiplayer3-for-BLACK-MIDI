@@ -4,7 +4,7 @@ Free Pascal midiplayer3 for Black MIDI by ax_pokl
 How to Play
 -------------
 * Drag file to play
-* Support command line
+* Support command line	[midiplayer.exe filename.mid [-M]]
 * Support mid and rmi file
 
 Mouse Control
@@ -38,3 +38,10 @@ Other Functions
 * F9	Bar Color	[0=Chord,1=Track/Channel(Black),2=Track/Channel]
 * F11	Key Number	[0=Number,1=Chord,2=Blank,3=All Blank]
 * F12	Loop Mode [S=Single,A=All,N=None]
+
+Memory instead of File
+-------------
+* There are 3 ways to force use memory
+* 1. Set 2nd command line parameter to -M
+* 2. Run "REG ADD HKCU\Software\ax_midi_player /v fbi /t REG_DWORD /d 1"
+* 3. Create File "FORCE_MEMORY"

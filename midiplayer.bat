@@ -17,6 +17,9 @@ copy midiplayer32.exe midiplayer\midiplayer32.exe
 copy midiplayer64.exe midiplayer\midiplayer64.exe
 copy midiplayer.ico midiplayer\midiplayer.ico
 copy midiplayer.txt midiplayer\midiplayer.txt
+copy FORCE_MEMORY midiplayer\FORCE_MEMORY
+copy LICENSE midiplayer\LICENSE
+copy README.md midiplayer\README.md
 xcopy ..\sample\* sample\* /s /e /y /r
 xcopy ..\sample2\* sample2\* /s /e /y /r
 xcopy ..\sample3\* sample3\* /s /e /y /r
