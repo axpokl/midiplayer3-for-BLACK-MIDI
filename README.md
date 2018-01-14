@@ -5,7 +5,7 @@ How to Play
 -------------
 * Drag file to play
 * Support command line	[midiplayer.exe filename.mid [-M]]
-* Support mid and rmi file
+* Support MIDI(.mid) and RMID(.rmi) file
 
 Mouse Control
 -------------
