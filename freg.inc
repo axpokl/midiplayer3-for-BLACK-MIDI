@@ -56,6 +56,7 @@ const mult0=400;
 var mult:longword=100;
 var autofresh:longword=0;
 var midiOuti:longword=0;
+var msgbufn0:longword=$100;
 
 procedure PlayMidi(fname:ansistring);forward;
 
@@ -76,6 +77,7 @@ SetKeyI('mult',mult);
 SetKeyI('autofresh',autofresh);
 SetKeyI('midiouti',midiouti);
 SetKeyI('framerate',framerate);
+SetKeyI('msgbufn0',msgbufn0);
 end;
 
 procedure loadfile();
@@ -91,6 +93,7 @@ GetKeyI('mult',mult);
 GetKeyI('autofresh',autofresh);
 GetKeyI('midiouti',midiouti);
 GetKeyI('framerate',framerate);
+GetKeyI('msgbufn0',msgbufn0);
 if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
 if fileexists(fnames) then begin PlayMidi(fnames);SetMidiTime(midipos/1000-1);end;
 end;

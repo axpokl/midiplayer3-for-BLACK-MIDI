@@ -1357,7 +1357,7 @@ if GetMidiTime()>finaltime then
 EnterCriticalSection(csfevent0);
 if eventi<eventn then
   begin
-  msgbufn:=-$100;
+  msgbufn:=-msgbufn0;
   while GetMidiTime()>GetFEvent0TickTime(eventi) do
     begin
     if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
