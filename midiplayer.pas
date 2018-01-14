@@ -1020,14 +1020,14 @@ end;
 
 procedure DrawTime();
 begin
-if finaltime>0 then
-  _Line(trunc(GetMidiTime()/finaltime*GetWidth()),0,0,GetHeight(),white);
-DrawTextXY(t2s(GetMidiTime())+'/'+t2s(finaltime),0,0,white);
+if max(0,finaltime-1)>0 then
+  _Line(trunc(GetMidiTime()/max(0,finaltime-1)*GetWidth()),0,0,GetHeight(),white);
+DrawTextXY(t2s(min(max(0,finaltime-1),GetMidiTime()))+'/'+t2s(max(0,finaltime-1)),0,0,white);
 end;
 
 procedure DrawChord();
 begin
-if (finaltime>0) then
+if (max(0,finaltime-1)>0) then
   _DrawTextXY(chords[chord],0,round(GetKeynoteW0()*kleny0),white);
 end;
 
@@ -1112,12 +1112,12 @@ procedure DrawTitle();
 var stitle:ansistring;
 begin
 stitle:='';
-if (finaltime>0) and (drawr=0) then
-  stitle:=stitle+'['+i2s(max(0,trunc(GetMidiTime()*100/finaltime)))+'%]';
+if (max(0,finaltime-1)>0) and (drawr=0) then
+  stitle:=stitle+'['+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%]';
 stitle:=stitle+ExtractFileName(fnames);
-if (finaltime>0) and (drawr=0)then
+if (max(0,finaltime-1)>0) and (drawr=0)then
   stitle:=stitle+'('+chords[chord]+')';
-if (finaltime>0) and (drawr=0)then
+if (max(0,finaltime-1)>0) and (drawr=0)then
   stitle:=stitle+'['+i2s(find_current)+'/'+i2s(find_count)+']';
 if spd0>0 then if round(spd0*100)<>100 then
   stitle:=stitle+'('+i2s(longword(round(spd0*100)))+'%)';
@@ -1255,9 +1255,9 @@ if iskey() then
   end;
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
   begin
-  if ismouseleft() or (ismousemove() and (_ms.wparam=1)) and (finaltime>0) then
+  if ismouseleft() or (ismousemove() and (_ms.wparam=1)) and (max(0,finaltime-1)>0) then
     begin
-    SetMidiTime(GetMousePosX()/GetWidth()*finaltime);
+    SetMidiTime(GetMousePosX()/GetWidth()*max(0,finaltime-1));
     InitKbdC();
     while IsNextMsg() do ;
     end;
