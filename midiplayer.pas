@@ -1200,10 +1200,10 @@ end;
 
 procedure helpproc();
 begin
-  if fileexists(fdir+'midiplayer.txt') then
-    ShellExecute(0,nil, PChar('notepad.exe'),PChar(fdir+'midiplayer.txt'),nil,1)
+  if fileexists(fdir+'README.md') then
+    ShellExecute(0,nil, PChar('notepad.exe'),PChar(fdir+'README.md'),nil,1)
   else
-    msgbox('Missing help file: '+fdir+'midiplayer.txt','Help file not found!');
+    msgbox('Missing help file: '+fdir+'README.md','Help file not found!');
 end;
 
 procedure DoAct();
@@ -1291,10 +1291,7 @@ end;
 Procedure DoCommandLine();
 begin
 hwm:=FindWindow('DisplayClass',nil);
-fdir:=ParamStr(0);
-repeat
-if length(fdir)>0 then delete(fdir,length(fdir),1);
-until (length(fdir)<=1) or (fdir[length(fdir)]='\');
+fdir:=ExtractFileDir(ParamStr(0))+'\';
 para:=ParamStr(1);
 if hwm<>0 then
   if para<>'' then
@@ -1308,7 +1305,7 @@ if hwm<>0 then
     halt;
     end;
 if ParamStr(2)<>'' then fb:=false;
-if(fileexists(ExtractFileDir(ParamStr(0))+'\FORCE_MEMORY')) then fb:=false;
+if(fileexists(fdir+'FORCE_MEMORY')) then fb:=false;
 GetKeyI('fbi',fbi);if fbi>0 then fb:=false;
 end;
 

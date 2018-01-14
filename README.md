@@ -45,3 +45,10 @@ Memory instead of File
 * 1. Set 2nd command line parameter to -M
 * 2. Run "REG ADD HKCU\Software\ax_midi_player /v fbi /t REG_DWORD /d 1"
 * 3. Create File "FORCE_MEMORY"
+
+MIDI software synthesizer
+-------------
+* It is recommended to use the VirtualMIDISynth as MIDI Driver for MIDI output
+* VirtualMIDISynth supports midiOutLongMsg function as MIDI output
+* The Microsoft GS Wavetable Synth or other MIDI Drivers may not support long MIDI event
+* Website: https://coolsoft.altervista.org/en/virtualmidisynth
