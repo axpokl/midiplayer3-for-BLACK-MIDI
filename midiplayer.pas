@@ -431,6 +431,7 @@ chordtmp:=-1;
 tick0:=0;
 ticktime0:=0;
 eventmi:=0;
+tempo00:=0;
 for fi:=0 to eventn-1 do
   begin
   if eventn>0 then begin drawr:=fi/eventn;if fi and $FFF=0 then DrawTitle();end;
@@ -449,6 +450,7 @@ for fi:=0 to eventn-1 do
   if fps>0 then event0[eventi].ticktime:=event0[eventi].ticktime+tick/fps;
   ticktime0:=event0[eventi].ticktime;
   if event0[eventi].tempo>0 then tempo:=event0[eventi].tempo;
+  if event0[eventi].tempo>0 then if tempo00=0 then tempo00:=event0[eventi].tempo;
   if event0[eventi].msg=$5AFF then event0[eventi].tempo:=tempo;
   if event0[eventi].msg=$5AFF then if curtick=event0[eventi].curtick then event0[eventi].msg:=$5BFF;
   if event0[eventi].msg and $FFFF=$59FF then chord:=event0[eventi].chord else event0[eventi].chord:=chord;
@@ -459,13 +461,7 @@ for fi:=0 to eventn-1 do
   end;
 eventmn:=eventmi;
 drawr:=0;
-tempo00:=500000;
-for fi:=eventn-1 downto 1 do
-  begin
-  if not(fb) then eventk:=fi else begin eventk:=0;event0[eventk]:=GetFEvent0(fi);end;
-  if(event0[eventk].msg and $FFFF=$51FF)then
-    tempo00:=event0[eventk].tempo;
-  end;
+if tempo00=0 then tempo00:=5000000;
 FlushFEvent0();
 close(fevent0);fevent0w:=false;reset(fevent0);bjfevent0:=-1;
 LeaveCriticalSection(csfevent0);
@@ -556,7 +552,7 @@ if (fi<maxfevent0n) or (fi>min(eventj,eventn-1)-maxfevent0n) then
     else if (event0[eventk].msg and $F0<>$90) and (event0[eventk].msg and $F0<>$80) then
       midiOutShortMsg(midiOut,event0[eventk].msg);
     end;
-  if(event0[eventk].msg and $FFFF=$51FF)then
+  if event0[eventk].tempo>0 then
     tempo0:=event0[eventk].tempo;
   end;
 LeaveCriticalSection(csfevent0);
@@ -1076,6 +1072,7 @@ if GetFNote(notemapa).note0>=printtime-delaytime then notemapa:=max(0,notemapa-n
 if notemapx=1 then break;
 notemapx:=(notemapx+1) div 2;
 until false;
+if notemapx>0 then
 if GetFNote(notemapa).note0<printtime-delaytime then notemapa:=min(notemapa+1,notemapn);
 notemapb:=notemapn div 2;
 notemapx:=(notemapb+1) div 2;
@@ -1085,8 +1082,10 @@ if GetFNote(notemapb).note0>printtime+scrtime then notemapb:=max(0,notemapb-note
 if notemapx=1 then break;
 notemapx:=(notemapx+1) div 2;
 until false;
+if notemapx>0 then
 if GetFNote(notemapb).note0<=printtime+scrtime then notemapi:=max(0,notemapb-1);
 GetFNoteDraw(notemapa,notemapb);
+if notemapx>0 then
 for notemapi:=notemapa to notemapb do
   if GetFNoteDraw(notemapi)=false then
     if(IsKeynoteBlack(GetFNote(notemapi).note)=0)then
@@ -1192,6 +1191,7 @@ if GetFNote(notemapi).note0>=printtime then notemapi:=max(0,notemapi-notemapx) e
 if notemapx=1 then break;
 notemapx:=(notemapx+1) div 2;
 until false;
+if notemapx>0 then
 if GetFNote(notemapi).note0<printtime then notemapi:=min(notemapi+1,notemapn);
 notes:=i2s(notemapi)+'/'+i2s(notemapn);
 DrawTextXY(notes,GetWidth()-fw*length(notes),0,white);
@@ -1486,6 +1486,7 @@ if eventi<eventn then
     begin
     if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
     if event0[eventi].msg and $F0 shr 4<$F then
+      begin
       if(event0[eventi].msg and $F0 shr 4=$B)
       and(event0[eventi].msg shr 8 and $FF=$07)then
         SetMidiChanVol(event0[eventi].msg and $F,event0[eventi].msg shr 16 and $FF)
@@ -1541,12 +1542,14 @@ if eventi<eventn then
               msgbuf[msgbufn]:=msgbuf0 and $FF;
               msgbuf0:=msgbuf0 shr 8;
               msgbufn:=msgbufn+1;
-              end;
-            end;
+              end
+            end
           end
         end
+      end
     else
-      if(event0[eventi].msg and $FFFF=$51FF)then tempo:=event0[eventi].tempo;
+      if event0[eventi].tempo>0 then
+        tempo:=event0[eventi].tempo;
     chord:=event0[eventi].chord;
     if fb then eventi:=fi;
     eventi:=eventi+1;
