@@ -33,7 +33,7 @@ Max notes (64 bit): ~2000 Million
 *Visualized and easy to use.
 *Very fast to seek.
 *Always give the right output(e.g. piano pedal).
-*Fast event output to midi driver.
+*Use Longmsg event to acclerate output to midi driver.
 *Requires very few memory space when use file (less than 10M).
 *Uses unique color to display chord information
 *Can also display individual colors through tracks and channels.
