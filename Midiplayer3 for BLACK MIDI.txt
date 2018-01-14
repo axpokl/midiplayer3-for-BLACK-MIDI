@@ -20,9 +20,11 @@ Latest version:<br />http://www.axpokl.com/midiplayer3.zip
 Source code:<br />https://github.com/axpokl/midiplayer3-for-BLACK-MIDI
 
 
-Max notes: ~60 Million
+Max notes (32 bit): ~8 Million
 
-Max notes (with 4GB Patch): ~120 Million
+Max notes (4GB file): ~120 Million
+
+Max notes (64 bit): ~2000 Million
 
 ==Pros and Cons==
 
@@ -32,16 +34,14 @@ Max notes (with 4GB Patch): ~120 Million
 *Very fast to seek.
 *Always give the right output(e.g. piano pedal).
 *Fast event output to midi driver.
-*Requires very few memory space(less than 10M).
-*Uses unique color formulas to display chord information
+*Requires very few memory space when use file (less than 10M).
+*Uses unique color to display chord information
 *Can also display individual colors through tracks and channels.
 *Uses different threads to play MIDI events and draw graphics.
 '''Cons'''
-*Requires a lot of time and disk space to create large temporary files.
-*Lags when notes are dense(but canrender the graphics first to make it fluent).
+*Requires a lot of time and space to load.
 *Only available on the Windows Platform
 *Can't change the track or channel color.
 
 '''Trivia'''
 *Uses the Windows GUI to draw graphics.
-*There was a old verion of midiplayer3 which use memory cache and plays normal MIDI file.
