@@ -1262,8 +1262,8 @@ if iskey() then
   if iskey(K_END) then PlayMidi(get_file(find_count));
   if iskey(221) and not(k_shift) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
   if iskey(219) and not(k_shift) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
-  if iskey(221) and (k_shift) then begin kkey0:=(kkey0+1);initb:=false;end;
-  if iskey(219) and (k_shift) then begin kkey0:=(kkey0-1);initb:=false;end;
+  if iskey(221) and (k_shift) then begin kkey0:=(kkey0+1);kchord0:=(kchord0+7) mod 12;initb:=false;end;
+  if iskey(219) and (k_shift) then begin kkey0:=(kkey0-1);kchord0:=(kchord0+5) mod 12;initb:=false;end;
   if iskey(K_ESC) then CloseWin();
   end;
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
