@@ -704,7 +704,8 @@ key:=GetKeykey(notemap[ni].note);
 x:=GetKeynoteX(key);
 w:=GetKeynoteX0(key)-GetKeynoteX(key);
 y:=trunc((notemap[ni].note0)*mult*GetWidth()/mult0)+round(GetKeynoteW0()*kleny0);
-h:=max(round(fh*fhr),max(3,trunc((notemap[ni].note1-notemap[ni].note0)*mult*GetWidth()/mult0)));
+h:=max(1,trunc((notemap[ni].note1-notemap[ni].note0)*mult*GetWidth()/mult0));
+if kchb<2 then h:=max(round(fh*fhr),h);
 if ((h+y)<>bnotekeyn) then FlushBar();
 bnotekeyn:=(h+y);
 if(h>=bnotekey[key].h)then
