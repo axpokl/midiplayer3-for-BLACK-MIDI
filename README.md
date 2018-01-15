@@ -16,9 +16,10 @@ Mouse Control
 Key Control
 -------------
 * L/R	Seek	[Default=1s,Ctrl=5s,Shift=30s]
+* Space	Pause
 * UP/DN	Volumn	[0%-200%]
 * +/-	Speed	[0%-1600%][Default=10%,Ctrl=3%,Shift=1%]
-* Space	Pause
+* [/]	Chord	[Shift=Pitch]
 
 File Control
 -------------

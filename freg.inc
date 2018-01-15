@@ -57,6 +57,8 @@ var mult:longword=100;
 var autofresh:longword=0;
 var midiOuti:longword=0;
 var msgbufn0:longword=$100;
+var kchord0:longword=0;
+var kkey0:longword=0;
 
 procedure PlayMidi(fname:ansistring);forward;
 

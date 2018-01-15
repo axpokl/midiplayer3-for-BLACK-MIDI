@@ -617,11 +617,14 @@ end;
 procedure InitkbdColor();
 begin for kbdi:=0 to 11 do kbdcc[kbdi]:=HSN2RGB($9FFF00 or round((kbdi*5+7)mod 12*$FF/12));end;
 
+function GetKeyChordS(chord:byte):ansistring;
+begin chord:=(chord and $F)+kchord0;if chord>=$F then chord:=chord-12;GetKeyChordS:=chords[chord]+'/'+chords[$10 or chord];end;
+
 function GetKeyChord(k:byte;chord:byte):ansistring;
-begin GetKeyChord:=keychord[kchb,(k-chordb[chord]+12) mod 12]end;
+begin GetKeyChord:=keychord[kchb,(k-chordb[chord]+kchord0*5+12) mod 12]end;
 
 function GetKeyChord0(k:byte;chord:byte):byte;
-begin GetKeyChord0:=(k-chordb[chord]+12) mod 12;end;
+begin GetKeyChord0:=(k-chordb[chord]+kchord0*5+12) mod 12;end;
 
 function GetKeyChordC(k:byte;chord:byte):longword;
 begin GetKeyChordC:=kbdcc[GetKeyChord0(k,chord)];end;
@@ -631,6 +634,9 @@ begin GetKeyChord:=GetKeyChord(k,chord);end;
 
 function IsKeynoteBlack(k:byte):byte;
 begin IsKeynoteBlack:=keyblack[k mod 12];end;
+
+function GetKeykey(k:byte):byte;var key:longint;
+begin key:=k+kkey0;while key<0 do key:=key+12;while key>$7F do key:=key-12;GetKeykey:=key;end;
 
 function GetKeynote(k:byte):single;
 begin GetKeynote:=7*(k div 12)+kbd[k mod 12];end;
@@ -696,9 +702,9 @@ var x,y,w,h:longint;
 var key:byte;
 begin
 if fb then begin fni0:=ni;ni:=0;notemap[ni]:=GetFNote(fni0);end;
-key:=notemap[ni].note;
-x:=GetKeynoteX(notemap[ni].note);
-w:=GetKeynoteX0(notemap[ni].note)-GetKeynoteX(notemap[ni].note);
+key:=GetKeykey(notemap[ni].note);
+x:=GetKeynoteX(key);
+w:=GetKeynoteX0(key)-GetKeynoteX(key);
 y:=trunc((notemap[ni].note0)*mult*GetWidth()/mult0)+round(GetKeynoteW0()*kleny0);
 h:=max(round(fh*fhr),max(3,trunc((notemap[ni].note1-notemap[ni].note0)*mult*GetWidth()/mult0)));
 if ((h+y)<>bnotekeyn) then FlushBar();
@@ -711,11 +717,11 @@ if(h>=bnotekey[key].h)then
   bnotekey[key].h:=h;
   bnotekey[key].b:=b;
   if kbdcb=0 then
-    bnotekey[key].cbg:=GetKeyChordC(notemap[ni].note,notemap[ni].chord)
+    bnotekey[key].cbg:=GetKeyChordC(key,notemap[ni].chord)
   else
-    bnotekey[key].cbg:=GetKeynoteC(notemap[ni].note,notemap[ni].notec);
+    bnotekey[key].cbg:=GetKeynoteC(key,notemap[ni].notec);
   bnotekey[key].cfg:=MixColor(bnotekey[key].cbg,black,3/4);
-  bnotekey[key].s:=GetKeyChord(notemap[ni].note,notemap[ni].chord);
+  bnotekey[key].s:=GetKeyChord(key,notemap[ni].chord);
   bnotekey[key].sx:=x+(w-fw)div 2;
   bnotekey[key].sy:=min(y+round((h-fh)*fhr),y);
   bnotekey[key].sc:=black;
@@ -769,7 +775,7 @@ begin
 w0:=GetKeynoteW0();
 y:=trunc((t-printtime)*mult*GetWidth()/mult0)+round(w0*kleny0);
 if (y>=round(w0*kleny0)) and (y<GetHeight()) then _line(0,y,GetWidth(),0,c);
-if (y+fh>=round(w0*kleny0)) and (y<GetHeight()) then _DrawTextXY(chords[ch],0,y-fh-4,c);
+if (y+fh>=round(w0*kleny0)) and (y<GetHeight()) then _DrawTextXY(GetKeyChordS(ch),0,y-fh-4,c);
 end;
 
 procedure DrawMessureLineAll();
@@ -915,7 +921,7 @@ for fni:=0 to notemapn-1 do
   if notemapn>0 then if fni and $FFF=0 then begin drawr:=fni/notemapn;DrawTitle();end;
   if fb then begin notemapi:=0;notemap[notemapi]:=GetFNote(fni);end else notemapi:=fni;
   if(notemap[notemapi].note1-notemap[notemapi].note0>delaytime)then
-    if(IsKeynoteBlack(notemap[notemapi].note)=0)then
+    if(IsKeynoteBlack(GetKeykey(notemap[notemapi].note))=0)then
       DrawBNote(notemapi,0)
     else
       DrawBNote(notemapi,1);
@@ -926,6 +932,7 @@ end;
 notemapa:=0;
 notemapb:=0;
 GetDrawTime();
+InitKbdC();
 initb:=true;
 if pauseb0=false then PauseMidi();
 LeaveCriticalSection(cs4);
@@ -959,7 +966,7 @@ GetFNoteDraw(notemapa,notemapb);
 if notemapx>0 then
 for notemapi:=notemapa to notemapb do
   if GetFNoteDraw(notemapi)=false then
-    if(IsKeynoteBlack(GetFNote(notemapi).note)=0)then
+    if(IsKeynoteBlack(GetKeykey(GetFNote(notemapi).note))=0)then
       DrawBNote(notemapi,0)
     else
       DrawBNote(notemapi,1);
@@ -980,7 +987,7 @@ InitBNote(true);
 for notemapi:=0 to notemapn-1 do
   begin
   if notemapn>0 then if notemapi and $FFF=0 then begin drawr:=notemapi/notemapn;DrawTitle();end;
-  if(IsKeynoteBlack(GetFNote(notemapi).note)=0)then
+  if(IsKeynoteBlack(GetKeykey(GetFNote(notemapi).note))=0)then
     DrawBNote(notemapi,0)
   else
     DrawBNote(notemapi,1);
@@ -1028,7 +1035,7 @@ end;
 procedure DrawChord();
 begin
 if (max(0,finaltime-1)>0) then
-  _DrawTextXY(chords[chord],0,round(GetKeynoteW0()*kleny0),white);
+  _DrawTextXY(GetKeyChordS(chord),0,round(GetKeynoteW0()*kleny0),white);
 end;
 
 procedure DrawLoop();
@@ -1116,7 +1123,7 @@ if (max(0,finaltime-1)>0) and (drawr=0) then
   stitle:=stitle+'['+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%]';
 stitle:=stitle+ExtractFileName(fnames);
 if (max(0,finaltime-1)>0) and (drawr=0)then
-  stitle:=stitle+'('+chords[chord]+')';
+  stitle:=stitle+'('+GetKeyChordS(chord)+')';
 if (max(0,finaltime-1)>0) and (drawr=0)then
   stitle:=stitle+'['+i2s(find_current)+'/'+i2s(find_count)+']';
 if spd0>0 then if round(spd0*100)<>100 then
@@ -1191,6 +1198,8 @@ if(fileexists(fname))then
   CreateNoteMap();
   ResetMidi();
   initb:=false;
+  kchord0:=0;
+  kkey0:=0;
   LeaveCriticalSection(cs1);
   if autofresh=1 then bnoteb:=true;
   savefile();
@@ -1251,6 +1260,10 @@ if iskey() then
   if iskey(K_PGDN) then PlayMidi(get_file(find_current+1));
   if iskey(K_HOME) then PlayMidi(get_file(1));
   if iskey(K_END) then PlayMidi(get_file(find_count));
+  if iskey(221) and not(k_shift) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
+  if iskey(219) and not(k_shift) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
+  if iskey(221) and (k_shift) then begin kkey0:=(kkey0+1);initb:=false;end;
+  if iskey(219) and (k_shift) then begin kkey0:=(kkey0-1);initb:=false;end;
   if iskey(K_ESC) then CloseWin();
   end;
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
@@ -1375,9 +1388,9 @@ if eventi<eventn then
           EnterCriticalSection(cs3);
           if event0[eventi].msg and $F<>$9 then
             begin
+            notei:=GetKeykey(event0[eventi].msg shr 8 and $7F) or ((event0[eventi].track or event0[eventi].msg and $F shl 8) shl 8);
             if event0[eventi].msg and $F0=$90 then
               begin
-              notei:=(event0[eventi].msg shr 8 and $7F) or ((event0[eventi].track or event0[eventi].msg and $F shl 8) shl 8);
               notech[notei]:=event0[eventi].chord;
               notec[notei]:=event0[eventi].track or event0[eventi].msg and $F shl 8;
               if kbdcb=0 then
@@ -1386,36 +1399,40 @@ if eventi<eventn then
                 kbdc[notei and $7F]:=GetKeynoteC(notei and $7F,notec[notei]);
               end;
             if event0[eventi].msg and $F0=$80 then
-              begin
-              notei:=(event0[eventi].msg shr 8 and $7F) or ((event0[eventi].track or event0[eventi].msg and $F shl 8) shl 8);
               kbdc[notei and $7F]:=-1;
-              end;
             end;
           LeaveCriticalSection(cs3);
           if not((event0[eventi].msg and $F0=$90) and (event0[eventi].msg shr 16 and $F0=0)) then
-          if (msgbufn<0) then
-            begin
-            midiOutShortMsg(midiOut,event0[eventi].msg);
-            msgbufn:=msgbufn+1;
-            end
-          else if msgbufn<maxbuf-1 then
             begin
             msgbuf0:=event0[eventi].msg;
-            case msgbuf0 and $F0 shr 4 of
-              $8:msgbuf2:=2;
-              $9:msgbuf2:=2;
-              $A:msgbuf2:=2;
-              $B:msgbuf2:=2;
-              $C:msgbuf2:=1;
-              $D:msgbuf2:=1;
-              $E:msgbuf2:=2;
-              else msgbuf2:=-1;
-              end;
-            for msgbuf1:=0 to msgbuf2 do
+            if event0[eventi].msg and $F<>$9 then
               begin
-              msgbuf[msgbufn]:=msgbuf0 and $FF;
-              msgbuf0:=msgbuf0 shr 8;
+              notei:=GetKeykey(msgbuf0 shr 8 and $7F);
+              msgbuf0:=msgbuf0 and $FFFF00FF or notei shl 8;
+              end;
+            if (msgbufn<0) then
+              begin
+              midiOutShortMsg(midiOut,msgbuf0);
               msgbufn:=msgbufn+1;
+              end
+            else if msgbufn<maxbuf-1 then
+              begin
+              case msgbuf0 and $F0 shr 4 of
+                $8:msgbuf2:=2;
+                $9:msgbuf2:=2;
+                $A:msgbuf2:=2;
+                $B:msgbuf2:=2;
+                $C:msgbuf2:=1;
+                $D:msgbuf2:=1;
+                $E:msgbuf2:=2;
+                else msgbuf2:=-1;
+                end;
+              for msgbuf1:=0 to msgbuf2 do
+                begin
+                msgbuf[msgbufn]:=msgbuf0 and $FF;
+                msgbuf0:=msgbuf0 shr 8;
+                msgbufn:=msgbufn+1;
+                end
               end
             end
           end

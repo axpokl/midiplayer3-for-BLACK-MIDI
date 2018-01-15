@@ -20,11 +20,11 @@ Latest version:<br />http://www.axpokl.com/midiplayer3.zip
 Source code:<br />https://github.com/axpokl/midiplayer3-for-BLACK-MIDI
 
 
-Max notes (32 bit): ~8 Million
+Max notes (32 bit): [[Note Limits for MIDI Players|~8 Million]]
 
-Max notes (4GB file): ~120 Million
+Max notes (4GB file): [[Note Limits for MIDI Players|~128 Million]]
 
-Max notes (64 bit): ~2000 Million
+Max notes (64 bit): [[Note Limits for MIDI Players|~512 Million]]
 
 ==Pros and Cons==
 
