@@ -20,6 +20,7 @@ copy midiplayer.txt midiplayer\midiplayer.txt
 copy FORCE_MEMORY midiplayer\FORCE_MEMORY
 copy LICENSE midiplayer\LICENSE
 copy README.md midiplayer\README.md
+copy midiplayer.reg midiplayer\midiplayer.reg
 xcopy ..\sample\* sample\* /s /e /y /r
 xcopy ..\sample2\* sample2\* /s /e /y /r
 xcopy ..\sample3\* sample3\* /s /e /y /r

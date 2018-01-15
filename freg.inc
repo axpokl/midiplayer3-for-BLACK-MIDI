@@ -52,7 +52,7 @@ var para:ansistring;
 var parai:longword;
 var fdir:ansistring;
 var hwm:longword;
-const mult0=400;
+const mult0=600;
 var mult:longword=100;
 var autofresh:longword=0;
 var midiOuti:longword=0;

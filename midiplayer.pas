@@ -21,8 +21,6 @@ const maxeventm=$10000;
 var eventm:packed array[0..maxeventm-1]of tevent;
 var eventmn:longword;
 var eventmi:longword;
-var eventmj:longword;
-var eventmk:longword;
 
 const maxeventseek=$1000;
 
@@ -592,7 +590,7 @@ var bnoteb:boolean=false;
 var initb:boolean=false;
 
 type tbnotekey=record
-x,y,w,h:longint;b:shortint;cbg,cfg:longword;
+x,y,w,h:longint;bi:shortint;cbg,cfg:longword;
 s:ansistring;sx,sy:longint;sc:longword;
 end;
 var bnotekey:array[0..$7F]of tbnotekey;
@@ -679,25 +677,25 @@ for keyi:=0 to $7F do
     h0:=h;
     while h0>(bnoteh0-y0) do
       begin
-      Bar(bnote[b,bnotei],x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
+      Bar(bnote[bi,bnotei],x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
       h0:=h0-(bnoteh0-y0);
       y0:=0;
       bnotei:=bnotei-1;
       end;
-    if bnotei>=0 then Bar(bnote[b,bnotei],x,y0-1,w,h0+1,cfg,cbg);
+    if bnotei>=0 then Bar(bnote[bi,bnotei],x,y0-1,w,h0+1,cfg,cbg);
     bnotei:=(sy+fh+2)div bnoteh0;
     y0:=bnoteh0-(sy+fh+2-bnotei*bnoteh0);
-    if kchb<=1 then DrawTextXY(bnote[b,bnotei],s,sx,y0+1,sc);
+    if kchb<=1 then DrawTextXY(bnote[bi,bnotei],s,sx,y0+1,sc);
     if y0+fh>=bnoteh0 then
       if bnotei>1 then
-        if kchb<=1 then DrawTextXY(bnote[b,bnotei-1],s,sx,y0-bnoteh0+1,sc);
+        if kchb<=1 then DrawTextXY(bnote[bi,bnotei-1],s,sx,y0-bnoteh0+1,sc);
     h:=0;
     end;
   end;
 if fb then if flushb then FlushFNote();
 end;
 
-procedure DrawBNote(ni:longword;b:shortint);
+procedure DrawBNote(ni:longword;bi:shortint);
 var x,y,w,h:longint;
 var key:byte;
 begin
@@ -715,7 +713,7 @@ if(h>=bnotekey[key].h)then
   bnotekey[key].y:=y;
   bnotekey[key].w:=w;
   bnotekey[key].h:=h;
-  bnotekey[key].b:=b;
+  bnotekey[key].bi:=bi;
   if kbdcb=0 then
     bnotekey[key].cbg:=GetKeyChordC(key,notemap[ni].chord)
   else
@@ -731,11 +729,32 @@ end;
 procedure _Bar(x,y,w,h:longint;cfg,cbg:longword);
 begin Bar(x,GetHeight()-y-h,w,h,cfg,cbg);end;
 
+procedure _Line(bi:shortint;x,y,w,h:longint;c:longword);
+var y0:longword;
+var bnotei:longint;
+begin
+bnotei:=y div bnoteh0;
+y0:=bnoteh0-(y-bnotei*bnoteh0);
+Line(bnote[bi,bnotei],x,y0,w,h,c);
+end;
+
 procedure _Line(b:pbitmap;x,y,w,h:longint;c:longword);
 begin Line(b,x,bnoteh-y-h,w,h,c);end;
 
 procedure _Line(x,y,w,h:longint;c:longword);
 begin Line(x,GetHeight()-y-h,w,h,c);end;
+
+procedure _DrawTextXY(bi:shortint;s:ansistring;sx,sy:longint;sc:longword);
+var y0:longword;
+var bnotei:longint;
+begin
+bnotei:=(sy+fh+2)div bnoteh0;
+y0:=bnoteh0-(sy+fh+2-bnotei*bnoteh0);
+DrawTextXY(bnote[bi,bnotei],s,sx,y0+1,sc);
+if y0+fh>=bnoteh0 then 
+  if bnotei>1 then
+    DrawTextXY(bnote[bi,bnotei-1],s,sx,y0-bnoteh0+1,sc);
+end;
 
 procedure _DrawTextXY(s:ansistring;x,y:longint;c:longword);
 begin DrawTextXY(s,x,GetHeight()-y-fh-2,c);end;
@@ -759,39 +778,31 @@ var w0,y:longint;
 var bpm:single;
 begin
 w0:=GetKeynoteW0();
-y:=trunc((t-printtime)*mult*GetWidth()/mult0)+round(w0*kleny0);
-if (y>=round(w0*kleny0)) and (y<GetHeight()) then _line(0,y,GetWidth(),0,c);
-if (y+fh>=round(w0*kleny0)) and (y<GetHeight()) then
-  begin
-  _DrawTextXY(i2s(ms),0,y,c);
-  if tempo>0 then bpm:=60000000/tempo*spd0 else bpm:=0;
-  _DrawTextXY(r2s(bpm),GetWidth()-fw*length(r2s(bpm)),y,c);
-  end;
+y:=trunc(t*mult*GetWidth()/mult0)+round(w0*kleny0);
+_line(0,0,y,GetWidth(),0,c);
+_DrawTextXY(0,i2s(ms),0,y,c);
+if tempo>0 then bpm:=60000000/tempo*spd0 else bpm:=0;
+_DrawTextXY(0,r2s(bpm),GetWidth()-fw*length(r2s(bpm)),y,c);
 end;
 
 procedure DrawChordLine(t:single;ch:byte;c:longword);
 var w0,y:longint;
 begin
 w0:=GetKeynoteW0();
-y:=trunc((t-printtime)*mult*GetWidth()/mult0)+round(w0*kleny0);
-if (y>=round(w0*kleny0)) and (y<GetHeight()) then _line(0,y,GetWidth(),0,c);
-if (y+fh>=round(w0*kleny0)) and (y<GetHeight()) then _DrawTextXY(GetKeyChordS(ch),0,y-fh-4,c);
+y:=trunc(t*mult*GetWidth()/mult0)+round(w0*kleny0);
+_line(0,0,y,GetWidth(),0,c);
+_DrawTextXY(0,GetKeyChordS(ch),0,y-fh-4,c);
 end;
 
 procedure DrawMessureLineAll();
 begin
-eventmj:=0;
-while (eventmj<eventmn-1) and (eventm[eventmj].ticktime<printtime) do
-  eventmj:=eventmj+1;
-eventmk:=eventmj;
-while (eventmk<eventmn-1) and (eventm[eventmk].ticktime<printtime+scrtime) do
-  eventmk:=eventmk+1;
 if eventmn>0 then
-  for eventmj:=0 to eventmk do
+  for eventmi:=0 to eventmn-1 do
     begin
-    if eventm[eventmj].msg and $FFFF=$5AFF then DrawMessureLine(eventm[eventmj].ticktime,eventm[eventmj].curtick div tpq,eventm[eventmj].tempo,gray0);
-    if eventm[eventmj].msg and $FFFF=$5BFF then DrawMessureLine(eventm[eventmj].ticktime,eventm[eventmj].curtick div tpq,eventm[eventmj].tempo,gray1);
-    if eventm[eventmj].msg and $FFFF=$59FF then DrawChordLine(eventm[eventmj].ticktime,eventm[eventmj].chord,gray2);
+    if eventmi and $FFF=0 then begin drawr:=eventmi/eventmn;DrawTitle();end;
+    if eventm[eventmi].msg and $FFFF=$5AFF then DrawMessureLine(eventm[eventmi].ticktime,eventm[eventmi].curtick div tpq,eventm[eventmi].tempo,gray0);
+    if eventm[eventmi].msg and $FFFF=$5BFF then DrawMessureLine(eventm[eventmi].ticktime,eventm[eventmi].curtick div tpq,eventm[eventmi].tempo,gray1);
+    if eventm[eventmi].msg and $FFFF=$59FF then DrawChordLine(eventm[eventmi].ticktime,eventm[eventmi].chord,gray2);
     end;
 end;
 
@@ -904,12 +915,10 @@ bnoten:=bnoten0;
 end;
 
 procedure InitBNote(force:boolean);
-var pauseb0:boolean;
 begin
 EnterCriticalSection(cs4);
-pauseb0:=pauseb;
-if pauseb0=false then PauseMidi();
 InitBnote0(force);
+DrawMessureLineAll();
 InitFNoteDraw(0,notemapn-1);
 if fb then FlushFNote();
 scrtime:=(GetHeight()-round(GetKeynoteW0()*kleny0))/(mult*GetWidth()/mult0);
@@ -934,7 +943,6 @@ notemapb:=0;
 GetDrawTime();
 InitKbdC();
 initb:=true;
-if pauseb0=false then PauseMidi();
 LeaveCriticalSection(cs4);
 end;
 
@@ -965,13 +973,17 @@ if GetFNote(notemapb).note0<=printtime+scrtime then notemapi:=max(0,notemapb-1);
 GetFNoteDraw(notemapa,notemapb);
 if notemapx>0 then
 for notemapi:=notemapa to notemapb do
+  begin
+  if (notemapb-notemapa)>0 then if (notemapi-notemapa) and $FFF=0 then begin drawr:=(notemapi-notemapa)/(notemapb-notemapa);DrawTitle();end;
   if GetFNoteDraw(notemapi)=false then
     if(IsKeynoteBlack(GetKeykey(GetFNote(notemapi).note))=0)then
       DrawBNote(notemapi,0)
     else
       DrawBNote(notemapi,1);
+  end;
 if notemapa<=notemapb then SetFNoteDraw(notemapa,notemapb);
 FlushBar();
+drawr:=0;
 LeaveCriticalSection(cs1);
 end;
 
@@ -1097,7 +1109,6 @@ SetDrawFont();
 Clear();
 GetDrawTime();
 DrawNoteLine();
-DrawMessureLineAll();
 DrawBNoteAll0();
 DrawBNoteAll();
 DrawBNoteBB();
@@ -1145,9 +1156,8 @@ if GetTimeR()>frametime+1/framerate then
   while GetTimeR()>frametime+1/framerate do frametime:=frametime+1/framerate;
     if not(IsIconic(GetHWnd())) then DrawAll();
   DrawTitle();
-  end
-else
-  Delay(1);
+  end;
+Delay(1);
 until not(iswin());
 end;
 

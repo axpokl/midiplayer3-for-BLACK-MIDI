@@ -20,11 +20,15 @@ Latest version:<br />http://www.axpokl.com/midiplayer3.zip
 Source code:<br />https://github.com/axpokl/midiplayer3-for-BLACK-MIDI
 
 
-Max notes (32 bit): [[Note Limits for MIDI Players|~8 Million]]
+Max notes (32 bit 2G): [[Note Limits for MIDI Players|~8 Million]]
 
-Max notes (4GB file): [[Note Limits for MIDI Players|~128 Million]]
+Max notes (32 bit 4G): [[Note Limits for MIDI Players|~16 Million]]
 
-Max notes (64 bit): [[Note Limits for MIDI Players|~512 Million]]
+Max notes (32 bit file): [[Note Limits for MIDI Players|~32 Million]]
+
+Max notes (64 bit): [[Note Limits for MIDI Players|8 Million / 1GB Memory]]
+
+Max notes (64 bit file): [[Note Limits for MIDI Players|8 Million / 1GB File]]
 
 ==Pros and Cons==
 
@@ -45,3 +49,4 @@ Max notes (64 bit): [[Note Limits for MIDI Players|~512 Million]]
 
 '''Trivia'''
 *Uses the Windows GUI to draw graphics.
+*The loading speed is about 1 Million notes per second.
