@@ -25,7 +25,7 @@ xcopy ..\sample\* sample\* /s /e /y /r
 xcopy ..\sample2\* sample2\* /s /e /y /r
 xcopy ..\sample3\* sample3\* /s /e /y /r
 xcopy sample\* midiplayer\sample\* /s /e /y /r
-xcopy sample2\* midiplayer\sample2\* /s /e /y /r
+::xcopy sample2\* midiplayer\sample2\* /s /e /y /r
 ::xcopy sample3\* midiplayer\sample3\* /s /e /y /r
 ::mkdir midiplayer\source
 ::copy midiplayer.pas midiplayer\source\midiplayer.pas
