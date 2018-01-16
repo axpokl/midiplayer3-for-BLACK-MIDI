@@ -302,7 +302,7 @@ while (eventj<eventn) do
   end;
 if fb then FlushFEvent0();
 drawr:=0;
-tempo:=5000000;
+tempo:=500000;
 finaltime:=0;
 curtick:=0;
 sig0:=1;sig:=1;
@@ -340,7 +340,7 @@ for fi:=0 to eventn-1 do
   end;
 eventmn:=eventmi;
 drawr:=0;
-if tempo00=0 then tempo00:=5000000;
+if tempo00=0 then tempo00:=500000;
 if fb then FlushFEvent0();
 if fb then begin close(fevent0);fevent0w:=false;reset(fevent0);bjfevent0:=-1;end;
 LeaveCriticalSection(csfevent0);
@@ -705,7 +705,7 @@ x:=GetKeynoteX(key);
 w:=GetKeynoteX0(key)-GetKeynoteX(key);
 y:=trunc((notemap[ni].note0)*mult*GetWidth()/mult0)+round(GetKeynoteW0()*kleny0);
 h:=max(1,trunc((notemap[ni].note1-notemap[ni].note0)*mult*GetWidth()/mult0));
-if kchb<2 then h:=max(round(fh*fhr),h);
+if kchb<=1 then h:=max(round(fh*fhr),h);
 if ((h+y)<>bnotekeyn) then FlushBar();
 bnotekeyn:=(h+y);
 if(h>=bnotekey[key].h)then
@@ -759,6 +759,12 @@ end;
 
 procedure _DrawTextXY(s:ansistring;x,y:longint;c:longword);
 begin DrawTextXY(s,x,GetHeight()-y-fh-2,c);end;
+
+procedure _DrawTextXY1(s:ansistring;x,y:longint;c:longword);
+begin DrawTextXY(s,x,GetHeight()-round(GetKeynoteW0()*kleny0)-y-fh-2,c,gray0);end;
+
+procedure _DrawTextXY0(s:ansistring;x,y:longint;c:longword);
+begin DrawTextXY(s,x,y,c,gray0);end;
 
 procedure SetDrawFont(sz:single);
 begin
@@ -1042,30 +1048,26 @@ procedure DrawTime();
 begin
 if max(0,finaltime-1)>0 then
   _Line(trunc(GetMidiTime()/max(0,finaltime-1)*GetWidth()),0,0,GetHeight(),white);
-DrawTextXY(t2s(min(max(0,finaltime-1),GetMidiTime()))+'/'+t2s(max(0,finaltime-1)),0,0,white);
+_DrawTextXY0(t2s(min(max(0,finaltime-1),GetMidiTime()))+'/'+t2s(max(0,finaltime-1))
++'('+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)',0,0,white);
 end;
 
 procedure DrawChord();
 begin
 if (max(0,finaltime-1)>0) then
-  _DrawTextXY(GetKeyChordS(chord),0,round(GetKeynoteW0()*kleny0),white);
+  _DrawTextXY1(GetKeyChordS(chord),0,0,white);
 end;
-
-procedure DrawLoop();
-begin _DrawTextXY(loops[loop],GetWidth()-fw,round(GetKeynoteW0()*kleny0),white);end;
 
 procedure DrawBPM();
 var bpm:single;
-var spds:ansistring='';
+var bmps:ansistring='';
 begin
 if tempo>0 then bpm:=60000000/tempo*spd0 else bpm:=0;
 if(bpm>=0)then
   begin
-  if round(spd0*100)<>100 then spds:='('+i2s(round(spd0*100))+'%)';
-  SetDrawFont(1.5);
-  DrawTextXY(r2s(bpm)+' BPM',(GetWidth()-fw*length(r2s(bpm)+' BPM'))div 2,0,white);
-  SetDrawFont();
-  DrawTextXY(spds,(GetWidth()-fw*length(spds))div 2,round(fh*1.5),white);
+  bmps:=r2s(bpm)+' BPM';
+  if round(spd0*100)<>100 then bmps:=bmps+'('+i2s(round(spd0*100))+'%)';
+  _DrawTextXY1(bmps,GetWidth()-fw*length(bmps),0,white);
   end;
 end;
 
@@ -1084,7 +1086,9 @@ until false;
 if notemapx>0 then
 if GetFNote(notemapi).note0<printtime then notemapi:=min(notemapi+1,notemapn);
 notes:=i2s(notemapi)+'/'+i2s(notemapn);
-DrawTextXY(notes,GetWidth()-fw*length(notes),0,white);
+SetDrawFont(1.5);
+_DrawTextXY0(notes,(GetWidth()-fw*length(notes))div 2,0,white);
+SetDrawFont();
 end;
 
 procedure DrawFPS();
@@ -1092,7 +1096,7 @@ var fpss:ansistring='';
 begin
 fpss:=i2s(GetFPS())+'/'+i2s(framerate);
 if abs(GetFPSR-framerate)>1 then
-  DrawTextXY(fpss,GetWidth()-fw*length(fpss),fh,white);
+  _DrawTextXY0(fpss,GetWidth()-fw*length(fpss),0,white);
 end;
 
 procedure DrawReal();
@@ -1114,13 +1118,12 @@ DrawBNoteAll0();
 DrawBNoteAll();
 DrawBNoteBB();
 DrawKeyboard();
-if kchb<=2 then
+if kchb2=0 then
   begin
   DrawTime();
   DrawChord();
   DrawBPM();
   DrawNoteN();
-  DrawLoop();
   DrawFPS();
   end;
 DrawReal();
@@ -1131,19 +1134,19 @@ procedure DrawTitle();
 var stitle:ansistring;
 begin
 stitle:='';
-if (max(0,finaltime-1)>0) and (drawr=0) then
-  stitle:=stitle+'['+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%]';
 stitle:=stitle+ExtractFileName(fnames);
-if (max(0,finaltime-1)>0) and (drawr=0)then
-  stitle:=stitle+'('+GetKeyChordS(chord)+')';
-if (max(0,finaltime-1)>0) and (drawr=0)then
-  stitle:=stitle+'['+i2s(find_current)+'/'+i2s(find_count)+']';
+if (max(0,finaltime-1)>0) then
+  begin
+  stitle:='('+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)'+stitle;
+  stitle:=stitle+'<'+i2s(find_current)+'/'+i2s(find_count)+'/'+loops[loop]+'>';
+  stitle:=stitle+'['+GetKeyChordS(chord)+']';
+  end;
+if voli>0 then if round(vola[voli]*100)<>100 then
+  stitle:=stitle+'('+i2s(longword(round(vola[voli]*100)))+'%)';
 if spd0>0 then if round(spd0*100)<>100 then
-  stitle:=stitle+'('+i2s(longword(round(spd0*100)))+'%)';
+  stitle:=stitle+'['+i2s(longword(round(spd0*100)))+'%]';
 if mult>0 then if mult<>100 then
   stitle:=stitle+'<'+i2s(mult)+'%>';
-if voli>0 then if round(vola[voli]*100)<>100 then
-  stitle:=stitle+'['+i2s(longword(round(vola[voli]*100)))+'%]';
 if drawr>0 then
   stitle:='['+i2s(trunc(drawr*100))+'%]'+stitle;
 SetTitle(stitle);
@@ -1247,15 +1250,16 @@ if iskey() then
   k_ctrl:=GetKeyState(VK_CONTROL)<0;
   if iskey(K_F1) then newthread(@helpproc);
   if iskey(K_F2) then PlayMidi(fnames);
-  if iskey(K_F3) then if not(k_shift) then ResetMidiHard(midiOuti) else ResetMidiHard(midiOuti+1);
-  if iskey(K_F4) then if not(k_shift) then bnoteb:=true else autofresh:=1-autofresh;
+  if iskey(K_F3) then if not(k_ctrl) then ResetMidiHard(midiOuti) else ResetMidiHard(midiOuti+1);
+  if iskey(K_F4) then if not(k_ctrl) then bnoteb:=true else autofresh:=1-autofresh;
   if iskey(K_F5) then framerate:=max(5,framerate-((framerate-1) div 60+1));
   if iskey(K_F6) then framerate:=min(480,framerate+(framerate div 60+1));
   if iskey(K_F7) or iskey(K_F8) then begin k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;end;
   if iskey(K_F7) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
   if iskey(K_F8) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
   if iskey(K_F9) then begin kbdcb:=(kbdcb+1)mod 3;initb:=false;end;
-  if iskey(K_F11) then begin kchb:=(kchb+1) mod 4;initb:=false;end;
+  if iskey(K_F11) and not(k_ctrl) then begin kchb:=(kchb+1) mod 3;initb:=false;end;
+  if iskey(K_F11) and (k_ctrl) then begin kchb2:=(kchb2+1) mod 2;end;
   if iskey(K_F12) then loop:=(loop+1) mod 3;
   if iskey(K_RIGHT) or iskey(K_LEFT) then begin k_pos:=1;if k_ctrl then k_pos:=5;if k_shift then k_pos:=30;end;
   if iskey(K_LEFT) then begin SetMidiTime(max(-1,GetMidiTime()-k_pos));InitKbdC();end;
@@ -1271,10 +1275,10 @@ if iskey() then
   if iskey(K_PGDN) then PlayMidi(get_file(find_current+1));
   if iskey(K_HOME) then PlayMidi(get_file(1));
   if iskey(K_END) then PlayMidi(get_file(find_count));
-  if iskey(221) and not(k_shift) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
-  if iskey(219) and not(k_shift) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
-  if iskey(221) and (k_shift) then begin kkey0:=(kkey0+1);kchord0:=(kchord0+7) mod 12;initb:=false;end;
-  if iskey(219) and (k_shift) then begin kkey0:=(kkey0-1);kchord0:=(kchord0+5) mod 12;initb:=false;end;
+  if iskey(221) and not(k_ctrl) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
+  if iskey(219) and not(k_ctrl) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
+  if iskey(221) and (k_ctrl) then begin kkey0:=(kkey0+1);kchord0:=(kchord0+7) mod 12;initb:=false;end;
+  if iskey(219) and (k_ctrl) then begin kkey0:=(kkey0-1);kchord0:=(kchord0+5) mod 12;initb:=false;end;
   if iskey(K_ESC) then CloseWin();
   end;
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then

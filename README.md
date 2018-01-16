@@ -32,12 +32,12 @@ Other Functions
 -------------
 * F1	Help
 * F2	File Reset
-* F3	Hardware Reset [Shift=Change MIDI output device]
-* F4	Bar Reset [Shift=Auto Reset]
+* F3	Hardware Reset [Ctrl=Change MIDI output device]
+* F4	Bar Reset [Ctrl=Auto Reset]
 * F5/F6	FPS [5-480(Default=120)]
 * F7/F8	Bar Size	[0%-1000%][Default=10%,Ctrl=3%,Shift=1%]
 * F9	Bar Color	[0=Chord,1=Track/Channel(Black),2=Track/Channel]
-* F11	Key Number	[0=Number,1=Chord,2=Blank,3=All Blank]
+* F11	Key Number	[0=Number,1=Chord,2=Blank][Ctrl=Text On/Off]
 * F12	Loop Mode [S=Single,A=All,N=None]
 
 Memory instead of File
