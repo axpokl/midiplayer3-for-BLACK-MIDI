@@ -43,9 +43,9 @@ Other Functions
 Memory instead of File
 -------------
 * There are 3 ways to force use memory
-1: Set 2nd command line parameter to -M
-2: Run Command: REG ADD HKCU\Software\ax_midi_player /v fbi /t REG_DWORD /d 1 /f
-3: Create File "FORCE_MEMORY"
+* 1: Set 2nd command line parameter to -M
+* 2: Run Command: REG ADD HKCU\Software\ax_midi_player /v fbi /t REG_DWORD /d 1 /f
+* 3: Create File "FORCE_MEMORY"
 
 MIDI software synthesizer
 -------------
