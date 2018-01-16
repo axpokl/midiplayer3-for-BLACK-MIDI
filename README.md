@@ -43,17 +43,17 @@ Other Functions
 Memory instead of File
 -------------
 * There are 3 ways to force use memory
-* 1: Set 2nd command line parameter to -M
-* 2: Run Command: REG ADD HKCU\Software\ax_midi_player /v fbi /t REG_DWORD /d 1 /f
-* 3: Create File "FORCE_MEMORY"
+1: Set 2nd command line parameter to -M
+2: Run Command: REG ADD HKCU\Software\ax_midi_player /v fbi /t REG_DWORD /d 1 /f
+3: Create File "FORCE_MEMORY"
 
 MIDI software synthesizer
 -------------
 * It is recommended to use the VirtualMIDISynth as driver device for MIDI output
-* Website: https://coolsoft.altervista.org/en/virtualmidisynth
+Website: https://coolsoft.altervista.org/en/virtualmidisynth
 * VirtualMIDISynth supports midiOutLongMsg Windows API function for long MIDI event as MIDI output
 * The Microsoft GS Wavetable Synth or other MIDI output device may not support long MIDI event
 * If your MIDI output device does not support long MIDI event, please run following command:
-* REG ADD HKCU\Software\ax_midi_player /v msgbufn0 /t REG_DWORD /d 2147483647 /f
+REG ADD HKCU\Software\ax_midi_player /v msgbufn0 /t REG_DWORD /d 2147483647 /f
 * You can also use this command always force to use long MIDI event for better MIDI output performance:
-* REG ADD HKCU\Software\ax_midi_player /v msgbufn0 /t REG_DWORD /d 0 /f
+REG ADD HKCU\Software\ax_midi_player /v msgbufn0 /t REG_DWORD /d 0 /f
