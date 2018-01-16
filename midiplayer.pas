@@ -802,15 +802,18 @@ _DrawTextXY(0,GetKeyChordS(ch),0,y-fh-4,c);
 end;
 
 procedure DrawMessureLineAll();
+var grayx:longword;
 begin
+grayx:=gray0;if kmessure=1 then grayx:=gray1;
 if eventmn>0 then
   for eventmi:=0 to eventmn-1 do
-    begin
-    if eventmi and $FFF=0 then begin drawr:=eventmi/eventmn;DrawTitle();end;
-    if eventm[eventmi].msg and $FFFF=$5AFF then DrawMessureLine(eventm[eventmi].ticktime,eventm[eventmi].curtick div tpq,eventm[eventmi].tempo,gray0);
-    if eventm[eventmi].msg and $FFFF=$5BFF then DrawMessureLine(eventm[eventmi].ticktime,eventm[eventmi].curtick div tpq,eventm[eventmi].tempo,gray1);
-    if eventm[eventmi].msg and $FFFF=$59FF then DrawChordLine(eventm[eventmi].ticktime,eventm[eventmi].chord,gray2);
-    end;
+    if (eventm[eventmi].msg and $FFFF=$5AFF) and (kmessure<=1) then DrawMessureLine(eventm[eventmi].ticktime,eventm[eventmi].curtick div tpq,eventm[eventmi].tempo,grayx);
+if eventmn>0 then
+  for eventmi:=0 to eventmn-1 do
+    if (eventm[eventmi].msg and $FFFF=$5BFF) and (kmessure<=2) then DrawMessureLine(eventm[eventmi].ticktime,eventm[eventmi].curtick div tpq,eventm[eventmi].tempo,gray1);
+if eventmn>0 then
+  for eventmi:=0 to eventmn-1 do
+    if (eventm[eventmi].msg and $FFFF=$59FF) and (kmessure<=3) then DrawChordLine(eventm[eventmi].ticktime,eventm[eventmi].chord,gray2);
 end;
 
 procedure DrawNoteLine();
@@ -1258,8 +1261,9 @@ if iskey() then
   if iskey(K_F7) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
   if iskey(K_F8) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
   if iskey(K_F9) then begin kbdcb:=(kbdcb+1)mod 3;initb:=false;end;
-  if iskey(K_F11) and not(k_ctrl) then begin kchb:=(kchb+1) mod 3;initb:=false;end;
+  if iskey(K_F11) and not(k_ctrl) and not(k_shift) then begin kchb:=(kchb+1) mod 3;initb:=false;end;
   if iskey(K_F11) and (k_ctrl) then begin kchb2:=(kchb2+1) mod 2;end;
+  if iskey(K_F11) and (k_shift) then begin kmessure:=(kmessure+1) mod 5;initb:=false;end;
   if iskey(K_F12) then loop:=(loop+1) mod 3;
   if iskey(K_RIGHT) or iskey(K_LEFT) then begin k_pos:=1;if k_ctrl then k_pos:=5;if k_shift then k_pos:=30;end;
   if iskey(K_LEFT) then begin SetMidiTime(max(-1,GetMidiTime()-k_pos));InitKbdC();end;
