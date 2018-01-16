@@ -1050,9 +1050,11 @@ end;
 procedure DrawTime();
 begin
 if max(0,finaltime-1)>0 then
+  begin
   _Line(trunc(GetMidiTime()/max(0,finaltime-1)*GetWidth()),0,0,GetHeight(),white);
-_DrawTextXY0(t2s(min(max(0,finaltime-1),GetMidiTime()))+'/'+t2s(max(0,finaltime-1))
-+'('+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)',0,0,white);
+  _DrawTextXY0(t2s(min(max(0,finaltime-1),GetMidiTime()))+'/'+t2s(max(0,finaltime-1))+'('
+    +i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)',0,0,white);
+  end;
 end;
 
 procedure DrawChord();
@@ -1421,7 +1423,7 @@ if eventi<eventn then
               kbdc[notei and $7F]:=-1;
             end;
           LeaveCriticalSection(cs3);
-          if not((event0[eventi].msg and $F0=$90) and (event0[eventi].msg shr 16 and $F0=0)) then
+          if (event0[eventi].msg and $F0<>$90) or (event0[eventi].msg shr 16 and $FF>=4) then
             begin
             msgbuf0:=event0[eventi].msg;
             if event0[eventi].msg and $F<>$9 then

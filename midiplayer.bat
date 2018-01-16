@@ -28,17 +28,17 @@ xcopy sample\* midiplayer\sample\* /s /e /y /r
 ::xcopy sample2\* midiplayer\sample2\* /s /e /y /r
 ::xcopy sample3\* midiplayer\sample3\* /s /e /y /r
 ::mkdir midiplayer\source
-::copy midiplayer.pas midiplayer\source\midiplayer.pas
-::copy fevent.inc midiplayer\source\fevent.inc
-::copy fevent0.inc midiplayer\source\fevent0.inc
-::copy fnote.inc midiplayer\source\fnote.inc
-::copy display.pp midiplayer\source\display.pp
-::copy mmsystem.pp midiplayer\source\mmsystem.pp
-::copy midiplayer.rc midiplayer\source\midiplayer.rc
-::copy midiplayer.bat midiplayer\source\midiplayer.bat
-::copy midiplayer.ico midiplayer\source\midiplayer.ico
-::copy midiplayer.png midiplayer\source\midiplayer.png
-::copy midiplayer.txt midiplayer\source\midiplayer.txt
+copy midiplayer.pas midiplayer\source\midiplayer.pas
+copy fevent.inc midiplayer\source\fevent.inc
+copy fevent0.inc midiplayer\source\fevent0.inc
+copy fnote.inc midiplayer\source\fnote.inc
+copy display.pp midiplayer\source\display.pp
+copy mmsystem.pp midiplayer\source\mmsystem.pp
+copy midiplayer.rc midiplayer\source\midiplayer.rc
+copy midiplayer.bat midiplayer\source\midiplayer.bat
+copy midiplayer.ico midiplayer\source\midiplayer.ico
+copy midiplayer.png midiplayer\source\midiplayer.png
+copy midiplayer.txt midiplayer\source\midiplayer.txt
 ::copy midiplayer.reg midiplayer\source\midiplayer.reg
 zip -q -r midiplayer3.zip midiplayer
 rmdir midiplayer /s /q
