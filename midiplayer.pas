@@ -752,7 +752,7 @@ begin
 bnotei:=(sy+fh+2)div bnoteh0;
 y0:=bnoteh0-(sy+fh+2-bnotei*bnoteh0);
 DrawTextXY(bnote[bi,bnotei],s,sx,y0+1,sc);
-if y0+fh>=bnoteh0 then 
+if y0+fh>=bnoteh0 then
   if bnotei>1 then
     DrawTextXY(bnote[bi,bnotei-1],s,sx,y0-bnoteh0+1,sc);
 end;
