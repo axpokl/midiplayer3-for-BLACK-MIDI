@@ -49,11 +49,11 @@ Memory instead of File
 
 MIDI software synthesizer
 -------------
-* It is recommended to use the VirtualMIDISynth as driver device for MIDI output
-Website: https://coolsoft.altervista.org/en/virtualmidisynth
+* It is recommended to use the VirtualMIDISynth as driver device for MIDI output: 
+https://coolsoft.altervista.org/en/virtualmidisynth
 * VirtualMIDISynth supports midiOutLongMsg Windows API function for long MIDI event as MIDI output
 * The Microsoft GS Wavetable Synth or other MIDI output device may not support long MIDI event
-* If your MIDI output device does not support long MIDI event, please run following command:
+* If your MIDI output device does not support long MIDI event, please run following command: 
 REG ADD HKCU\Software\ax_midi_player /v msgbufn0 /t REG_DWORD /d 2147483647 /f
-* You can also use this command always force to use long MIDI event for better MIDI output performance:
+* You can also use this command always force to use long MIDI event for better MIDI output performance: 
 REG ADD HKCU\Software\ax_midi_player /v msgbufn0 /t REG_DWORD /d 0 /f
