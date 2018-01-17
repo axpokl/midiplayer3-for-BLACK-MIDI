@@ -41,9 +41,6 @@ var chanj:longword;
 const chanc0:array[0..11]of longword=
 ($55,$AA,$FF,$2A,$7F,$D4,$15,$6A,$BF,$3F,$94,$E9);
 
-var chorda:array[0..1,-7..7]of byte=(
-($00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0D,$0E),
-($10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$1A,$1B,$1C,$1D,$1E));
 var chordb:array[0..31]of byte=(
 11,06,01,08,03,10,05,00,07,02,09,04,11,06,01,00,
 08,03,10,05,00,07,02,09,04,11,06,01,08,03,10,00);
@@ -233,7 +230,7 @@ while GetFilePos<len0 do
            if lens>0 then begin chord1:=shortint(Get1());lens:=lens-1;end;
            while lens>0 do begin Get1();lens:=lens-1;end;
            if chord1<>0 then chord1:=1;
-           chord:=chorda[chord1,chord0];
+           chord:=chord0+7+chord1*0;
            addEvent(tracki,max(0,curtick-1),meta shl 8 or Stat,0,chord);
            end
          else if meta=$58 then
@@ -322,7 +319,7 @@ for fi:=0 to eventn-1 do
     sig:=1;while sig1>0 do begin sig:=sig*2;sig1:=sig1-1;end;
     end;
   while curtick<event0[eventi].curtick do curtick:=curtick+tpq*sig0*4 div sig;
-  tick:=event0[eventi].curtick-tick0;
+  tick:=max(0,event0[eventi].curtick-tick0);
   tick0:=event0[eventi].curtick;
   event0[eventi].ticktime:=ticktime0;
   if tpq>0 then event0[eventi].ticktime:=event0[eventi].ticktime+tick/tpq*(tempo/1000000);
