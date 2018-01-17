@@ -1518,8 +1518,6 @@ if msgbufn>0 then
     lpData:=@msgbuf;
     dwBufferLength:=msgbufn;
     dwBytesRecorded:=msgbufn;
-    dwBufferLength:=msgbufn;
-    dwBytesRecorded:=msgbufn;
     dwUser:=0;
     dwFlags:=0;
     dwOffset:=0;
