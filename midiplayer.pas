@@ -361,10 +361,10 @@ var volchani:byte;
 
 var msghdr:MIDIHDR;
 const maxbuf=$10000;
-var msgbuf:packed array[0..maxbuf]of byte;
+var msgbuf:packed array[0..maxbuf]of byte;//longword;
 var msgbuf0:longword;
 var msgbufn:longint;
-var msgbuf1,msgbuf2:shortint;
+var msgbufi:shortint;
 
 var notemapa:longint;
 var notemapb:longint;
@@ -1231,7 +1231,9 @@ begin
 n:=midiOutGetNumDevs();
 if n>0 then midiOuti:=i mod n else midiOuti:=0;
 midiOutClose(midiOut);
+//midiStreamClose(midiOut);
 midiOutOpen(@midiOut,midiOuti,0,0,0);
+//midiStreamOpen(@midiOut,@midiOuti,1,0,0,0);
 ResetMidiSoft();
 deviceb:=2;
 end;
@@ -1471,7 +1473,7 @@ if eventi<eventn then
           if (event0[eventi].msg and $F0<>$90) or (event0[eventi].msg shr 16 and $FF>=msgvol0) then
             begin
             msgbuf0:=event0[eventi].msg;
-            if event0[eventi].msg and $F<>$9 then
+            if event0[eventi].msg and $0F<>$09 then
               begin
               notei:=GetKeykey(msgbuf0 shr 8 and $7F);
               msgbuf0:=msgbuf0 and $FFFF00FF or notei shl 8;
@@ -1483,22 +1485,19 @@ if eventi<eventn then
               end
             else if msgbufn<maxbuf-1 then
               begin
-              case msgbuf0 and $F0 shr 4 of
-                $8:msgbuf2:=2;
-                $9:msgbuf2:=2;
-                $A:msgbuf2:=2;
-                $B:msgbuf2:=2;
-                $C:msgbuf2:=1;
-                $D:msgbuf2:=1;
-                $E:msgbuf2:=2;
-                else msgbuf2:=-1;
-                end;
-              for msgbuf1:=0 to msgbuf2 do
+
+              for msgbufi:=0 to 2 do
                 begin
-                msgbuf[msgbufn]:=msgbuf0 and $FF;
+                msgbuf[msgbufn+msgbufi]:=msgbuf0 and $FF;
                 msgbuf0:=msgbuf0 shr 8;
-                msgbufn:=msgbufn+1;
-                end
+                end;
+              msgbufn:=msgbufn+3;
+//              writeln('@',i2hs(msgbuf0));
+{               msgbuf[msgbufn+0]:=0;
+              msgbuf[msgbufn+1]:=0;
+              msgbuf[msgbufn+2]:=msgbuf0;
+              msgbufn:=msgbufn+3;
+              }
               end
             end
           end
@@ -1514,18 +1513,26 @@ if eventi<eventn then
     end;
   end;
 LeaveCriticalSection(csfevent0);
-if msgbufn>=0 then
+if msgbufn>0 then
   begin
   with msghdr do
     begin
+//writeln(msgbufn);
     lpData:=@msgbuf;
     dwBufferLength:=msgbufn;
+    dwBytesRecorded:=msgbufn;
+    dwBufferLength:=msgbufn;
+    dwBytesRecorded:=msgbufn;
+    dwUser:=0;
     dwFlags:=0;
+    dwOffset:=0;
     end;
   midiOutPrepareHeader(midiOut,@msghdr,sizeof(msghdr));
   midiOutLongMsg(midiOut,@msghdr,sizeof(msghdr));
+  //midiStreamOut(midiOut,@msghdr,sizeof(msghdr));
   midiOutUnPrepareHeader(midiOut,@msghdr,sizeof(msghdr));
   end;
+//for msgbufn:=0 to maxbuf-1 do msgbuf[msgbufn]:=0;
 until not(iswin());
 if fb then
   begin
