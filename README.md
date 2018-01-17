@@ -37,6 +37,7 @@ Other Functions
 * Ctrl+F4	Auto Reset Bar
 * F5/F6	Set FPS [5-480][Default=120]
 * Ctrl+F5/F6	Set short MIDI event buffer
+* ShiftF5/F6	Set minimum MIDI event volume
 * F7/F8	Set Bar Size	[0%-1000%][Default=10%,Ctrl=3%,Shift=1%]
 * F9	Set Bar Color	[0=Chord,1=Track/Channel(With Black Key),2=Track/Channel]
 * F11	Set Key Number	[0=Number,1=Chord,2=Blank]

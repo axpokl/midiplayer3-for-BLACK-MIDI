@@ -563,6 +563,8 @@ var scrtime:single;
 var delaytime:single=0;
 var deviceb:shortint=0;
 var devicetime:single=0;
+var msgvolb:shortint=0;
+var msgvoltime:single=0;
 
 var k_shift,k_ctrl:boolean;
 var k_pos:single;
@@ -1123,6 +1125,16 @@ if deviceb=1 then
   end;
 end;
 
+procedure DrawMsgVol();
+begin
+if msgvolb=2 then begin msgvoltime:=GetTimeR();msgvolb:=1;end;
+if msgvolb=1 then
+  begin
+  _DrawTextXY0(i2s(msgvol0),GetWidth()-fw*length(i2s(msgvol0)),_fh*2,white);
+  if GetTimeR>=msgvoltime+3 then msgvolb:=0;
+  end;
+end;
+
 procedure DrawLongMsg();
 begin if msgbufn>0 then _DrawTextXY0(i2s(msgbufn),GetWidth()-fw*length(i2s(msgbufn)),_fh,white);end;
 
@@ -1153,6 +1165,7 @@ if kchb2=0 then
   DrawNoteN();
   DrawFPS();
   DrawDevice();
+  DrawMsgVol();
   DrawLongMsg();
   end;
 DrawReal();
@@ -1285,10 +1298,12 @@ if iskey() then
   if iskey(K_F4) and not(k_ctrl) then bnoteb:=true;
   if iskey(K_F3) and (k_ctrl) then ResetMidiHard(midiOuti+1);
   if iskey(K_F4) and (k_ctrl) then autofresh:=1-autofresh;
-  if iskey(K_F5) and not(k_ctrl) then framerate:=max(5,framerate-((framerate-1) div 60+1));
-  if iskey(K_F6) and not(k_ctrl) then framerate:=min(480,framerate+(framerate div 60+1));
+  if iskey(K_F5) and not(k_ctrl) and not(k_shift) then framerate:=max(5,framerate-((framerate-1) div 60+1));
+  if iskey(K_F6) and not(k_ctrl) and not(k_shift) then framerate:=min(480,framerate+(framerate div 60+1));
   if iskey(K_F5) and (k_ctrl) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
   if iskey(K_F6) and (k_ctrl) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
+  if iskey(K_F5) and (k_shift) then begin msgvol0:=max(0,msgvol0-1);msgvolb:=2;end;
+  if iskey(K_F6) and (k_shift) then begin msgvol0:=min($7F,msgvol0+1);msgvolb:=2;end;
   if iskey(K_F7) or iskey(K_F8) then begin k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;end;
   if iskey(K_F7) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
   if iskey(K_F8) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
@@ -1453,7 +1468,7 @@ if eventi<eventn then
               kbdc[notei and $7F]:=-1;
             end;
           LeaveCriticalSection(cs3);
-          if (event0[eventi].msg and $F0<>$90) or (event0[eventi].msg shr 16 and $FF>=4) then
+          if (event0[eventi].msg and $F0<>$90) or (event0[eventi].msg shr 16 and $FF>=msgvol0) then
             begin
             msgbuf0:=event0[eventi].msg;
             if event0[eventi].msg and $F<>$9 then

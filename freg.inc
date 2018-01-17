@@ -61,6 +61,7 @@ var msgbufn0:longword;
 var kchord0:longword;
 var kkey0:longword;
 var kmessure:longword;
+var msgvol0:longword;
 
 procedure PlayMidi(fname:ansistring);forward;
 
@@ -85,6 +86,7 @@ msgbufn0:=32;
 kchord0:=0;
 kkey0:=0;
 kmessure:=0;
+msgvol0:=2;
 end;
 
 procedure savefile();
@@ -103,6 +105,7 @@ SetKeyI('midiouti',midiouti);
 SetKeyI('framerate',framerate);
 SetKeyI('msgbufn0',msgbufn0);
 SetKeyI('kmessure',kmessure);
+SetKeyI('msgvol0',msgvol0);
 end;
 
 procedure loadfile();
@@ -122,6 +125,7 @@ GetKeyI('midiouti',midiouti);
 GetKeyI('framerate',framerate);
 GetKeyI('msgbufn0',msgbufn0);
 GetKeyI('kmessure',kmessure);
+GetKeyI('msgvol0',msgvol0);
 if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
 if fileexists(fnames) then begin PlayMidi(fnames);SetMidiTime(midipos/1000-1);end;
 end;
