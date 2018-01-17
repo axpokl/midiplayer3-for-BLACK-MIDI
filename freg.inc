@@ -40,13 +40,13 @@ begin
 RegSetValueEx(regkey,PChar(kname),0,REG_DWORD,@i,sizeof(DWORD));
 end;
 
-var fnames:ansistring='midiplayer by ax_pokl';
+var fnames:ansistring;
 var rs:ansistring;
-var framerate:longword=120;
-var loop:longword=1;
+var framerate:longword;
+var loop:longword;
 var midipos:longword;
 var voli:longword;
-var kbdcb:longword=0;
+var kbdcb:longword;
 var kchb:longword=0;
 var kchb2:longword=0;
 var para:ansistring;
@@ -54,19 +54,38 @@ var parai:longword;
 var fdir:ansistring;
 var hwm:longword;
 const mult0=600;
-var mult:longword=100;
-var autofresh:longword=0;
-var midiOuti:longword=0;
-var msgbufn0:longword=$100;
-var kchord0:longword=0;
-var kkey0:longword=0;
-var kmessure:longword=0;
+var mult:longword;
+var autofresh:longword;
+var midiOuti:longword;
+var msgbufn0:longword;
+var kchord0:longword;
+var kkey0:longword;
+var kmessure:longword;
 
 procedure PlayMidi(fname:ansistring);forward;
 
 procedure SetMidiTime(settime:single);forward;
 
 function GetMidiTime():single;forward;
+
+procedure resetfile();
+begin
+fnames:='midiplayer by ax_pokl';
+framerate:=120;
+midipos:=0;
+voli:=0;
+loop:=1;
+kbdcb:=0;
+kchb:=0;
+kchb2:=0;
+mult:=100;
+autofresh:=0;
+midiouti:=0;
+msgbufn0:=32;
+kchord0:=0;
+kkey0:=0;
+kmessure:=0;
+end;
 
 procedure savefile();
 begin
@@ -77,7 +96,7 @@ SetKeyI('voli',voli);
 SetKeyI('loop',loop);
 SetKeyI('kbdcb',kbdcb);
 SetKeyI('kchb',kchb);
-SetKeyI('kchb2',kchb);
+SetKeyI('kchb2',kchb2);
 SetKeyI('mult',mult);
 SetKeyI('autofresh',autofresh);
 SetKeyI('midiouti',midiouti);
@@ -88,6 +107,7 @@ end;
 
 procedure loadfile();
 begin
+resetfile();
 GetKeyS('fnames',fnames);
 GetKeyI('framerate',framerate);
 GetKeyI('midipos',midipos);
@@ -95,7 +115,7 @@ GetKeyI('voli',voli);
 GetKeyI('loop',loop);
 GetKeyI('kbdcb',kbdcb);
 GetKeyI('kchb',kchb);
-GetKeyI('kchb2',kchb);
+GetKeyI('kchb2',kchb2);
 GetKeyI('mult',mult);
 GetKeyI('autofresh',autofresh);
 GetKeyI('midiouti',midiouti);

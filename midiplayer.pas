@@ -395,6 +395,10 @@ voli:=v;
 for volchani:=0 to $F do SetMidiChanVol(volchani,volchana[volchani]);
 end;
 
+procedure ResetMidiKeyVol();
+var chani:byte;
+begin for chani:=0 to $F do midiOutShortMsg(midiOut,$00007BB0 or chani);end;
+
 function GetMidiTime():single;
 begin
 if pauseb then GetMidiTime:=pausetime
@@ -402,11 +406,10 @@ else GetMidiTime:=GetTimeR()*spd0-firsttime;
 end;
 
 procedure SetMidiTime(settime:single);
-var chani:byte;
 begin
 EnterCriticalSection(cs2);
 if settime<=0 then midiOutReset(midiOut);
-for chani:=0 to $F do midiOutShortMsg(midiOut,$00007BB0 or chani);
+ResetMidiKeyVol();
 firsttime:=GetTimeR()*spd0-settime;
 EnterCriticalSection(csfevent0);
 eventj:=eventn div 2;
@@ -558,6 +561,8 @@ var frametime:single;
 var printtime:single;
 var scrtime:single;
 var delaytime:single=0;
+var deviceb:shortint=0;
+var devicetime:single=0;
 
 var k_shift,k_ctrl:boolean;
 var k_pos:single;
@@ -1104,6 +1109,23 @@ if abs(GetFPSR-framerate)>1 then
   _DrawTextXY0(fpss,GetWidth()-fw*length(fpss),0,white);
 end;
 
+procedure DrawDevice();
+var caps:MIDIOUTCAPS;
+var devs:ansistring;
+begin
+if deviceb=2 then begin devicetime:=GetTimeR();deviceb:=1;end;
+if deviceb=1 then
+  begin
+  midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
+  devs:=caps.szPname+'('+i2s(midiOuti+1)+'/'+i2s(midiOutGetNumDevs)+')'+'['+i2s(msgbufn0)+'/'+i2s(caps.wNotes)+']';
+  _DrawTextXY0(devs,GetWidth()-fw*length(devs),0,white);
+  if GetTimeR>=devicetime+3 then deviceb:=0;
+  end;
+end;
+
+procedure DrawLongMsg();
+begin if msgbufn>0 then _DrawTextXY0(i2s(msgbufn),GetWidth()-fw*length(i2s(msgbufn)),_fh,white);end;
+
 procedure DrawReal();
 begin
 if drawr>0 then
@@ -1130,6 +1152,8 @@ if kchb2=0 then
   DrawBPM();
   DrawNoteN();
   DrawFPS();
+  DrawDevice();
+  DrawLongMsg();
   end;
 DrawReal();
 FreshWin();
@@ -1196,6 +1220,7 @@ if n>0 then midiOuti:=i mod n else midiOuti:=0;
 midiOutClose(midiOut);
 midiOutOpen(@midiOut,midiOuti,0,0,0);
 ResetMidiSoft();
+deviceb:=2;
 end;
 
 procedure PlayMidi(fname:ansistring);
@@ -1254,11 +1279,16 @@ if iskey() then
   k_shift:=GetKeyState(VK_SHIFT)<0;
   k_ctrl:=GetKeyState(VK_CONTROL)<0;
   if iskey(K_F1) then newthread(@helpproc);
-  if iskey(K_F2) then PlayMidi(fnames);
-  if iskey(K_F3) then if not(k_ctrl) then ResetMidiHard(midiOuti) else ResetMidiHard(midiOuti+1);
-  if iskey(K_F4) then if not(k_ctrl) then bnoteb:=true else autofresh:=1-autofresh;
-  if iskey(K_F5) then framerate:=max(5,framerate-((framerate-1) div 60+1));
-  if iskey(K_F6) then framerate:=min(480,framerate+(framerate div 60+1));
+  if iskey(K_F2) and not(k_ctrl)then PlayMidi(fnames);
+  if iskey(K_F2) and (k_ctrl)then begin resetfile();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);savefile();initb:=false;PlayMidi(fnames);end;
+  if iskey(K_F3) and not(k_ctrl) then ResetMidiHard(midiOuti);
+  if iskey(K_F4) and not(k_ctrl) then bnoteb:=true;
+  if iskey(K_F3) and (k_ctrl) then ResetMidiHard(midiOuti+1);
+  if iskey(K_F4) and (k_ctrl) then autofresh:=1-autofresh;
+  if iskey(K_F5) and not(k_ctrl) then framerate:=max(5,framerate-((framerate-1) div 60+1));
+  if iskey(K_F6) and not(k_ctrl) then framerate:=min(480,framerate+(framerate div 60+1));
+  if iskey(K_F5) and (k_ctrl) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
+  if iskey(K_F6) and (k_ctrl) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
   if iskey(K_F7) or iskey(K_F8) then begin k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;end;
   if iskey(K_F7) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
   if iskey(K_F8) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
@@ -1283,8 +1313,8 @@ if iskey() then
   if iskey(K_END) then PlayMidi(get_file(find_count));
   if iskey(221) and not(k_ctrl) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
   if iskey(219) and not(k_ctrl) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
-  if iskey(221) and (k_ctrl) then begin kkey0:=(kkey0+1);kchord0:=(kchord0+7) mod 12;initb:=false;end;
-  if iskey(219) and (k_ctrl) then begin kkey0:=(kkey0-1);kchord0:=(kchord0+5) mod 12;initb:=false;end;
+  if iskey(221) and (k_ctrl) then begin kkey0:=(kkey0+1);kchord0:=(kchord0+7) mod 12;initb:=false;ResetMidiKeyVol();end;
+  if iskey(219) and (k_ctrl) then begin kkey0:=(kkey0-1);kchord0:=(kchord0+5) mod 12;initb:=false;ResetMidiKeyVol();end;
   if iskey(K_ESC) then CloseWin();
   end;
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
@@ -1377,8 +1407,8 @@ if fb then
   assign(fnote,GetTempDir(false)+'fnote'+rs);DeleteFile(GetTempDir(false)+'fnote');fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);bjfnote:=-1;
   end;
 InitDraw();
-SetMidiVol(volamax-2);
 loadfile();
+SetMidiVol(volamax-2);
 ResetMidiHard(midiOuti);
 repeat
 if isnextmsg then DoAct() else Delay(1);
