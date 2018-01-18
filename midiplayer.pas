@@ -9,7 +9,7 @@ var fbi:longword=0;
 {$i freg.inc}
 {$i flist.inc}
 
-type tevent=packed record track:byte;curtick,msg,tempo:longword;chord:shortint;ticktime:single;end;
+type tevent=packed record track:word;curtick,msg,tempo:longword;chord:shortint;ticktime:single;end;
 var event:packed array of tevent;
 var eventi:longint;
 var eventn:longword=0;
@@ -24,8 +24,9 @@ var eventmi:longword;
 
 const maxeventseek=$1000;
 
-const maxtrack=$100;
-const maxchan=$1000;
+const maxtrack0=12;
+const maxtrack=1 shl maxtrack0;
+const maxchan=maxtrack shl 4;
 var track0:packed array[0..maxtrack-1]of longword;
 var track1:packed array[0..maxtrack-1]of longword;
 var tracki:longint;
@@ -129,7 +130,7 @@ eventm[eventmi]:=e;
 eventmi:=eventmi+1;
 end;
 
-procedure AddEvent(tr:byte;cu,ms,tm:longword;ch:shortint);
+procedure AddEvent(tr:word;cu,ms,tm:longword;ch:shortint);
 var fi:longint;
 begin
 if fb then begin fi:=eventi;eventi:=0;end;
@@ -453,7 +454,7 @@ SetMidiTime(pausetime);
 pauseb:=not(pauseb);
 end;
 
-const maxnote=$FFFFF;
+const maxnote=$FFFFFF;
 var note0:packed array[0..maxnote]of single;
 var note1:packed array[0..maxnote]of single;
 var notec:packed array[0..maxnote]of longword;
@@ -509,20 +510,20 @@ for fi:=0 to eventn-1 do
     begin
     if event0[ei].msg and $F0=$90 then
       begin
-      notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl 8) shl 8);
+      notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl maxtrack0) shl 8);
       kbd0:=min(notei and $7F,kbd0);
       kbd1:=max(notei and $7F,kbd1);
       if noteb[notei]=true then SetFNoteNote1(notem[notei],event0[ei].ticktime);
       noteb[notei]:=true;
       notech[notei]:=event0[ei].chord;
-      notec[notei]:=event0[ei].track or event0[ei].msg and $F shl 8;
+      notec[notei]:=event0[ei].track or event0[ei].msg and $F shl maxtrack0;
       note0[notei]:=event0[ei].ticktime;
       note1[notei]:=event0[ei].ticktime;
       AddNoteMap(notei);
       end;
     if event0[ei].msg and $F0=$80 then
       begin
-      notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl 8) shl 8);
+      notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl maxtrack0) shl 8);
       SetFNoteNote1(notem[notei],event0[ei].ticktime)
       end;
     end;
@@ -532,22 +533,81 @@ if fb then FlushFNote();
 if fb then begin close(fnote);fnotew:=false;reset(fnote);bjfnote:=-1;end;
 LeaveCriticalSection(csfevent0);
 notemapn:=notemapi;
-for chani:=0 to maxchan-1 do
-  for chanj:=0 to maxchan-1 do
-    if chancn[chani]>chancn[chanj] then
-      begin
-      swapc(chancn[chani],chancn[chanj]);
-      swapc(chancc[chani],chancc[chanj]);
-      end;
-for chani:=0 to maxchan-1 do
-  for chanj:=0 to maxchan-1 do
-    if chancc[chani]<chancc[chanj] then
-      begin
-      swapc(chancn[chani],chancn[chanj]);
-      swapc(chancc[chani],chancc[chanj]);
-      swapc(chancw[chani],chancw[chanj]);
-      swapc(chancb[chani],chancb[chanj]);
-      end;
+end;
+
+procedure SortNoteMapColorQuick1(n1,n2:longword);
+var chancn0,chancc0:longint;
+var q1,q2:longint;
+begin
+chancn0:=chancn[n1];
+chancc0:=chancc[n1];
+q1:=n1;
+q2:=n2;
+while (q1<q2) do
+  begin
+  while (q1<q2) and (chancn[q2]<chancn0) do
+    q2:=q2-1;
+  if (q1<q2) then
+    begin
+    swapc(chancn[q1],chancn[q2]);
+    swapc(chancc[q1],chancc[q2]);
+    q1:=q1+1;
+    end;
+  while (q1<q2) and (chancn[q1]>chancn0) do
+    q1:=q1+1;
+  if (q1<q2) then
+    begin
+    swapc(chancn[q1],chancn[q2]);
+    swapc(chancc[q1],chancc[q2]);
+    q2:=q2-1;
+    end;
+  end;
+if (q1-1>n1) then SortNoteMapColorQuick1(n1,q1-1);
+if (n2>q1+1) then SortNoteMapColorQuick1(q1+1,n2);
+end;
+
+
+procedure SortNoteMapColorQuick2(n1,n2:longword);
+var chancn0,chancc0,chancw0,chancb0:longint;
+var q1,q2:longword;
+begin
+chancn0:=chancn[n1];
+chancc0:=chancc[n1];
+chancw0:=chancw[n1];
+chancb0:=chancb[n1];
+q1:=n1;
+q2:=n2;
+while (q1<q2) do
+  begin
+  while (q1<q2) and (chancc[q2]>chancc0) do
+    q2:=q2-1;
+  if (q1<q2) then
+    begin
+    swapc(chancn[q1],chancn[q2]);
+    swapc(chancc[q1],chancc[q2]);
+    swapc(chancw[q1],chancw[q2]);
+    swapc(chancb[q1],chancb[q2]);
+    q1:=q1+1;
+    end;
+  while (q1<q2) and (chancc[q1]<chancc0) do
+    q1:=q1+1;
+  if (q1<q2) then
+    begin
+    swapc(chancn[q1],chancn[q2]);
+    swapc(chancc[q1],chancc[q2]);
+    swapc(chancw[q1],chancw[q2]);
+    swapc(chancb[q1],chancb[q2]);
+    q2:=q2-1;
+    end;
+  end;
+if (q1-1>n1) then SortNoteMapColorQuick2(n1,q1-1);
+if (n2>q1+1) then SortNoteMapColorQuick2(q1+1,n2);
+end;
+
+procedure SortNoteMapColor();
+begin
+SortNoteMapColorQuick1(0,maxchan-1);
+SortNoteMapColorQuick2(0,maxchan-1);
 end;
 
 var w:longword;
@@ -1252,6 +1312,7 @@ if(fileexists(fname))then
   LeaveCriticalSection(cs2);
   EnterCriticalSection(cs1);
   CreateNoteMap();
+  SortNoteMapColor();
   ResetMidi();
   initb:=false;
   kchord0:=0;
@@ -1413,12 +1474,17 @@ end;
 begin
 OpenKey();
 DoCommandLine();
+GetKeyS('rs',rs);
+DeleteFile(GetTempDir(false)+'fevent0'+rs);
+DeleteFile(GetTempDir(false)+'fevent'+rs);
+DeleteFile(GetTempDir(false)+'fnote'+rs);
 randomize();rs:=i2hs(longword(random($FFFFFFFF)));
+SetKeyS('rs',rs);
 if fb then
   begin
-  assign(fevent0,GetTempDir(false)+'fevent0'+rs);DeleteFile(GetTempDir(false)+'fevent0');fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
-  assign(fevent,GetTempDir(false)+'fevent'+rs);DeleteFile(GetTempDir(false)+'fevent');fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
-  assign(fnote,GetTempDir(false)+'fnote'+rs);DeleteFile(GetTempDir(false)+'fnote');fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);bjfnote:=-1;
+  assign(fevent0,GetTempDir(false)+'fevent0'+rs);fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
+  assign(fevent,GetTempDir(false)+'fevent'+rs);fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+  assign(fnote,GetTempDir(false)+'fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);bjfnote:=-1;
   end;
 InitDraw();
 loadfile();
@@ -1453,11 +1519,11 @@ if eventi<eventn then
           EnterCriticalSection(cs3);
           if event0[eventi].msg and $F<>$9 then
             begin
-            notei:=GetKeykey(event0[eventi].msg shr 8 and $7F) or ((event0[eventi].track or event0[eventi].msg and $F shl 8) shl 8);
+            notei:=GetKeykey(event0[eventi].msg shr 8 and $7F) or ((event0[eventi].track or event0[eventi].msg and $F shl maxtrack0) shl 8);
             if event0[eventi].msg and $F0=$90 then
               begin
               notech[notei]:=event0[eventi].chord;
-              notec[notei]:=event0[eventi].track or event0[eventi].msg and $F shl 8;
+              notec[notei]:=event0[eventi].track or event0[eventi].msg and $F shl maxtrack0;
               if kbdcb=0 then
                 kbdc[notei and $7F]:=GetKeyChordC(notei and $7F,notech[notei])
               else

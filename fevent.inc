@@ -1,6 +1,6 @@
-const maxfeventn0=8;
+const maxfeventn0=12;
 const maxfeventn=1 shl maxfeventn0;
-const maxfeventm0=8;
+const maxfeventm0=maxtrack0;
 const maxfeventm=1 shl maxfeventm0;
 var fevent:file of tevent;
 var feventw:boolean;
@@ -8,9 +8,9 @@ var bfevent:array[0..maxfeventm-1,0..maxfeventn-1]of tevent;
 var bfevent_:array[0..maxfeventn-1]of tevent;
 var bifevent:longint;
 var bjfevent:array[0..maxfeventm-1]of longint;
-var bjfeventi:byte;
+var bjfeventi:word;
 
-procedure FlushFEvent(tracki:byte);inline;
+procedure FlushFEvent(tracki:word);inline;
 begin
 if bjfevent[tracki]>=0 then
   begin
@@ -19,7 +19,7 @@ if bjfevent[tracki]>=0 then
   end;
 end;
 
-procedure GetFEventBlock(i:longint;tracki:byte);inline;
+procedure GetFEventBlock(i:longint;tracki:word);inline;
 begin
 if bjfevent[tracki]<>i shr maxfeventn0 then
   begin
@@ -36,7 +36,7 @@ if bjfevent[tracki]<>i shr maxfeventn0 then
   end;
 end;
 
-function GetFEvent(i:longint;tracki:byte):tevent;inline;
+function GetFEvent(i:longint;tracki:word):tevent;inline;
 begin
 if fb then
   begin
@@ -48,7 +48,7 @@ else
   GetFEvent:=event[i];
 end;
 
-procedure SetFEvent(e:tevent;tracki:byte;i:longint);inline;
+procedure SetFEvent(e:tevent;tracki:word;i:longint);inline;
 begin
 if fb then
   begin
@@ -60,7 +60,7 @@ else
   event[i]:=e;
 end;
 
-function GetFEventCurTick(i:longint;tracki:byte):longword;inline;
+function GetFEventCurTick(i:longint;tracki:word):longword;inline;
 begin
 if fb then
   begin

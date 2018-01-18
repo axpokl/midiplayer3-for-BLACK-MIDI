@@ -1,4 +1,4 @@
-const maxfnoten0=12;
+const maxfnoten0=16;
 const maxfnoten=1 shl maxfnoten0;
 var fnote:file of tnotemap;
 var fnotew:boolean;

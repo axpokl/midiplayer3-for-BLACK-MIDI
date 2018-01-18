@@ -40,8 +40,8 @@ begin
 RegSetValueEx(regkey,PChar(kname),0,REG_DWORD,@i,sizeof(DWORD));
 end;
 
-var fnames:ansistring;
 var rs:ansistring;
+var fnames:ansistring;
 var framerate:longword;
 var loop:longword;
 var midipos:longword;

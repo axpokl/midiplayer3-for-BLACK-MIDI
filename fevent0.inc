@@ -1,4 +1,4 @@
-const maxfevent0n0=12;
+const maxfevent0n0=16;
 const maxfevent0n=1 shl maxfevent0n0;
 var fevent0:file of tevent;
 var fevent0w:boolean;
