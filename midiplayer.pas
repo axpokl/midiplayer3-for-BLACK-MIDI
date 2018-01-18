@@ -9,7 +9,7 @@ var fbi:longword=0;
 {$i freg.inc}
 {$i flist.inc}
 
-type tevent=record track:byte;curtick,msg,tempo:longword;chord:shortint;ticktime:single;end;
+type tevent=packed record track:byte;curtick,msg,tempo:longword;chord:shortint;ticktime:single;end;
 var event:packed array of tevent;
 var eventi:longint;
 var eventn:longword=0;
@@ -26,25 +26,25 @@ const maxeventseek=$1000;
 
 const maxtrack=$100;
 const maxchan=$1000;
-var track0:array[0..maxtrack-1]of longword;
-var track1:array[0..maxtrack-1]of longword;
+var track0:packed array[0..maxtrack-1]of longword;
+var track1:packed array[0..maxtrack-1]of longword;
 var tracki:longint;
 var trackn:longword;
 var trackj:longword;
 
-var chancn:array[0..maxchan-1]of longword;
-var chancc:array[0..maxchan-1]of longword;
-var chancw:array[0..maxchan-1]of longword;
-var chancb:array[0..maxchan-1]of longword;
+var chancn:packed array[0..maxchan-1]of longword;
+var chancc:packed array[0..maxchan-1]of longword;
+var chancw:packed array[0..maxchan-1]of longword;
+var chancb:packed array[0..maxchan-1]of longword;
 var chani:longword;
 var chanj:longword;
-const chanc0:array[0..11]of longword=
+const chanc0:packed array[0..11]of longword=
 ($55,$AA,$FF,$2A,$7F,$D4,$15,$6A,$BF,$3F,$94,$E9);
 
-var chordb:array[0..31]of byte=(
+var chordb:packed array[0..31]of byte=(
 11,06,01,08,03,10,05,00,07,02,09,04,11,06,01,00,
 08,03,10,05,00,07,02,09,04,11,06,01,08,03,10,00);
-var chords:array[0..31]of ansistring=(
+var chords:packed array[0..31]of ansistring=(
 'Cb','Gb','Db','Ab','Eb','Bb','F','C','G','D','A','E','B','F#','C#','',
 'ab','eb','bb','f','c','g','d','a','e','b','f#','c#','g#','d#','a#','');
 var chord0,chord1:shortint;
@@ -52,7 +52,7 @@ var chordtmp:shortint=-1;
 var sig0,sig1:byte;
 var sig:longword;
 
-const loops:array[0..2]of char=('N','S','A');
+const loops:packed array[0..2]of char=('N','S','A');
 
 var cs1:TRTLCriticalSection;
 var cs2:TRTLCriticalSection;
@@ -79,7 +79,7 @@ var tempo0:longword;
 var tempo00:longword;
 var drawr:single;
 
-type tnotemap=record note:byte;note0,note1:single;notec:longword;chord:byte;end;
+type tnotemap=packed record note:byte;note0,note1:single;notec:longword;chord:byte;end;
 var notemap:packed array of tnotemap;
 var notemapi:longint;
 var notemapn:longword;
@@ -351,9 +351,9 @@ var spd0:single=1;
 var spd1:single=1;
 
 const volamax=16;
-const vola:array[1..volamax]of single=
+const vola:packed array[1..volamax]of single=
 (0,0.01,0.02,0.03,0.04,0.06,0.08,0.12,0.16,0.25,0.35,0.5,0.7,1,1.41,2);
-var volchana:array[0..$F]of byte;
+var volchana:packed array[0..$F]of byte;
 var volchani:byte;
 
 var msghdr:MIDIHDR;
@@ -366,8 +366,8 @@ var msgbufi:shortint;
 var notemapa:longint;
 var notemapb:longint;
 
-var kbdc:array[$00..$7F]of longint;
-var kbdcc:array[0..11]of longword;
+var kbdc:packed array[$00..$7F]of longint;
+var kbdcc:packed array[0..11]of longword;
 var kbdci:byte;
 
 procedure InitKbdC();
@@ -454,12 +454,12 @@ pauseb:=not(pauseb);
 end;
 
 const maxnote=$FFFFF;
-var note0:array[0..maxnote]of single;
-var note1:array[0..maxnote]of single;
-var notec:array[0..maxnote]of longword;
-var notech:array[0..maxnote]of byte;
-var noteb:array[0..maxnote]of boolean;
-var notem:array[0..maxnote]of longword;
+var note0:packed array[0..maxnote]of single;
+var note1:packed array[0..maxnote]of single;
+var notec:packed array[0..maxnote]of longword;
+var notech:packed array[0..maxnote]of byte;
+var noteb:packed array[0..maxnote]of boolean;
+var notem:packed array[0..maxnote]of longword;
 var notei:longword;
 
 const black0=$0F0F0F;
@@ -568,9 +568,9 @@ var k_pos:single;
 
 const klen0:single=1.15;
 const klen1:single=0.65;
-var kbd:array[0..11]of single;
-const keyblack:array[0..11]of byte=(0,1,0,1,0,0,1,0,1,0,1,0);
-const keychord:array[0..3,0..11]of char=(
+var kbd:packed array[0..11]of single;
+const keyblack:packed array[0..11]of byte=(0,1,0,1,0,0,1,0,1,0,1,0);
+const keychord:packed array[0..3,0..11]of char=(
 ('1',' ','2',' ','3','4',' ','5',' ','6',' ','7'),
 ('C','d','D','e','E','F','g','G','a','A','b','B'),
 (' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '),
@@ -584,7 +584,7 @@ var kbdi,kbdn:byte;
 const fhr=0.7;
 
 const maxbnote=$1000;
-var bnote:array[0..1,0..maxbnote-1]of pbitmap;
+var bnote:packed array[0..1,0..maxbnote-1]of pbitmap;
 var bnoten:longint=-1;
 var bnoten0:longint=-1;
 var bnotei:longint;
@@ -593,11 +593,11 @@ var bnoteh0:longword=$1000;
 var bnoteb:boolean=false;
 var initb:boolean=false;
 
-type tbnotekey=record
+type tbnotekey=packed record
 x,y,w,h:longint;bi:shortint;cbg,cfg:longword;
 s:ansistring;sx,sy:longint;sc:longword;
 end;
-var bnotekey:array[0..$7F]of tbnotekey;
+var bnotekey:packed array[0..$7F]of tbnotekey;
 var bnotekeyn:longword;
 
 procedure InitkbdPos();
@@ -1517,7 +1517,7 @@ if msgbufn>0 then
 //writeln(msgbufn);
     lpData:=@msgbuf;
     dwBufferLength:=msgbufn;
-    dwBytesRecorded:=msgbufn;
+    dwBytesrecorded:=msgbufn;
     dwUser:=0;
     dwFlags:=0;
     dwOffset:=0;
