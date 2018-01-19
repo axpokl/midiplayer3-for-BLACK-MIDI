@@ -9,7 +9,7 @@ var fbi:longword=0;
 {$i freg.inc}
 {$i flist.inc}
 
-type tevent=packed record track:word;curtick,msg,tempo:longword;chord:shortint;ticktime:single;end;
+type tevent=packed record track:word;curtick,msg:longword;ticktime:single;end;
 var event:packed array of tevent;
 var eventi:longint;
 var eventn:longword=0;
@@ -17,10 +17,20 @@ var event0:packed array of tevent;
 var eventj:longword;
 var eventk:longint;
 
-const maxeventm=$10000;
-var eventm:packed array[0..maxeventm-1]of tevent;
-var eventmn:longword;
-var eventmi:longword;
+const maxeventtm=$100000;
+var eventtm:packed array[0..maxeventtm-1]of tevent;
+var eventtmn:longword;
+var eventtmi:longword;
+
+const maxeventmu=$100000;
+var eventmu:packed array[0..maxeventmu-1]of tevent;
+var eventmun:longword;
+var eventmui:longword;
+
+const maxeventch=$100000;
+var eventch:packed array[0..maxeventch-1]of tevent;
+var eventchn:longword;
+var eventchi:longword;
 
 const maxeventseek=$1000;
 
@@ -122,15 +132,45 @@ end;
 function r2s(bpm:single):ansistring;var r0,r1:longint;var s:ansistring='';
 begin r0:=round(bpm*10) div 10;r1:=round(bpm*10) mod 10;s:=i2s(r0);if r1>0 then s:=s+'.'+i2s(r1);r2s:=s;end;
 
-procedure Addeventm(e:tevent);
+procedure AddEventTempo(tr:word;cu:longword;tm:longword);
 begin
-eventm[eventmi]:=e;
-eventmi:=eventmi+1;
+with eventtm[eventtmi] do
+  begin
+  track:=tr;
+  curtick:=cu;
+  msg:=tm;
+  end;
+eventtmi:=eventtmi+1;
+end;
+
+procedure AddEventMessure(tr:word;cu:longword);
+begin
+with eventmu[eventmui] do
+  begin
+  track:=tr;
+  curtick:=cu;
+  msg:=0;
+  end;
+eventmui:=eventmui+1;
+end;
+
+procedure AddEventChord(tr:word;cu:longword;ch:longword);
+begin
+with eventch[eventchi] do
+  begin
+  track:=tr;
+  curtick:=cu;
+  msg:=ch;
+  end;
+eventchi:=eventchi+1;
 end;
 
 procedure AddEvent(tr:word;cu,ms,tm:longword;ch:shortint);
 var fi:longint;
 begin
+if ms and $FFFF=$51FF then AddEventTempo(tr,cu,tm)
+else if ms and $FFFF=$5AFF then AddEventMessure(tr,cu)
+else if ms and $FFFF=$59FF then AddEventChord(tr,cu,ch);
 if fb then begin fi:=eventi;eventi:=0;end;
 if not(fb) then if maxevent<=eventi then
   begin
@@ -143,15 +183,13 @@ with event[eventi] do
   track:=tr;
   curtick:=cu;
   msg:=ms;
-  tempo:=tm;
-  chord:=ch;
   if msg and $F0=$90 then
     if msg shr 16 and $00FF=0 then
       msg:=msg and $FFFFFF8F;
   end;
 if fb then begin SetFEvent(event[eventi],0,fi);eventi:=fi;end;
-if finaltick<cu then finaltick:=cu;
 eventi:=eventi+1;
+if finaltick<cu then finaltick:=cu;
 end;
 
 procedure LoadMidi(fname:string);
@@ -180,8 +218,11 @@ if GetFilePos<len0 then
   tpq:=0;if dvs and $8000=0 then tpq:=dvs and $7FFF;
   fps:=0;if dvs and $8000=1 then fps:=(dvs and $00FF)/(-((dvs and $7FFF) shr 8));
   end;
-eventi:=0;
 tracki:=0;
+eventi:=0;
+eventtmi:=0;
+eventmui:=0;
+eventchi:=0;
 finaltick:=0;
 if fb then begin close(fevent);feventw:=true;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
 while GetFilePos<len0 do
@@ -219,7 +260,7 @@ while GetFilePos<len0 do
          if meta=$51 then
            begin
            tempo:=Get3();
-           addEvent(tracki,curtick,meta shl 8 or Stat,tempo,0);
+           AddEvent(tracki,curtick,meta shl 8 or Stat,tempo,0);
            end
          else if meta=$59 then
            begin
@@ -230,7 +271,7 @@ while GetFilePos<len0 do
            while lens>0 do begin Get1();lens:=lens-1;end;
            if chord1<>0 then chord1:=1;
            chord:=chord0+7+chord1*0;
-           addEvent(tracki,max(0,curtick-1),meta shl 8 or Stat,0,chord);
+           AddEvent(tracki,max(0,curtick-1),meta shl 8 or Stat,0,chord);
            end
          else if meta=$58 then
            begin
@@ -239,7 +280,7 @@ while GetFilePos<len0 do
            if lens>0 then begin sig0:=shortint(Get1());lens:=lens-1;end;
            if lens>0 then begin sig1:=shortint(Get1());lens:=lens-1;end;
            while lens>0 do begin Get1();lens:=lens-1;end;
-           addEvent(tracki,curtick,sig1 shl 24 or sig0 shl 16 or meta shl 8 or Stat,0,0);
+           AddEvent(tracki,curtick,sig1 shl 24 or sig0 shl 16 or meta shl 8 or Stat,0,0);
            end
          else if meta=$2F then
            len:=0
@@ -267,7 +308,7 @@ if tpq>0 then
   begin
   curtick:=0;
   repeat
-  addEvent(trackn,curtick,$5AFF,0,0);
+  AddEvent(trackn,curtick,$5AFF,0,0);
   curtick:=curtick+tpq;
   until curtick>finaltick;
   track1[trackn]:=eventi;
@@ -276,6 +317,9 @@ if tpq>0 then
 if fb then FlushFEvent(0);
 if fb then begin close(fevent);feventw:=false;reset(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
 eventn:=eventi;
+eventtmn:=eventtmi;
+eventmun:=eventmui;
+eventchn:=eventchi;
 track0[0]:=0;
 for tracki:=1 to trackn-1 do track0[tracki]:=track1[tracki-1];
 EnterCriticalSection(csfevent0);
@@ -307,8 +351,10 @@ sig0:=1;
 chordtmp:=-1;
 tick0:=0;
 ticktime0:=0;
-eventmi:=0;
 tempo00:=0;
+eventtmi:=0;
+eventmui:=0;
+eventchi:=0;
 for fi:=0 to eventn-1 do
   begin
   if eventn>0 then begin drawr:=fi/eventn;if fi and $FFF=0 then DrawTitle();end;
@@ -319,18 +365,34 @@ for fi:=0 to eventn-1 do
   if fps>0 then ticktime0:=ticktime0+tick/fps;
   event0[eventi].ticktime:=ticktime0;
   finaltime:=max(finaltime,ticktime0+1);
-  if event0[eventi].tempo>0 then tempo:=event0[eventi].tempo;
-  if event0[eventi].tempo>0 then if tempo00=0 then tempo00:=event0[eventi].tempo;
-  if event0[eventi].msg=$5AFF then event0[eventi].tempo:=tempo;
   if event0[eventi].msg and $FFFF=$58FF then begin sig0:=event0[eventi].msg shr 16 and $FF;sig1:=event0[eventi].msg shr 24 and $FF;end;
   while curtick<tick0 do curtick:=curtick+(tpq*sig0 shr max(0,sig1-2));
-  if event0[eventi].msg=$5AFF then if curtick=tick0 then event0[eventi].msg:=$5BFF;
-  if event0[eventi].msg and $FFFF=$59FF then chord:=event0[eventi].chord else event0[eventi].chord:=chord;
-  if event0[eventi].msg and $FFFF=$59FF then if chordtmp=-1 then chordtmp:=chord;
-  if (event0[eventi].msg and $FFFF=$5AFF) or (event0[eventi].msg and $FFFF=$5BFF) or (event0[eventi].msg and $FFFF=$59FF) then Addeventm(event0[eventi]);
+  while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=tick0) do
+    begin
+    eventtm[eventtmi].ticktime:=ticktime0;
+    tempo:=eventtm[eventtmi].msg;
+    if tempo00=0 then tempo00:=tempo;
+    eventtmi:=eventtmi+1;
+    end;
+  while (eventmui<eventmun) and (eventmu[eventmui].curtick<=tick0) do
+    begin
+    eventmu[eventmui].ticktime:=ticktime0;
+    eventmu[eventmui].msg:=tempo;
+    if curtick=tick0 then eventmu[eventmui].msg:=eventmu[eventmui].msg or $01000000;
+    eventmui:=eventmui+1;
+    end;
+  while (eventchi<eventchn) and (eventch[eventchi].curtick<=tick0) do
+    begin
+    eventch[eventchi].ticktime:=ticktime0;
+    chord:=eventch[eventchi].msg;
+    if chordtmp=-1 then chordtmp:=chord;
+    eventchi:=eventchi+1;
+    end;
   if fb then SetFEvent0(event0[eventi],fi);
   end;
-eventmn:=eventmi;
+eventtmi:=0;
+eventmui:=0;
+eventchi:=0;
 drawr:=0;
 if tempo00=0 then tempo00:=500000;
 if fb then FlushFEvent0();
@@ -409,7 +471,7 @@ if GetFEvent0Ticktime(seeki)>=seekt then seeki:=max(0,seeki-seekx) else seeki:=m
 if seekx=1 then break;
 seekx:=(seekx+1) div 2;
 until false;
-if seekx>0 then if GetFNote(seeki).note0<seekt then seeki:=min(seeki+1,seekn);
+if seekx>0 then if GetFEvent0Ticktime(seeki)<seekt then seeki:=min(seeki+1,seekn);
 SeekMidiTimeFEvent:=seeki;
 end;
 
@@ -427,6 +489,38 @@ seekx:=(seekx+1) div 2;
 until false;
 if seekx>0 then if GetFNote(seeki).note0<seekt then seeki:=min(seeki+1,seekn);
 SeekMidiTimeFNote:=seeki;
+end;
+
+function SeekMidiTimeTempo(seekt:single):longword;
+var seeki,seekn:longword;seekx:longint;
+begin
+seekn:=eventtmn;
+seeki:=seekn div 2;
+seekx:=(seeki+1) div 2;
+repeat
+if seekx=0 then break;
+if eventtm[seeki].ticktime>=seekt then seeki:=max(0,seeki-seekx) else seeki:=min(seeki+seekx,seekn-1);
+if seekx=1 then break;
+seekx:=(seekx+1) div 2;
+until false;
+if seekx>0 then if eventtm[seeki].ticktime<seekt then seeki:=min(seeki+1,seekn);
+SeekMidiTimeTempo:=max(0,seeki-1);
+end;
+
+function SeekMidiTimeChord(seekt:single):longword;
+var seeki,seekn:longword;seekx:longint;
+begin
+seekn:=eventchn;
+seeki:=seekn div 2;
+seekx:=(seeki+1) div 2;
+repeat
+if seekx=0 then break;
+if eventch[seeki].ticktime>=seekt then seeki:=max(0,seeki-seekx) else seeki:=min(seeki+seekx,seekn-1);
+if seekx=1 then break;
+seekx:=(seekx+1) div 2;
+until false;
+if seekx>0 then if eventch[seeki].ticktime<seekt then seeki:=min(seeki+1,seekn);
+SeekMidiTimeChord:=max(0,seeki-1);
 end;
 
 procedure SetMidiTime(settime:single);
@@ -449,9 +543,9 @@ if (fi<maxeventseek) or (fi>min(eventj,eventn-1)-maxeventseek) then
     else if (event0[eventk].msg and $F0<>$90) and (event0[eventk].msg and $F0<>$80) then
       midiOutShortMsg(midiOut,event0[eventk].msg);
     end;
-  if event0[eventk].tempo>0 then
-    tempo0:=event0[eventk].tempo;
   end;
+if (eventtmn>0) then begin eventtmi:=SeekMidiTimeTempo(settime);tempo0:=eventtm[eventtmi].msg;end;
+if (eventchn>0) then begin eventchi:=SeekMidiTimeChord(settime);chord:=eventch[eventchi].msg;end;
 LeaveCriticalSection(csfevent0);
 tempo:=tempo0;
 eventi:=eventj;
@@ -532,7 +626,8 @@ for fi:=0 to eventn-1 do
       kbd1:=max(notei and $7F,kbd1);
       if noteb[notei]=true then SetFNoteNote1(notem[notei],event0[ei].ticktime);
       noteb[notei]:=true;
-      notech[notei]:=event0[ei].chord;
+      while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[ei].curtick) do begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
+      notech[notei]:=chord;
       notec[notei]:=event0[ei].track or event0[ei].msg and $F shl maxtrack0;
       note0[notei]:=event0[ei].ticktime;
       note1[notei]:=event0[ei].ticktime;
@@ -545,6 +640,9 @@ for fi:=0 to eventn-1 do
       end;
     end;
   end;
+eventtmi:=0;
+eventmui:=0;
+eventchi:=0;
 drawr:=0;
 if fb then FlushFNote();
 if fb then begin close(fnote);fnotew:=false;reset(fnote);bjfnote:=-1;end;
@@ -858,6 +956,7 @@ procedure DrawMessureLine(t:single;ms:longword;tempo:longword;c:longword);
 var w0,y:longint;
 var bpm:single;
 begin
+tempo:=tempo and $FFFFFF;
 w0:=GetKeynoteW0();
 y:=trunc(t*mult*GetWidth()/mult0)+round(w0*kleny0);
 _line(0,0,y,GetWidth(),0,c);
@@ -879,15 +978,15 @@ procedure DrawMessureLineAll();
 var grayx:longword;
 begin
 grayx:=gray0;if kmessure=1 then grayx:=gray1;
-if eventmn>0 then
-  for eventmi:=0 to eventmn-1 do
-    if (eventm[eventmi].msg and $FFFF=$5AFF) and (kmessure<=1) then DrawMessureLine(eventm[eventmi].ticktime,eventm[eventmi].curtick div tpq,eventm[eventmi].tempo,grayx);
-if eventmn>0 then
-  for eventmi:=0 to eventmn-1 do
-    if (eventm[eventmi].msg and $FFFF=$5BFF) and (kmessure<=2) then DrawMessureLine(eventm[eventmi].ticktime,eventm[eventmi].curtick div tpq,eventm[eventmi].tempo,gray1);
-if eventmn>0 then
-  for eventmi:=0 to eventmn-1 do
-    if (eventm[eventmi].msg and $FFFF=$59FF) and (kmessure<=3) then DrawChordLine(eventm[eventmi].ticktime,eventm[eventmi].chord,gray2);
+if eventmun>0 then
+  for eventmui:=0 to eventmun-1 do
+    if (kmessure<=1) then if eventmu[eventmui].msg shr 24=0 then DrawMessureLine(eventmu[eventmui].ticktime,eventmui,eventmu[eventmui].msg,grayx);
+if eventmun>0 then
+  for eventmui:=0 to eventmun-1 do
+    if (kmessure<=2) then if eventmu[eventmui].msg shr 24=1 then DrawMessureLine(eventmu[eventmui].ticktime,eventmui,eventmu[eventmui].msg,gray1);
+if eventchn>0 then
+  for eventchi:=0 to eventchn-1 do
+    if (kmessure<=3) then DrawChordLine(eventch[eventchi].ticktime,eventch[eventchi].msg,gray2);
 end;
 
 procedure DrawNoteLine();
@@ -1034,7 +1133,6 @@ procedure DrawBNoteAll();
 begin
 EnterCriticalSection(cs1);
 if initb=false then InitBNote(false);
-
 notemapa:=SeekMidiTimeFNote(printtime-delaytime);
 notemapb:=SeekMidiTimeFNote(printtime+scrtime);
 GetFNoteDraw(notemapa,notemapb);
@@ -1489,6 +1587,8 @@ if eventi<eventn then
   while GetMidiTime()>GetFEvent0TickTime(eventi) do
     begin
     if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
+    while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=event0[eventi].curtick) do begin tempo:=eventtm[eventtmi].msg;eventtmi:=eventtmi+1;end;
+    while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[eventi].curtick) do begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
     if event0[eventi].msg and $F0 shr 4<$F then
       begin
       if(event0[eventi].msg and $F0 shr 4=$B)
@@ -1506,7 +1606,7 @@ if eventi<eventn then
             notei:=GetKeykey(event0[eventi].msg shr 8 and $7F) or ((event0[eventi].track or event0[eventi].msg and $F shl maxtrack0) shl 8);
             if event0[eventi].msg and $F0=$90 then
               begin
-              notech[notei]:=event0[eventi].chord;
+              notech[notei]:=chord;
               notec[notei]:=event0[eventi].track or event0[eventi].msg and $F shl maxtrack0;
               if kbdcb=0 then
                 kbdc[notei and $7F]:=GetKeyChordC(notei and $7F,notech[notei])
@@ -1549,11 +1649,7 @@ if eventi<eventn then
             end
           end
         end
-      end
-    else
-      if event0[eventi].tempo>0 then
-        tempo:=event0[eventi].tempo;
-    chord:=event0[eventi].chord;
+      end;
     if fb then eventi:=fi;
     eventi:=eventi+1;
     if eventi>=eventn then break;
