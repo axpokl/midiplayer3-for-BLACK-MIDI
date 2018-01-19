@@ -302,13 +302,13 @@ CloseFile();
 end;
 
 const maxtrackheap=maxtrack;
-var trackheapt:array[0..maxtrackheap-1]of longword;
+var trackheapt:array[0..maxtrackheap-1]of single;
 var trackheap:array[0..maxtrackheap-1]of longword;
 var trackheapi:longword;
 var trackheapn:longword;
 
 procedure SwapEventHeap(trackheapi,trackheapj:longword);inline;
-var trackheapt0,trackheap0:longword;
+var trackheapt0:single;trackheap0:longword;
 begin
 trackheapt0:=trackheapt[trackheapi];
 trackheap0:=trackheap[trackheapi];
@@ -321,13 +321,13 @@ end;
 procedure SortEventHeap(trackheapi:longword);
 var trackheapj:longword;
 begin
-trackheapj:=(trackheapi+1)shl 1;
+trackheapj:=(trackheapi+1)shl 1
 if trackheapj>=trackheapn then
   trackheapj:=trackheapj-1
 else
-  if trackheapt[trackheapj-1]<=trackheapt[trackheapj] then
+  if trackheapt[trackheapj-1]<trackheapt[trackheapj] then
     trackheapj:=trackheapj-1;
-if trackheapj<trackheapn then
+if trackheapj<trackheapn
   if trackheapt[trackheapj]<trackheapt[trackheapi] then
     begin
     SwapEventHeap(trackheapi,trackheapj);
@@ -359,27 +359,48 @@ for tracki:=1 to trackn-1 do track0[tracki]:=track1[tracki-1];
 EnterCriticalSection(csfevent0);
 if fb then begin close(fevent0);fevent0w:=true;rewrite(fevent0);bjfevent0:=-1;end;
 eventj:=0;
+
 trackheapi:=0;
 for tracki:=0 to trackn-1 do
   if track0[tracki]<track1[tracki] then
     begin
-    trackheapt[trackheapi]:=GetFEventCurTick(track0[tracki],tracki);
-    trackheap[trackheapi]:=tracki;
+    trackheapt[trackheapn]:=GetFEventCurTick(track0[tracki],tracki);
+    trackheap[trackheapn]:=tracki;
     trackheapi:=trackheapi+1;
     end;
 trackheapn:=trackheapi;
 for trackheapi:=trackheapn-1 downto 0 do SortEventHeap(trackheapi);
 while (eventj<eventn) do
   begin
-  if eventn>0 then begin drawr:=eventj/eventn;if eventj and $FFF=0 then DrawTitle();end;
   trackj:=trackheap[0];
   SetFEvent0(GetFEvent(track0[trackj],trackj),eventj);
   track0[trackj]:=track0[trackj]+1;
-  if track0[trackj]<track1[trackj] then trackheapt[0]:=GetFEventCurTick(track0[trackj],trackj)
-  else begin SwapEventHeap(0,trackheapn-1);trackheapn:=trackheapn-1;end;
+  if track0[trackj]<track1[trackj] then trackheapt[0]:=GetFEventCurTick(track0[trackj],trackj) else trackheapt[0]:=$FFFFFFFF;
   SortEventHeap(0);
+  if track0[trackj]>=track1[trackj] then trackheapn:=trackheapn-1;
+  end;
+{
+
+for tracki:=0 to trackn-1 do
+while (eventj<eventn) do trackt[tracki]:=GetFEventCurTick(track0[tracki],tracki);
+  begin
+  if eventn>0 then begin drawr:=eventj/eventn;if eventj and $FFF=0 then DrawTitle();end;
+  curtick:=$FFFFFFFF;
+  for tracki:=0 to trackn-1 do
+    if track0[tracki]<track1[tracki] then
+      if trackt[tracki]<curtick then
+        begin
+        trackj:=tracki;
+        curtick:=trackt[tracki];
+        end;
+  SetFEvent0(GetFEvent(track0[trackj],trackj),eventj);
+  track0[trackj]:=track0[trackj]+1;
+  trackt[trackj]:=GetFEventCurTick(track0[trackj],trackj);
   eventj:=eventj+1;
   end;
+}
+
+
 if fb then FlushFEvent0();
 drawr:=0;
 tempo:=500000;
