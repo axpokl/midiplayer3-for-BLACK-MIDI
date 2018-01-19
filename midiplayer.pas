@@ -29,6 +29,7 @@ const maxtrack=1 shl maxtrack0;
 const maxchan=maxtrack shl 4;
 var track0:packed array[0..maxtrack-1]of longword;
 var track1:packed array[0..maxtrack-1]of longword;
+var trackt:packed array[0..maxtrack-1]of longword;
 var tracki:longint;
 var trackn:longword;
 var trackj:longword;
@@ -38,7 +39,6 @@ var chancc:packed array[0..maxchan-1]of longword;
 var chancw:packed array[0..maxchan-1]of longword;
 var chancb:packed array[0..maxchan-1]of longword;
 var chani:longword;
-var chanj:longword;
 const chanc0:packed array[0..11]of longword=
 ($55,$AA,$FF,$2A,$7F,$D4,$15,$6A,$BF,$3F,$94,$E9);
 
@@ -51,7 +51,6 @@ var chords:packed array[0..31]of ansistring=(
 var chord0,chord1:shortint;
 var chordtmp:shortint=-1;
 var sig0,sig1:byte;
-var sig:longword;
 
 const loops:packed array[0..2]of char=('N','S','A');
 
@@ -283,19 +282,21 @@ for tracki:=1 to trackn-1 do track0[tracki]:=track1[tracki-1];
 EnterCriticalSection(csfevent0);
 if fb then begin close(fevent0);fevent0w:=true;rewrite(fevent0);bjfevent0:=-1;end;
 eventj:=0;
+for tracki:=0 to trackn-1 do trackt[tracki]:=GetFEventCurTick(track0[tracki],tracki);
 while (eventj<eventn) do
   begin
   if eventn>0 then begin drawr:=eventj/eventn;if eventj and $FFF=0 then DrawTitle();end;
   curtick:=$FFFFFFFF;
   for tracki:=0 to trackn-1 do
     if track0[tracki]<track1[tracki] then
-      if GetFEventCurTick(track0[tracki],tracki)<curtick then
+      if trackt[tracki]<curtick then
         begin
         trackj:=tracki;
-        curtick:=GetFEventCurTick(track0[tracki],tracki);
+        curtick:=trackt[tracki];
         end;
   SetFEvent0(GetFEvent(track0[trackj],trackj),eventj);
   track0[trackj]:=track0[trackj]+1;
+  trackt[trackj]:=GetFEventCurTick(track0[trackj],trackj);
   eventj:=eventj+1;
   end;
 if fb then FlushFEvent0();
@@ -303,7 +304,7 @@ drawr:=0;
 tempo:=500000;
 finaltime:=0;
 curtick:=0;
-sig0:=1;sig:=1;
+sig0:=1;
 chordtmp:=-1;
 tick0:=0;
 ticktime0:=0;
@@ -313,27 +314,21 @@ for fi:=0 to eventn-1 do
   begin
   if eventn>0 then begin drawr:=fi/eventn;if fi and $FFF=0 then DrawTitle();end;
   if not(fb) then eventi:=fi else begin eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
-  if event0[eventi].msg and $FFFF=$58FF then
-    begin
-    sig0:=event0[eventi].msg shr 16 and $FF;
-    sig1:=event0[eventi].msg shr 24 and $FF;
-    sig:=1;while sig1>0 do begin sig:=sig*2;sig1:=sig1-1;end;
-    end;
-  while curtick<event0[eventi].curtick do curtick:=curtick+tpq*sig0*4 div sig;
   tick:=max(0,event0[eventi].curtick-tick0);
-  tick0:=event0[eventi].curtick;
+  tick0:=tick0+tick;
+  if tpq>0 then ticktime0:=ticktime0+tick/tpq*(tempo/1000000);
+  if fps>0 then ticktime0:=ticktime0+tick/fps;
   event0[eventi].ticktime:=ticktime0;
-  if tpq>0 then event0[eventi].ticktime:=event0[eventi].ticktime+tick/tpq*(tempo/1000000);
-  if fps>0 then event0[eventi].ticktime:=event0[eventi].ticktime+tick/fps;
-  ticktime0:=event0[eventi].ticktime;
+  finaltime:=max(finaltime,ticktime0+1);
   if event0[eventi].tempo>0 then tempo:=event0[eventi].tempo;
   if event0[eventi].tempo>0 then if tempo00=0 then tempo00:=event0[eventi].tempo;
   if event0[eventi].msg=$5AFF then event0[eventi].tempo:=tempo;
-  if event0[eventi].msg=$5AFF then if curtick=event0[eventi].curtick then event0[eventi].msg:=$5BFF;
+  if event0[eventi].msg and $FFFF=$58FF then begin sig0:=event0[eventi].msg shr 16 and $FF;sig1:=event0[eventi].msg shr 24 and $FF;end;
+  while curtick<tick0 do curtick:=curtick+(tpq*sig0 shr max(0,sig1-2));
+  if event0[eventi].msg=$5AFF then if curtick=tick0 then event0[eventi].msg:=$5BFF;
   if event0[eventi].msg and $FFFF=$59FF then chord:=event0[eventi].chord else event0[eventi].chord:=chord;
   if event0[eventi].msg and $FFFF=$59FF then if chordtmp=-1 then chordtmp:=chord;
   if (event0[eventi].msg and $FFFF=$5AFF) or (event0[eventi].msg and $FFFF=$5BFF) or (event0[eventi].msg and $FFFF=$59FF) then Addeventm(event0[eventi]);
-  finaltime:=max(finaltime,event0[eventi].ticktime+1);
   if fb then SetFEvent0(event0[eventi],fi);
   end;
 eventmn:=eventmi;
@@ -536,16 +531,14 @@ notemapn:=notemapi;
 end;
 
 procedure SortNoteMapColorQuick1(n1,n2:longword);
-var chancn0,chancc0:longint;
-var q1,q2:longint;
+var qv,q1,q2:longword;
 begin
-chancn0:=chancn[n1];
-chancc0:=chancc[n1];
+qv:=chancn[n1];
 q1:=n1;
 q2:=n2;
 while (q1<q2) do
   begin
-  while (q1<q2) and (chancn[q2]<chancn0) do
+  while (q1<q2) and (chancn[q2]<qv) do
     q2:=q2-1;
   if (q1<q2) then
     begin
@@ -553,7 +546,7 @@ while (q1<q2) do
     swapc(chancc[q1],chancc[q2]);
     q1:=q1+1;
     end;
-  while (q1<q2) and (chancn[q1]>chancn0) do
+  while (q1<q2) and (chancn[q1]>qv) do
     q1:=q1+1;
   if (q1<q2) then
     begin
@@ -566,20 +559,15 @@ if (q1-1>n1) then SortNoteMapColorQuick1(n1,q1-1);
 if (n2>q1+1) then SortNoteMapColorQuick1(q1+1,n2);
 end;
 
-
 procedure SortNoteMapColorQuick2(n1,n2:longword);
-var chancn0,chancc0,chancw0,chancb0:longint;
-var q1,q2:longword;
+var qv,q1,q2:longword;
 begin
-chancn0:=chancn[n1];
-chancc0:=chancc[n1];
-chancw0:=chancw[n1];
-chancb0:=chancb[n1];
+qv:=chancc[n1];
 q1:=n1;
 q2:=n2;
 while (q1<q2) do
   begin
-  while (q1<q2) and (chancc[q2]>chancc0) do
+  while (q1<q2) and (chancc[q2]>qv) do
     q2:=q2-1;
   if (q1<q2) then
     begin
@@ -589,7 +577,7 @@ while (q1<q2) do
     swapc(chancb[q1],chancb[q2]);
     q1:=q1+1;
     end;
-  while (q1<q2) and (chancc[q1]<chancc0) do
+  while (q1<q2) and (chancc[q1]<qv) do
     q1:=q1+1;
   if (q1<q2) then
     begin
