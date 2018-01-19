@@ -83,7 +83,6 @@ type tnotemap=packed record note:byte;note0,note1:single;notec:longword;chord:by
 var notemap:packed array of tnotemap;
 var notemapi:longint;
 var notemapn:longword;
-var notemapx:longword;
 
 var fi:longint;
 var fni:longint;
@@ -398,6 +397,38 @@ if pauseb then GetMidiTime:=pausetime
 else GetMidiTime:=GetTimeR()*spd0-firsttime;
 end;
 
+function SeekMidiTimeFEvent(seekt:single):longword;
+var seeki,seekn:longword;seekx:longint;
+begin
+seekn:=eventn;
+seeki:=seekn div 2;
+seekx:=(seeki+1) div 2;
+repeat
+if seekx=0 then break;
+if GetFEvent0Ticktime(seeki)>=seekt then seeki:=max(0,seeki-seekx) else seeki:=min(seeki+seekx,seekn-1);
+if seekx=1 then break;
+seekx:=(seekx+1) div 2;
+until false;
+if seekx>0 then if GetFNote(seeki).note0<seekt then seeki:=min(seeki+1,seekn);
+SeekMidiTimeFEvent:=seeki;
+end;
+
+function SeekMidiTimeFNote(seekt:single):longword;
+var seeki,seekn:longword;seekx:longint;
+begin
+seekn:=notemapn;
+seeki:=seekn div 2;
+seekx:=(seeki+1) div 2;
+repeat
+if seekx=0 then break;
+if GetFNote(seeki).note0>=seekt then seeki:=max(0,seeki-seekx) else seeki:=min(seeki+seekx,seekn-1);
+if seekx=1 then break;
+seekx:=(seekx+1) div 2;
+until false;
+if seekx>0 then if GetFNote(seeki).note0<seekt then seeki:=min(seeki+1,seekn);
+SeekMidiTimeFNote:=seeki;
+end;
+
 procedure SetMidiTime(settime:single);
 begin
 EnterCriticalSection(cs2);
@@ -405,16 +436,7 @@ if settime<=0 then midiOutReset(midiOut);
 ResetMidiKeyVol();
 firsttime:=GetTimeR()*spd0-settime;
 EnterCriticalSection(csfevent0);
-eventj:=eventn div 2;
-eventk:=(eventj+1) div 2;
-repeat
-if eventk=0 then break;
-if GetFEvent0Ticktime(eventj)>=settime then eventj:=max(0,eventj-eventk) else eventj:=min(eventj+eventk,eventn-1);
-if eventk=1 then break;
-eventk:=(eventk+1) div 2;
-until false;
-if eventn>0 then if GetFEvent0Ticktime(eventj)<settime then
-  eventj:=min(eventj+1,eventn);
+eventj:=SeekMidiTimeFEvent(settime);
 tempo0:=tempo00;
 for fi:=0 to min(eventj,eventn-1) do
 if (fi<maxeventseek) or (fi>min(eventj,eventn-1)-maxeventseek) then
@@ -1012,28 +1034,11 @@ procedure DrawBNoteAll();
 begin
 EnterCriticalSection(cs1);
 if initb=false then InitBNote(false);
-notemapa:=notemapn div 2;
-notemapx:=(notemapa+1) div 2;
-repeat
-if notemapx=0 then break;
-if GetFNote(notemapa).note0>=printtime-delaytime then notemapa:=max(0,notemapa-notemapx) else notemapa:=min(notemapa+notemapx,notemapn-1);
-if notemapx=1 then break;
-notemapx:=(notemapx+1) div 2;
-until false;
-if notemapx>0 then
-if GetFNote(notemapa).note0<printtime-delaytime then notemapa:=min(notemapa+1,notemapn);
-notemapb:=notemapn div 2;
-notemapx:=(notemapb+1) div 2;
-repeat
-if notemapx=0 then break;
-if GetFNote(notemapb).note0>printtime+scrtime then notemapb:=max(0,notemapb-notemapx) else notemapb:=min(notemapb+notemapx,notemapn-1);
-if notemapx=1 then break;
-notemapx:=(notemapx+1) div 2;
-until false;
-if notemapx>0 then
-if GetFNote(notemapb).note0<=printtime+scrtime then notemapi:=max(0,notemapb-1);
+
+notemapa:=SeekMidiTimeFNote(printtime-delaytime);
+notemapb:=SeekMidiTimeFNote(printtime+scrtime);
 GetFNoteDraw(notemapa,notemapb);
-if notemapx>0 then
+if notemapn>0 then
 for notemapi:=notemapa to notemapb do
   begin
   if (notemapb-notemapa)>0 then if (notemapi-notemapa) and $FFF=0 then begin drawr:=(notemapi-notemapa)/(notemapb-notemapa);DrawTitle();end;
@@ -1132,16 +1137,7 @@ procedure DrawNoteN();
 var notes:ansistring='';
 var notemapi:longword;
 begin
-notemapi:=notemapn div 2;
-notemapx:=(notemapi+1) div 2;
-repeat
-if notemapx=0 then break;
-if GetFNote(notemapi).note0>=printtime then notemapi:=max(0,notemapi-notemapx) else notemapi:=min(notemapi+notemapx,notemapn-1);
-if notemapx=1 then break;
-notemapx:=(notemapx+1) div 2;
-until false;
-if notemapx>0 then
-if GetFNote(notemapi).note0<printtime then notemapi:=min(notemapi+1,notemapn);
+notemapi:=SeekMidiTimeFNote(printtime);
 notes:=i2s(notemapi)+'/'+i2s(notemapn);
 SetDrawFont(1.5);
 _DrawTextXY0(notes,(GetWidth()-fw*length(notes))div 2,0,white);
