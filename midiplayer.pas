@@ -905,10 +905,12 @@ for keyi:=0 to $7F do
 if fb then if flushb then FlushFNote();
 end;
 
-procedure DrawBNote(ni:longword;bi:shortint);
+procedure DrawBNote(ni:longword);
 var x,y,w,h:longint;
 var key:byte;
+var bi:shortint;
 begin
+bi:=IsKeynoteBlack(GetKeykey(notemap[notemapi].note));
 if fb then begin fni0:=ni;ni:=0;notemap[ni]:=GetFNote(fni0);end;
 key:=GetKeykey(notemap[ni].note);
 x:=GetKeynoteX(key);
@@ -1150,11 +1152,7 @@ for fni:=0 to notemapn-1 do
   begin
   if notemapn>0 then if fni and $FFF=0 then begin drawr:=fni/notemapn;DrawTitle();end;
   if fb then begin notemapi:=0;notemap[notemapi]:=GetFNote(fni);end else notemapi:=fni;
-  if(notemap[notemapi].note1-notemap[notemapi].note0>delaytime)then
-    if(IsKeynoteBlack(GetKeykey(notemap[notemapi].note))=0)then
-      DrawBNote(notemapi,0)
-    else
-      DrawBNote(notemapi,1);
+  if(notemap[notemapi].note1-notemap[notemapi].note0>delaytime)then DrawBNote(notemapi);
   end;
 FlushBar();
 drawr:=0;
@@ -1178,11 +1176,7 @@ if notemapn>0 then
 for notemapi:=notemapa to notemapb do
   begin
   if (notemapb-notemapa)>0 then if (notemapi-notemapa) and $FFF=0 then begin drawr:=(notemapi-notemapa)/(notemapb-notemapa);DrawTitle();end;
-  if GetFNoteDraw(notemapi)=false then
-    if(IsKeynoteBlack(GetKeykey(GetFNote(notemapi).note))=0)then
-      DrawBNote(notemapi,0)
-    else
-      DrawBNote(notemapi,1);
+  if GetFNoteDraw(notemapi)=false then DrawBNote(notemapi);
   end;
 if notemapa<=notemapb then SetFNoteDraw(notemapa,notemapb);
 FlushBar();
@@ -1202,10 +1196,7 @@ InitBNote(true);
 for notemapi:=0 to notemapn-1 do
   begin
   if notemapn>0 then if notemapi and $FFF=0 then begin drawr:=notemapi/notemapn;DrawTitle();end;
-  if(IsKeynoteBlack(GetKeykey(GetFNote(notemapi).note))=0)then
-    DrawBNote(notemapi,0)
-  else
-    DrawBNote(notemapi,1);
+  DrawBNote(notemapi);
   end;
 SetFNoteDraw(0,notemapn-1);
 FlushBar();
@@ -1292,23 +1283,23 @@ procedure DrawDevice();
 var caps:MIDIOUTCAPS;
 var devs:ansistring;
 begin
-if deviceb=2 then begin devicetime:=GetTimeR();deviceb:=1;end;
+if deviceb=2 then begin devicetime:=GetMidiTime();deviceb:=1;end;
 if deviceb=1 then
   begin
   midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
   devs:=caps.szPname+'('+i2s(midiOuti+1)+'/'+i2s(midiOutGetNumDevs)+')'+'['+i2s(msgbufn0)+'/'+i2s(caps.wNotes)+']';
   _DrawTextXY0(devs,GetWidth()-fw*length(devs),0,white);
-  if GetTimeR>=devicetime+3 then deviceb:=0;
+  if GetMidiTime()>=devicetime+3 then deviceb:=0;
   end;
 end;
 
 procedure DrawMsgVol();
 begin
-if msgvolb=2 then begin msgvoltime:=GetTimeR();msgvolb:=1;end;
+if msgvolb=2 then begin msgvoltime:=GetMidiTime();msgvolb:=1;end;
 if msgvolb=1 then
   begin
   _DrawTextXY0(i2s(msgvol0),GetWidth()-fw*length(i2s(msgvol0)),_fh*2,white);
-  if GetTimeR>=msgvoltime+3 then msgvolb:=0;
+  if GetMidiTime()>=msgvoltime+3 then msgvolb:=0;
   end;
 end;
 

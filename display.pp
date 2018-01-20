@@ -1616,11 +1616,15 @@ function IsWin():boolean;
 begin IsWin:=_winb;end;
 procedure SetDrawProcedure(th:tprocedure);
 begin _draw:=th;end;
-function GetTimeR():double;var freq,count:TLARGEINTEGER;
+function GetTimeR():double;
+var freq,count:Int64;
+var timer,offset:double;
 begin
 QueryPerformanceFrequency(@freq);
 QueryPerformanceCounter(@count);
-GetTimeR:=count/freq-_tbegin;
+timer:=count/freq-_tbegin;
+offset:=trunc(count/freq*freq-count)/freq;
+GetTimeR:=timer-offset;
 end;
 function GetTime():longword;
 begin GetTime:=Trunc(GetTimeR*1000);end;
