@@ -39,7 +39,6 @@ const maxtrack=1 shl maxtrack0;
 const maxchan=maxtrack shl 4;
 var track0:packed array[0..maxtrack-1]of longword;
 var track1:packed array[0..maxtrack-1]of longword;
-var trackt:packed array[0..maxtrack-1]of longword;
 var tracki:longint;
 var trackn:longword;
 var trackj:longword;
@@ -870,18 +869,18 @@ begin if(IsKeynoteBlack(k)=1) then GetKeynoteW:=GetKeynoteW1() else GetKeynoteW:
 function GetKeynoteC(k:byte;chan:word):longword;
 begin if(IsKeynoteBlack(k)=1) and (kbdcb=1) then GetKeynoteC:=chancb[chan] else GetKeynoteC:=chancw[chan];end;
 
-procedure FlushBar();
+procedure FlushBar(flushb:boolean);
 var keyi:byte;
 var y0,h0:longword;
 var bnotei:longint;
-var flushb:boolean=false;
+//var flushb:boolean=false;
 begin
 for keyi:=0 to $7F do
   with bnotekey[keyi] do
   begin
   if h>0 then
     begin
-    flushb:=true;
+    //flushb:=true;
     bnotei:=(y+h)div bnoteh0;
     y0:=bnoteh0-(y+h-bnotei*bnoteh0);
     h0:=h;
@@ -910,15 +909,15 @@ var x,y,w,h:longint;
 var key:byte;
 var bi:shortint;
 begin
-bi:=IsKeynoteBlack(GetKeykey(notemap[notemapi].note));
 if fb then begin fni0:=ni;ni:=0;notemap[ni]:=GetFNote(fni0);end;
 key:=GetKeykey(notemap[ni].note);
+bi:=IsKeynoteBlack(key);
 x:=GetKeynoteX(key);
 w:=GetKeynoteX0(key)-GetKeynoteX(key);
 y:=trunc((notemap[ni].note0)*mult*GetWidth()/mult0)+round(GetKeynoteW0()*kleny0);
 h:=max(1,trunc((notemap[ni].note1-notemap[ni].note0)*mult*GetWidth()/mult0));
 if kchb<=1 then h:=max(round(fh*fhr),h);
-if ((h+y)<>bnotekeyn) then FlushBar();
+if ((h+y)<>bnotekeyn) then FlushBar(false);
 bnotekeyn:=(h+y);
 if(h>=bnotekey[key].h)then
   begin
@@ -1154,7 +1153,7 @@ for fni:=0 to notemapn-1 do
   if fb then begin notemapi:=0;notemap[notemapi]:=GetFNote(fni);end else notemapi:=fni;
   if(notemap[notemapi].note1-notemap[notemapi].note0>delaytime)then DrawBNote(notemapi);
   end;
-FlushBar();
+FlushBar(true);
 drawr:=0;
 end;
 notemapa:=0;
@@ -1179,7 +1178,7 @@ for notemapi:=notemapa to notemapb do
   if GetFNoteDraw(notemapi)=false then DrawBNote(notemapi);
   end;
 if notemapa<=notemapb then SetFNoteDraw(notemapa,notemapb);
-FlushBar();
+FlushBar(true);
 drawr:=0;
 LeaveCriticalSection(cs1);
 end;
@@ -1199,7 +1198,7 @@ for notemapi:=0 to notemapn-1 do
   DrawBNote(notemapi);
   end;
 SetFNoteDraw(0,notemapn-1);
-FlushBar();
+FlushBar(true);
 drawr:=0;
 bnoteb:=false;
 if pauseb0=false then PauseMidi();
