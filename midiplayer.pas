@@ -1096,6 +1096,7 @@ begin
 if notemapn-1>=0 then
   bnoteh:=round(finaltime*mult*GetWidth()/mult0)+GetHeight();
 bnoten0:=bnoteh div bnoteh0;
+bnoten0:=min(bnoten0,maxbnote-1);
 for bnotei:=bnoten0+1 to bnoten do
   begin
   ReleaseBMP(bnote[0,bnotei]);
@@ -1171,6 +1172,7 @@ if initb=false then InitBNote(false);
 notemapa:=SeekMidiTimeFNote(printtime-delaytime);
 notemapb:=SeekMidiTimeFNote(printtime+scrtime);
 GetFNoteDraw(notemapa,notemapb);
+notemapb:=min(notemapa+$1000,notemapb);
 if notemapn>0 then
 for notemapi:=notemapa to notemapb do
   begin
