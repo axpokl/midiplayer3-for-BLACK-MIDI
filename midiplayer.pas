@@ -1173,8 +1173,8 @@ for bnoteb0:=0 to maxbnote-1 do
   bnotej0[0,bnoteb0]:=-1;
   bnotej0[1,bnoteb0]:=-1;
   end;
-//bnoten0:=min(bnoten0,maxbnote-1);
 {
+bnoten0:=min(bnoten0,maxbnote-1);
 for bnotej:=bnoten0+1 to bnoten do
   begin
   ReleaseBMP(bnote[0,bnotej]);
