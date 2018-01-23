@@ -1621,9 +1621,10 @@ begin IsWin:=_winb;end;
 procedure SetDrawProcedure(th:tprocedure);
 begin _draw:=th;end;
 function GetTimeR():double;
+var tfreq,tcount:Int64;
 begin
-QueryPerformanceFrequency(@_tfreq);
-QueryPerformanceCounter(@_tcount);
+if QueryPerformanceFrequency(@tfreq)=true then _tfreq:=tfreq;
+if QueryPerformanceCounter(@tcount)=true then _tcount:=tcount;
 GetTimeR:=(_tcount-_tbegin)/_tfreq;
 end;
 function GetTime():longword;
