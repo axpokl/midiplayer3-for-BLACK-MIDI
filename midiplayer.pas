@@ -1449,10 +1449,11 @@ repeat
 if GetTimeR()>frametime+1/framerate then
   begin
   while GetTimeR()>frametime+1/framerate do frametime:=frametime+1/framerate;
-    if not(IsIconic(GetHWnd())) then DrawAll();
+  if not(IsIconic(GetHWnd())) then DrawAll();
   DrawTitle();
-  end;
-Delay(1);
+  end
+else
+  Delay(1);
 until not(iswin());
 end;
 
