@@ -644,6 +644,7 @@ var _bufz:longword;                   //位图缓存当前位置
     _bufcb,_bufcg,_bufcr:byte;        //位图缓存当前颜色
 
 var _tbegin:double;                   //窗口建立时间
+    _tfreq,_tcount:Int64;
     _winb:boolean;                    //窗口状态
     _draw:procedure;                  //绘图函数
 
@@ -1240,7 +1241,7 @@ if _wca=0 then
 WinCreate();
 WinCreateMain();
 _winb:=true;
-_tbegin:=GetTimeR();
+GetTimeR();_tbegin:=_tcount;
 while IsWin() do
   begin
   GetMessage(_mst,_hw,0,0);
@@ -1617,14 +1618,10 @@ begin IsWin:=_winb;end;
 procedure SetDrawProcedure(th:tprocedure);
 begin _draw:=th;end;
 function GetTimeR():double;
-var freq,count:Int64;
-var timer,offset:double;
 begin
-QueryPerformanceFrequency(@freq);
-QueryPerformanceCounter(@count);
-timer:=count/freq-_tbegin;
-offset:=trunc(count/freq*freq-count)/freq;
-GetTimeR:=timer-offset;
+QueryPerformanceFrequency(@_tfreq);
+QueryPerformanceCounter(@_tcount);
+GetTimeR:=(_tcount-_tbegin)/_tfreq;
 end;
 function GetTime():longword;
 begin GetTime:=Trunc(GetTimeR*1000);end;
