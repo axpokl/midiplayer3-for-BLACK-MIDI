@@ -779,6 +779,7 @@ procedure StopThread(thi:longword);
 function MsgBox(s,title:ansistring;i:longword):longword;
 procedure MsgBox(s,title:ansistring);
 procedure MsgBox(s:ansistring);
+procedure Delay(t:double);
 procedure Delay(t:longword);
 procedure Delay();
 procedure Sound(hz:longword;t:longword);
@@ -1538,17 +1539,19 @@ begin Msgbox(s,title,0);end;
 procedure MsgBox(s:ansistring);
 begin MsgBox(s,'');end;
 
+procedure Delay(t:double);var tbegin:double;
+begin tbegin:=GetTimeR();Sleep(max(0,trunc(t*1000)-1));While(GetTimeR()-tbegin)<t do ;end;
 procedure Delay(t:longword);
-begin if t=0 then t:=DELAYTIMEDEFAULT;Sleep(t);end;
+begin Sleep(t);end;
 procedure Delay();
-begin Delay(0);end;
+begin Delay(DELAYTIMEDEFAULT);end;
 
 procedure Sound(hz:longword;t:longword);
 begin if t=0 then t:=DELAYTIMEDEFAULT;if (hz<MINHZ) or (hz>MAXHZ) then Delay(t) else Windows.Beep(hz,t);end;
 procedure Sound(hz:longword;t:double);
 begin Sound(hz,longword(round(t)));end;
 procedure Sound(hz:longword);
-begin Sound(hz,0);end;
+begin Sound(hz,DELAYTIMEDEFAULT);end;
 
 procedure FreshFPS();
 begin
