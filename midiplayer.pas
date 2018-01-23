@@ -788,15 +788,23 @@ var kbdi,kbdn:byte;
 
 const fhr=0.7;
 
-const maxbnote=$1000;
+const maxbnote=$100;
+const maxbnotebuf=$10000;
 var bnote:packed array[0..1,0..maxbnote-1]of pbitmap;
+var bnotej0:packed array[0..1,0..maxbnote-1]of longint;
+var bnotej1:packed array[0..1,0..maxbnotebuf-1]of longint;
 var bnoten:longint=-1;
 var bnoten0:longint=-1;
-var bnotei:longint;
+var bnoten00:longint=-1;
+var bnotej:longint;
 var bnoteh:longword=0;
 var bnoteh0:longword=$1000;
 var bnoteb:boolean=false;
 var initb:boolean=false;
+
+var bnoteb0:longint;
+var bnoteb1:array[0..1]of longint;
+var bmpname:ansistring;
 
 type tbnotekey=packed record
 x,y,w,h:longint;bi:shortint;cbg,cfg:longword;
@@ -869,35 +877,109 @@ begin if(IsKeynoteBlack(k)=1) then GetKeynoteW:=GetKeynoteW1() else GetKeynoteW:
 function GetKeynoteC(k:byte;chan:word):longword;
 begin if(IsKeynoteBlack(k)=1) and (kbdcb=1) then GetKeynoteC:=chancb[chan] else GetKeynoteC:=chancw[chan];end;
 
+procedure SetDrawFont(sz:single);
+begin
+fw:=max(1,round((GetKeynoteW1()-2)*sz));
+fh:=max(1,round(fw*2.2));
+SetFontSize(fw,fh);
+SetFont();
+end;
+
+procedure SetDrawFont();
+begin SetDrawFont(1);end;
+
+procedure GetDrawTime();
+begin printtime:=GetMidiTime();end;
+
+procedure ClearBMP(bi,bnoteb0:longint);
+begin
+if bnote[bi,bnoteb0]<>nil then
+  begin
+  bmpname:=GetTempDir(false)+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
+  if bnotej0[bi,bnoteb0]>=0 then SaveBMP(bnote[bi,bnoteb0],bmpname);
+  ReleaseBMP(bnote[bi,bnoteb0]);
+  bnote[bi,bnoteb0]:=nil;
+  end;
+end;
+
+procedure FreshBMP(bi,bj:longint);
+begin
+if bnotej0[bi,bnotej1[bi,bj]]<>bj then
+  begin
+  bnoteb1[bi]:=(bnoteb1[bi]+1) and (maxbnote-1);
+  bnoteb0:=bnoteb1[bi];
+  ClearBMP(bi,bnoteb0);
+  bnotej0[bi,bnoteb0]:=bj;
+  bnotej1[bi,bj]:=bnoteb0;
+  end
+else
+  bnoteb0:=bnotej1[bi,bj];
+if bnote[bi,bnoteb0]=nil then
+  begin
+  bmpname:=GetTempDir(false)+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
+  if fileexists(bmpname) then
+    begin
+    bnote[bi,bnoteb0]:=LoadBMP(bmpname,black1);
+    DeleteFile(bmpname);
+    end
+  else
+    begin
+    bnote[bi,bnoteb0]:=CreateBMP(GetWidth(),bnoteh0,black1);
+    end;
+  SetDrawFont();
+  SetFont(bnote[bi,bnoteb0]);
+  end;
+end;
+
+procedure _Bar(bi,bj:longint;x,y,w,h:longint;cfg,cbg:longword);
+begin
+FreshBMP(bi,bj);
+Bar(bnote[bi,bnotej1[bi,bj]],x,y,w,h,cfg,cbg);
+end;
+
+procedure _Line(bi,bj:longint;x,y,w,h:longint;c:longword);
+begin
+FreshBMP(bi,bj);
+Line(bnote[bi,bnotej1[bi,bj]],x,y,w,h,c);
+end;
+
+procedure _DrawTextXY(bi,bj:longint;s:ansistring;x,y:longint;c:longword);
+begin
+FreshBMP(bi,bj);
+DrawTextXY(bnote[bi,bnotej1[bi,bj]],s,x,y,c);
+end;
+
 procedure FlushBar(flushb:boolean);
 var keyi:byte;
 var y0,h0:longword;
-var bnotei:longint;
-//var flushb:boolean=false;
+var bnotej:longint;
 begin
 for keyi:=0 to $7F do
   with bnotekey[keyi] do
   begin
   if h>0 then
     begin
-    //flushb:=true;
-    bnotei:=(y+h)div bnoteh0;
-    y0:=bnoteh0-(y+h-bnotei*bnoteh0);
+    bnotej:=(y+h)div bnoteh0;
+    y0:=bnoteh0-(y+h-bnotej*bnoteh0);
     h0:=h;
     while h0>(bnoteh0-y0) do
       begin
-      Bar(bnote[bi,bnotei],x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
+      if (bnotej>=0) then
+       _Bar(bi,bnotej,x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
       h0:=h0-(bnoteh0-y0);
       y0:=0;
-      bnotei:=bnotei-1;
+      bnotej:=bnotej-1;
       end;
-    if bnotei>=0 then Bar(bnote[bi,bnotei],x,y0-1,w,h0+1,cfg,cbg);
-    bnotei:=(sy+fh+2)div bnoteh0;
-    y0:=bnoteh0-(sy+fh+2-bnotei*bnoteh0);
-    if kchb<=1 then DrawTextXY(bnote[bi,bnotei],s,sx,y0+1,sc);
+    if (bnotej>=0) then
+      _Bar(bi,bnotej,x,y0-1,w,h0+1,cfg,cbg);
+    bnotej:=(sy+fh+2)div bnoteh0;
+    y0:=bnoteh0-(sy+fh+2-bnotej*bnoteh0);
+    if kchb<=1 then
+      _DrawTextXY(bi,bnotej,s,sx,y0+1,sc);
     if y0+fh>=bnoteh0 then
-      if bnotei>1 then
-        if kchb<=1 then DrawTextXY(bnote[bi,bnotei-1],s,sx,y0-bnoteh0+1,sc);
+      if bnotej>1 then
+        if kchb<=1 then
+          _DrawTextXY(bi,bnotej-1,s,sx,y0-bnoteh0+1,sc);
     h:=0;
     end;
   end;
@@ -943,11 +1025,12 @@ begin Bar(x,GetHeight()-y-h,w,h,cfg,cbg);end;
 
 procedure _Line(bi:shortint;x,y,w,h:longint;c:longword);
 var y0:longword;
-var bnotei:longint;
+var bnotej:longint;
 begin
-bnotei:=y div bnoteh0;
-y0:=bnoteh0-(y-bnotei*bnoteh0);
-Line(bnote[bi,bnotei],x,y0,w,h,c);
+bnotej:=y div bnoteh0;
+y0:=bnoteh0-(y-bnotej*bnoteh0);
+if (bnotej>=0) and (bnotej<maxbnote) then
+  _Line(bi,bnotej,x,y0,w,h,c);
 end;
 
 procedure _Line(b:pbitmap;x,y,w,h:longint;c:longword);
@@ -958,14 +1041,15 @@ begin Line(x,GetHeight()-y-h,w,h,c);end;
 
 procedure _DrawTextXY(bi:shortint;s:ansistring;sx,sy:longint;sc:longword);
 var y0:longword;
-var bnotei:longint;
+var bnotej:longint;
 begin
-bnotei:=(sy+fh+2)div bnoteh0;
-y0:=bnoteh0-(sy+fh+2-bnotei*bnoteh0);
-DrawTextXY(bnote[bi,bnotei],s,sx,y0+1,sc);
+bnotej:=(sy+fh+2)div bnoteh0;
+y0:=bnoteh0-(sy+fh+2-bnotej*bnoteh0);
+if (bnotej>=0) and (bnotej<maxbnote) then
+_DrawTextXY(bi,bnotej,s,sx,y0+1,sc);
 if y0+fh>=bnoteh0 then
-  if bnotei>1 then
-    DrawTextXY(bnote[bi,bnotei-1],s,sx,y0-bnoteh0+1,sc);
+  if (bnotej-1>=0) and (bnotej-1<maxbnote) then
+    _DrawTextXY(bi,bnotej-1,s,sx,y0-bnoteh0+1,sc);
 end;
 
 procedure _DrawTextXY(s:ansistring;x,y:longint;c:longword);
@@ -977,19 +1061,6 @@ begin DrawTextXY(s,x,GetHeight()-round(GetKeynoteW0()*kleny0)-y-fh-2,c,gray0);en
 procedure _DrawTextXY0(s:ansistring;x,y:longint;c:longword);
 begin DrawTextXY(s,x,y,c,gray0);end;
 
-procedure SetDrawFont(sz:single);
-begin
-fw:=max(1,round((GetKeynoteW1()-2)*sz));
-fh:=max(1,round(fw*2.2));
-SetFontSize(fw,fh);
-SetFont();
-end;
-
-procedure SetDrawFont();
-begin SetDrawFont(1);end;
-
-procedure GetDrawTime();
-begin printtime:=GetMidiTime();end;
 
 procedure DrawMessureLine(t:single;ms:longword;tempo:longword;c:longword);
 var w0,y:longint;
@@ -1096,44 +1167,52 @@ begin
 if notemapn-1>=0 then
   bnoteh:=round(finaltime*mult*GetWidth()/mult0)+GetHeight();
 bnoten0:=bnoteh div bnoteh0;
-bnoten0:=min(bnoten0,maxbnote-1);
-for bnotei:=bnoten0+1 to bnoten do
+bnoten00:=max(bnoten0,bnoten00);
+for bnoteb0:=0 to maxbnote-1 do
   begin
-  ReleaseBMP(bnote[0,bnotei]);
-  ReleaseBMP(bnote[1,bnotei]);
+  bnotej0[0,bnoteb0]:=-1;
+  bnotej0[1,bnoteb0]:=-1;
   end;
-for bnotei:=0 to min(bnoten0,bnoten) do
+//bnoten0:=min(bnoten0,maxbnote-1);
+{
+for bnotej:=bnoten0+1 to bnoten do
   begin
-  if force or (bnote[0,bnotei]^.width<>GetWidth()) then
+  ReleaseBMP(bnote[0,bnotej]);
+  ReleaseBMP(bnote[1,bnotej]);
+  end;
+for bnotej:=0 to min(bnoten0,bnoten) do
+  begin
+  if force or (bnote[0,bnotej]^.width<>GetWidth()) then
     begin
-    ReleaseBMP(bnote[0,bnotei]);
-    bnote[0,bnotei]:=CreateBMP(GetWidth(),bnoteh0,black1);
+    ReleaseBMP(bnote[0,bnotej]);
+    bnote[0,bnotej]:=CreateBMP(GetWidth(),bnoteh0,black1);
     end
   else
     begin
-    Clear(bnote[0,bnotei]);
+    Clear(bnote[0,bnotej]);
     end;
-  if force or (bnote[1,bnotei]^.width<>GetWidth()) then
+  if force or (bnote[1,bnotej]^.width<>GetWidth()) then
     begin
-    ReleaseBMP(bnote[1,bnotei]);
-    bnote[1,bnotei]:=CreateBMP(GetWidth(),bnoteh0,black1);
+    ReleaseBMP(bnote[1,bnotej]);
+    bnote[1,bnotej]:=CreateBMP(GetWidth(),bnoteh0,black1);
     end
   else
     begin
-    Clear(bnote[1,bnotei]);
+    Clear(bnote[1,bnotej]);
     end;
   end;
-for bnotei:=bnoten+1 to bnoten0 do
+for bnotej:=bnoten+1 to bnoten0 do
   begin
-  bnote[0,bnotei]:=CreateBMP(GetWidth(),bnoteh0,black1);
-  bnote[1,bnotei]:=CreateBMP(GetWidth(),bnoteh0,black1);
+  bnote[0,bnotej]:=CreateBMP(GetWidth(),bnoteh0,black1);
+  bnote[1,bnotej]:=CreateBMP(GetWidth(),bnoteh0,black1);
   end;
 SetDrawFont();
-for bnotei:=0 to bnoten0 do
+for bnotej:=0 to bnoten0 do
   begin
-  SetFont(bnote[0,bnotei]);
-  SetFont(bnote[1,bnotei]);
+  SetFont(bnote[0,bnotej]);
+  SetFont(bnote[1,bnotej]);
   end;
+  }
 bnoten:=bnoten0;
 end;
 
@@ -1172,7 +1251,7 @@ if initb=false then InitBNote(false);
 notemapa:=SeekMidiTimeFNote(printtime-delaytime);
 notemapb:=SeekMidiTimeFNote(printtime+scrtime);
 GetFNoteDraw(notemapa,notemapb);
-notemapb:=min(notemapa+$1000,notemapb);
+notemapb:=min(notemapa+$10000,notemapb);
 if notemapn>0 then
 for notemapi:=notemapa to notemapb do
   begin
@@ -1209,25 +1288,26 @@ end;
 end;
 
 procedure DrawBNoteBB();
-var y,y0,h,h0:longword;
-var bnotei:longint;
+var y:longint;
+var y0,h,h0:longword;
+var bnotej:longint;
 begin
 EnterCriticalSection(cs1);
 y:=min(bnoteh,round(printtime*mult*GetWidth()/mult0)+GetHeight());
 if y>0 then
   begin
   y0:=bnoteh0-(y mod bnoteh0);
-  bnotei:=y div bnoteh0;
+  bnotej:=y div bnoteh0;
   h:=0;
   repeat
   h0:=bnoteh0-y0;
   h0:=min(h0,GetHeight()-h);
-  DrawBMP(bnote[0,bnotei],0,y0,GetWidth(),h0,0,h,GetWidth(),h0);
-  DrawBMP(bnote[1,bnotei],0,y0,GetWidth(),h0,0,h,GetWidth(),h0);
-  bnotei:=bnotei-1;
+  FreshBMP(0,bnotej);DrawBMP(bnote[0,bnotej1[0,bnotej]],0,y0,GetWidth(),h0,0,h,GetWidth(),h0);
+  FreshBMP(1,bnotej);DrawBMP(bnote[1,bnotej1[1,bnotej]],0,y0,GetWidth(),h0,0,h,GetWidth(),h0);
+  bnotej:=bnotej-1;
   h:=h+h0;
   y0:=0;
-  until (h=GetHeight()) or (bnotei<0);
+  until (h=GetHeight()) or (bnotej<0);
   end;
 LeaveCriticalSection(cs1);
 end;
@@ -1710,6 +1790,11 @@ if fb then
   close(fevent0);DeleteFile(GetTempDir(false)+'fevent0'+rs);
   close(fevent);DeleteFile(GetTempDir(false)+'fevent'+rs);
   close(fnote);DeleteFile(GetTempDir(false)+'fnote'+rs);
+  end;
+for bnotej:=-1 to bnoten00 do
+  begin
+  bmpname:=GetTempDir(false)+'bmp'+'_'+i2s(0)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
+  bmpname:=GetTempDir(false)+'bmp'+'_'+i2s(1)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
   end;
 midiOutClose(midiOut);
 savefile();
