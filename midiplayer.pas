@@ -1364,23 +1364,23 @@ procedure DrawDevice();
 var caps:MIDIOUTCAPS;
 var devs:ansistring;
 begin
-if deviceb=2 then begin devicetime:=GetMidiTime();deviceb:=1;end;
+if deviceb=2 then begin devicetime:=GetTimeR();deviceb:=1;end;
 if deviceb=1 then
   begin
   midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
   devs:=caps.szPname+'('+i2s(midiOuti+1)+'/'+i2s(midiOutGetNumDevs)+')'+'['+i2s(msgbufn0)+'/'+i2s(caps.wNotes)+']';
   _DrawTextXY0(devs,GetWidth()-fw*length(devs),0,white);
-  if GetMidiTime()>=devicetime+3 then deviceb:=0;
+  if GetTimeR()>=devicetime+3 then deviceb:=0;
   end;
 end;
 
 procedure DrawMsgVol();
 begin
-if msgvolb=2 then begin msgvoltime:=GetMidiTime();msgvolb:=1;end;
+if msgvolb=2 then begin msgvoltime:=GetTimeR();msgvolb:=1;end;
 if msgvolb=1 then
   begin
   _DrawTextXY0(i2s(msgvol0),GetWidth()-fw*length(i2s(msgvol0)),_fh*2,white);
-  if GetMidiTime()>=msgvoltime+3 then msgvolb:=0;
+  if GetTimeR()>=msgvoltime+3 then msgvolb:=0;
   end;
 end;
 
