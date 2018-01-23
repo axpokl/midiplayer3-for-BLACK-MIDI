@@ -33,6 +33,7 @@ Other Functions
 * F2	Reset File
 * Ctrl+F2	Reset All
 * F3	Reset Hardware
+* Ctrl+F3	Change MIDI Device
 * F4	Reset Bar 
 * Ctrl+F4	Auto Reset Bar
 * F5/F6	Set FPS [5-480][Default=120]
