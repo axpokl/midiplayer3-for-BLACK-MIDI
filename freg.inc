@@ -59,7 +59,7 @@ var autofresh:longword;
 var midiOuti:longword;
 var msgbufn0:longword;
 var kchord0:longword;
-var kkey0:longword;
+var kkey0:longint;
 var kmessure:longword;
 var msgvol0:longword;
 

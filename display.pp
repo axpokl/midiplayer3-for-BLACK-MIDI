@@ -881,6 +881,7 @@ procedure GetStringSize(s:ansistring);
 function GetStringWidth(s:ansistring):longword;
 function GetStringHeight(s:ansistring):longword;
 
+procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;w,h:longword;cfg,cbg:longword);
 procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;cfg,cbg:longword);
 procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;cfg:longword);
 procedure DrawTextXY(s:ansistring;x,y:longint;cfg,cbg:longword);
@@ -1160,7 +1161,6 @@ case uM of
     if (wp and 11>0) and (IsIconic(_hw)) then
       begin
       ShowWindow(_hw,SW_SHOW);
-      ShowWindow(_hw,SW_RESTORE);
       SetForegroundWindow(_hw);
       end;
     end;
@@ -1206,7 +1206,7 @@ function WinRegister():ATOM;
 begin
 with _wc do
   begin
-  style:=0;//CS_HREDRAW or CS_VREDRAW;
+  style:=CS_HREDRAW or CS_VREDRAW;
   lpfnWndProc:=@WndProc;
   cbClsExtra:=0;
   cbWndExtra:=0;
@@ -1894,7 +1894,7 @@ _flt,_fud,_fsk,_fcs,
 OUT_DEFAULT_PRECIS,
 ClIP_DEFAULT_PRECIS,
 DEFAULT_QUALITY,
-FF_DONTCARE,
+DEFAULT_PITCH or FF_DONTCARE,
 as2pc(_ffn));
 SelectObject(b^.dc,_fns);
 if _fh=0 then begin GetTextMetrics(_dc,_tm);_fh:=_tm.tmHeight;end;
@@ -1928,22 +1928,36 @@ begin GetStringSize(s);if _strz.cy>0 then GetStringWidth:=round(_strz.cx*_fh/_st
 function GetStringHeight(s:ansistring):longword;
 begin GetStringSize(s);if _strz.cy>0 then GetStringHeight:=round(_strz.cy*_fh/_strz.cy) else GetStringHeight:=0;end;
 
-procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;cfg,cbg:longword);
+procedure InitTextXY(var b:pbitmap;var s:ansistring;var cfg,cbg:longword);
 begin
 if b=nil then b:=_pmain;
 if s='' then s:=' ';
 if cfg=0 then cfg:=White;
 SetTextColor(b^.dc,cfg);
 if cbg=0 then
-  SetBkMode(b^.dc,TRANSPARENT)
+  SetBkMode(b^.dc,Windows.TRANSPARENT)
 else
   begin
   SetBkColor(b^.dc,cbg);
-  SetBkMode(b^.dc,OPAQUE);
+  SetBkMode(b^.dc,Windows.OPAQUE);
   end;
+end;
+procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;w,h:longword;cfg,cbg:longword);
+var lpRect:RECT;
+begin
+InitTextXY(b,s,cfg,cbg);
+lpRect.left:=x;
+lpRect.top:=y;
+lpRect.right:=x+w;
+lpRect.bottom:=y+h;
+Windows.DrawText(b^.dc,as2pc(s),length(s),lpRect,DT_SINGLELINE or DT_CENTER or DT_VCENTER);
+_fx:=x+w;_fy:=y;
+end;
+procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;cfg,cbg:longword);
+begin
+InitTextXY(b,s,cfg,cbg);
 TextOut(b^.dc,x,y,as2pc(s),length(s));
-_fx:=x+GetStringWidth(s);
-_fy:=y;
+_fx:=x+GetStringWidth(s);_fy:=y;
 end;
 procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;cfg:longword);
 begin DrawTextXY(b,s,x,y,cfg,0);end;
@@ -1976,20 +1990,9 @@ begin DrawTextln('');end;
 procedure DrawTextXYw(b:pbitmap;s:ansistring;x,y:longint;cfg,cbg:longword);
 var fi:longword;
 begin
-if b=nil then b:=_pmain;
-if cfg=0 then cfg:=White;
-SetTextColor(b^.dc,cfg);
-if cbg=0 then
-  SetBkMode(b^.dc,Windows.TRANSPARENT)
-else
-  begin
-  SetBkColor(b^.dc,cbg);
-  SetBkMode(b^.dc,Windows.OPAQUE);
-  end;
-for fi:=1 to length(s) do
-begin TextOut(b^.dc,x,y,@s[fi],1);x:=x+_fw;end;
-_fx:=x;
-_fy:=y;
+InitTextXY(b,s,cfg,cbg);
+for fi:=1 to length(s) do begin TextOut(b^.dc,x,y,@s[fi],1);x:=x+_fw;end;
+_fx:=x;_fy:=y;
 end;
 procedure DrawTextXYw(b:pbitmap;s:ansistring;x,y:longint;cfg:longword);
 begin DrawTextXYw(b,s,x,y,cfg,0);end;
