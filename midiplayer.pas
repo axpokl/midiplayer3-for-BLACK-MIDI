@@ -659,6 +659,7 @@ for fi:=0 to eventn-1 do
     if event0[ei].msg and $F0=$90 then
       begin
       notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl maxtrack0) shl 8);
+      if GetFNoteNote1(notem[notei])>event0[ei].ticktime then SetFNoteNote1(notem[notei],event0[ei].ticktime);
       kbd0:=min(notei and $7F,kbd0);
       kbd1:=max(notei and $7F,kbd1);
       if noteb[notei]=true then SetFNoteNote1(notem[notei],event0[ei].ticktime);
@@ -667,13 +668,13 @@ for fi:=0 to eventn-1 do
       notech[notei]:=chord;
       notec[notei]:=event0[ei].track or event0[ei].msg and $F shl maxtrack0;
       note0[notei]:=event0[ei].ticktime;
-      note1[notei]:=event0[ei].ticktime;
+      note1[notei]:=finaltime;
       AddNoteMap(notei);
       end;
     if event0[ei].msg and $F0=$80 then
       begin
       notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl maxtrack0) shl 8);
-      SetFNoteNote1(notem[notei],event0[ei].ticktime)
+      SetFNoteNote1(notem[notei],event0[ei].ticktime);
       end;
     end;
   end;
@@ -793,7 +794,7 @@ const maxbnotebuf=$10000;
 var bnote:packed array[0..1,0..maxbnote-1]of pbitmap;
 var bnotej0:packed array[0..1,0..maxbnote-1]of longint;
 var bnotej1:packed array[0..1,0..maxbnotebuf-1]of longint;
-var bnoten:longint=-1;
+//var bnoten:longint=-1;
 var bnoten0:longint=-1;
 var bnoten00:longint=-1;
 var bnotej:longint;
@@ -801,7 +802,6 @@ var bnoteh:longword=0;
 var bnoteh0:longword=$1000;
 var bnoteb:boolean=false;
 var initb:boolean=false;
-
 var bnoteb0:longint;
 var bnoteb1:array[0..1]of longint;
 var bmpname:ansistring;
@@ -1212,8 +1212,8 @@ for bnotej:=0 to bnoten0 do
   SetFont(bnote[0,bnotej]);
   SetFont(bnote[1,bnotej]);
   end;
-  }
 bnoten:=bnoten0;
+  }
 end;
 
 procedure InitBNote(force:boolean);

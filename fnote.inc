@@ -67,6 +67,13 @@ if e.note1<>note1 then
   end;
 end;
 
+function GetFNoteNote1(i:longint):single;inline;
+var e:tnotemap;
+begin
+e:=GetFNote(i);
+GetFNoteNote1:=e.note1;
+end;
+
 const maxnotemapdraw=$1000;
 var notemapdraw:array[-3..maxnotemapdraw-1+3]of longint;
 var notemapdrawn:longword;
