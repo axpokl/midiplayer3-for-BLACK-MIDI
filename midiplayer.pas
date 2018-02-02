@@ -14,22 +14,22 @@ var event:packed array of tevent;
 var eventi:longint;
 var eventn:longword=0;
 var event0:packed array of tevent;
-var eventj:longword;
-var eventk:longint;
+var eventj:longword=0;
+var eventk:longint=0;
 
 const maxeventtm=$100000;
 var eventtm:packed array[0..maxeventtm-1]of tevent;
-var eventtmn:longword;
-var eventtmi:longword;
+var eventtmn:longword=0;
+var eventtmi:longword=0;
 
 const maxeventmu=$100000;
 var eventmu:packed array[0..maxeventmu-1]of tevent;
-var eventmun:longword;
+var eventmun:longword=0;
 var eventmui:longword;
 
 const maxeventch=$100000;
 var eventch:packed array[0..maxeventch-1]of tevent;
-var eventchn:longword;
+var eventchn:longword=0;
 var eventchi:longword;
 
 const maxeventseek=$1000;
@@ -644,11 +644,13 @@ for chani:=0 to maxchan-1 do chancn[chani]:=0;
 for chani:=0 to maxchan-1 do chancc[chani]:=chani;
 for chani:=0 to maxchan-1 do chancw[chani]:=HSN2RGB(chanc0[chani mod 12]or $9FFF00);
 for chani:=0 to maxchan-1 do chancb[chani]:=MixColor(chancw[chani],black0,3/4);
+EnterCriticalSection(csfevent0);
+eventchi:=0;
 notemapi:=0;
+notemap:=nil;
+setlength(notemap,maxevent);
 kbd0:=kbd0n;
 kbd1:=kbd1n;
-EnterCriticalSection(csfevent0);
-notemap:=nil;setlength(notemap,maxevent);
 if fb then begin close(fnote);fnotew:=true;rewrite(fnote);bjfnote:=-1;end;
 for fi:=0 to eventn-1 do
   begin
@@ -664,7 +666,8 @@ for fi:=0 to eventn-1 do
       kbd1:=max(notei and $7F,kbd1);
       if noteb[notei]=true then SetFNoteNote1(notem[notei],event0[ei].ticktime);
       noteb[notei]:=true;
-      while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[ei].curtick) do begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
+      while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[ei].curtick) do
+        begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
       notech[notei]:=chord;
       notec[notei]:=event0[ei].track or event0[ei].msg and $F shl maxtrack0;
       note0[notei]:=event0[ei].ticktime;
@@ -836,7 +839,7 @@ function GetKeyChordS(chord:byte):ansistring;
 begin chord:=(chord and $F)+kchord0;if chord>=$F then chord:=chord-12;GetKeyChordS:=chords[chord]+'/'+chords[$10 or chord];end;
 
 function GetKeyChord(k:byte;chord:byte):ansistring;
-begin GetKeyChord:=keychord[kchb,(k-chordb[chord]+kchord0*5+12) mod 12]end;
+begin GetKeyChord:=keychord[kchb,(k-chordb[chord]+kchord0*5+12) mod 12];end;
 
 function GetKeyChord0(k:byte;chord:byte):byte;
 begin GetKeyChord0:=(k-chordb[chord]+kchord0*5+12) mod 12;end;
@@ -965,7 +968,7 @@ for keyi:=0 to $7F do
     while h0>(bnoteh0-y0) do
       begin
       if (bnotej>=0) then
-       _Bar(bi,bnotej,x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
+        _Bar(bi,bnotej,x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
       h0:=h0-(bnoteh0-y0);
       y0:=0;
       bnotej:=bnotej-1;
