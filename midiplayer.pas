@@ -26,6 +26,7 @@ const maxeventmu=$100000;
 var eventmu:packed array[0..maxeventmu-1]of tevent;
 var eventmun:longword=0;
 var eventmui:longword;
+var eventmu0:longword;
 
 const maxeventch=$100000;
 var eventch:packed array[0..maxeventch-1]of tevent;
@@ -73,8 +74,8 @@ var len0,head:longword;
 var fpos,flen:longword;
 var dvs:word;
 var len:longint;
-var tick,tick0,curtick,tpq:longword;
-var ticktime0:single;
+var tick,tick0,curtick,curtickm,tpq,tpqm:longword;
+var ticktime0,ticktime0m:single;
 var tempo:longword=500000;
 var fps:single;
 var stat0,stat,hex0,hex1,data0,data1:byte;
@@ -142,15 +143,18 @@ with eventtm[eventtmi] do
 eventtmi:=eventtmi+1;
 end;
 
-procedure AddEventMessure(tr:word;cu:longword);
+procedure AddEventMessure(tr:word;cu:longword;t:single;ms:longword);
 begin
-with eventmu[eventmui] do
+with eventmu[eventmun] do
   begin
   track:=tr;
   curtick:=cu;
-  msg:=0;
+  msg:=ms;
+  ticktime:=t;
+  if eventmu0=0 then msg:=msg or $01000000;
   end;
-eventmui:=eventmui+1;
+eventmu0:=(eventmu0+1) mod sig0;
+eventmun:=eventmun+1;
 end;
 
 procedure AddEventChord(tr:word;cu:longword;ch:longword);
@@ -168,7 +172,6 @@ procedure AddEvent(tr:word;cu,ms,tm:longword;ch:shortint);
 var fi:longint;
 begin
 if ms and $FFFF=$51FF then AddEventTempo(tr,cu,tm)
-else if ms and $FFFF=$5AFF then AddEventMessure(tr,cu)
 else if ms and $FFFF=$59FF then AddEventChord(tr,cu,ch);
 if fb then begin fi:=eventi;eventi:=0;end;
 if not(fb) then if maxevent<=eventi then
@@ -220,7 +223,6 @@ if GetFilePos<len0 then
 tracki:=0;
 eventi:=0;
 eventtmi:=0;
-eventmui:=0;
 eventchi:=0;
 finaltick:=0;
 if fb then begin close(fevent);feventw:=true;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
@@ -337,21 +339,11 @@ end;
 procedure PrepareMidi();
 begin
 trackn:=tracki;
-if tpq>0 then
-  begin
-  curtick:=0;
-  repeat
-  AddEvent(trackn,curtick,$5AFF,0,0);
-  curtick:=curtick+tpq;
-  until curtick>finaltick;
-  track1[trackn]:=eventi;
-  trackn:=trackn+1;
-  end;
 if fb then FlushFEvent(0);
 if fb then begin close(fevent);feventw:=false;reset(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
 eventn:=eventi;
 eventtmn:=eventtmi;
-eventmun:=eventmui;
+eventmun:=0;
 eventchn:=eventchi;
 track0[0]:=0;
 for tracki:=1 to trackn-1 do track0[tracki]:=track1[tracki-1];
@@ -384,14 +376,16 @@ drawr:=0;
 tempo:=500000;
 finaltime:=0;
 curtick:=0;
+curtickm:=0;
 sig0:=1;
 chordtmp:=-1;
 tick0:=0;
 ticktime0:=0;
 tempo00:=0;
 eventtmi:=0;
-eventmui:=0;
 eventchi:=0;
+tpqm:=tpq;
+AddEventMessure(0,0,0,tempo);eventmu0:=1;
 for fi:=0 to eventn-1 do
   begin
   if eventn>0 then begin drawr:=fi/eventn;if fi and $FFF=0 then DrawTitle();end;
@@ -402,8 +396,12 @@ for fi:=0 to eventn-1 do
   if fps>0 then ticktime0:=ticktime0+tick/fps;
   event0[eventi].ticktime:=ticktime0;
   finaltime:=max(finaltime,ticktime0+1);
-  if event0[eventi].msg and $FFFF=$58FF then begin sig0:=event0[eventi].msg shr 16 and $FF;sig1:=event0[eventi].msg shr 24 and $FF;end;
-  while curtick<tick0 do curtick:=curtick+(tpq*sig0 shr max(0,sig1-2));
+  if event0[eventi].msg and $FFFF=$58FF then
+    begin
+    sig0:=event0[eventi].msg shr 16 and $FF;
+    sig1:=event0[eventi].msg shr 24 and $FF;
+    tpqm:=tpq shr max(0,sig1-2);
+    end;
   while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=tick0) do
     begin
     eventtm[eventtmi].ticktime:=ticktime0;
@@ -411,12 +409,13 @@ for fi:=0 to eventn-1 do
     if tempo00=0 then tempo00:=tempo;
     eventtmi:=eventtmi+1;
     end;
-  while (eventmui<eventmun) and (eventmu[eventmui].curtick<=tick0) do
+  while curtickm+tpqm<=tick0 do
     begin
-    eventmu[eventmui].ticktime:=ticktime0;
-    eventmu[eventmui].msg:=tempo;
-    if curtick=tick0 then eventmu[eventmui].msg:=eventmu[eventmui].msg or $01000000;
-    eventmui:=eventmui+1;
+    tick:=tick0-(curtickm+tpqm);
+    if tpq>0 then ticktime0m:=ticktime0-tick/tpq*(tempo/1000000);
+    if fps>0 then ticktime0m:=ticktime0-tick/fps;;
+    AddEventMessure(0,curtickm,ticktime0m,tempo);
+    curtickm:=curtickm+tpqm;
     end;
   while (eventchi<eventchn) and (eventch[eventchi].curtick<=tick0) do
     begin
@@ -427,8 +426,11 @@ for fi:=0 to eventn-1 do
     end;
   if fb then SetFEvent0(event0[eventi],fi);
   end;
+tick:=tpqm;
+if tpq>0 then ticktime0m:=ticktime0m+tick/tpq*(tempo/1000000);
+if fps>0 then ticktime0m:=ticktime0m+tick/fps;
+AddEventMessure(0,curtickm,ticktime0m,tempo);
 eventtmi:=0;
-eventmui:=0;
 eventchi:=0;
 drawr:=0;
 if tempo00=0 then tempo00:=500000;
@@ -682,7 +684,7 @@ for fi:=0 to eventn-1 do
     end;
   end;
 eventtmi:=0;
-eventmui:=0;
+//eventmui:=0;
 eventchi:=0;
 drawr:=0;
 if fb then FlushFNote();
@@ -1063,7 +1065,6 @@ begin DrawTextXY(s,x,GetHeight()-round(GetKeynoteW0()*kleny0)-y-fh-2,c,gray0);en
 
 procedure _DrawTextXY0(s:ansistring;x,y:longint;c:longword);
 begin DrawTextXY(s,x,y,c,gray0);end;
-
 
 procedure DrawMessureLine(t:single;ms:longword;tempo:longword;c:longword);
 var w0,y:longint;
