@@ -65,9 +65,9 @@ var msgvol0:longword;
 
 procedure PlayMidi(fname:ansistring);forward;
 
-procedure SetMidiTime(settime:single);forward;
+procedure SetMidiTime(settime:double);forward;
 
-function GetMidiTime():single;forward;
+function GetMidiTime():double;forward;
 
 procedure resetfile();
 begin

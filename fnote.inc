@@ -56,7 +56,7 @@ else
   notemap[i]:=e;
 end;
 
-procedure SetFNoteNote1(i:longint;note1:single);inline;
+procedure SetFNoteNote1(i:longint;note1:double);inline;
 var e:tnotemap;
 begin
 e:=GetFNote(i);
@@ -67,7 +67,7 @@ if e.note1<>note1 then
   end;
 end;
 
-function GetFNoteNote1(i:longint):single;inline;
+function GetFNoteNote1(i:longint):double;inline;
 var e:tnotemap;
 begin
 e:=GetFNote(i);

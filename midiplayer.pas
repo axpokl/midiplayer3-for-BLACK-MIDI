@@ -9,7 +9,7 @@ var fbi:longword=0;
 {$i freg.inc}
 {$i flist.inc}
 
-type tevent=packed record track:word;curtick,msg:longword;ticktime:single;end;
+type tevent=packed record track:word;curtick,msg:longword;ticktime:double;end;
 var event:packed array of tevent;
 var eventi:longint;
 var eventn:longword=0;
@@ -22,7 +22,7 @@ var eventtm:packed array[0..maxeventtm-1]of tevent;
 var eventtmn:longword=0;
 var eventtmi:longword=0;
 
-const maxeventmu=$100000;
+const maxeventmu=$1000000;
 var eventmu:packed array[0..maxeventmu-1]of tevent;
 var eventmun:longword=0;
 var eventmui:longword;
@@ -75,21 +75,21 @@ var fpos,flen:longword;
 var dvs:word;
 var len:longint;
 var tick,tick0,curtick,curtickm,tpq,tpqm:longword;
-var ticktime0,ticktime0m:single;
+var ticktime0,ticktime0m:double;
 var tempo:longword=500000;
-var fps:single;
+var fps:double;
 var stat0,stat,hex0,hex1,data0,data1:byte;
 var lens:longword;
 var meta:byte;
 var msg:longword;
-var finaltime:single;
+var finaltime:double;
 var finaltick:longword;
 var chord:byte=7;
 var tempo0:longword;
 var tempo00:longword;
-var drawr:single;
+var drawr:double;
 
-type tnotemap=packed record note:byte;note0,note1:single;notec:longword;chord:byte;end;
+type tnotemap=packed record note:byte;note0,note1:double;notec:longword;chord:byte;end;
 var notemap:packed array of tnotemap;
 var notemapi:longint;
 var notemapn:longword;
@@ -121,15 +121,14 @@ function Get0():longword;var l:longword=0;b:byte;n:shortint=0;
 begin repeat b:=Get1();l:=(l shl 7) or (b and $7F);
 n:=n+8;until (b and $80)=0;Get0:=l;end;
 procedure swapc(var a,b:longword);var c:longword;begin c:=a;a:=b;b:=c;end;
-function MixColor(a,b:longword;m:single):longword;var cmix:longword;
+function MixColor(a,b:longword;m:double):longword;var cmix:longword;
 begin display.MixColor(a,b,cmix,m);MixColor:=cmix;end;
-function t2s(r:single):ansistring;var h,m,s,ss:longword;
+function t2s(r:double):ansistring;var h,m,s,ss:longword;var i:int64;
 begin
-if r<0 then r:=0;
-ss:=trunc(r*1000);s:=ss div 1000;ss:=ss mod 1000;m:=s div 60;s:=s mod 60;h:=m div 60;m:=m mod 60;
+if r<0 then r:=0;i:=trunc(r*1000);ss:=i mod 1000;s:=i div 1000;m:=s div 60;s:=s mod 60;h:=m div 60;m:=m mod 60;
 t2s:=i2s(m)+':'+i2s(s,2,'0')+'.'+i2s(ss div 100);if h>0 then t2s:=i2s(h)+':'+i2s(m,2,'0')+':'+i2s(s,2,'0')+'.'+i2s(ss div 100);
 end;
-function r2s(bpm:single):ansistring;var r0,r1:longint;var s:ansistring='';
+function r2s(bpm:double):ansistring;var r0,r1:longint;var s:ansistring='';
 begin r0:=round(bpm*10) div 10;r1:=round(bpm*10) mod 10;s:=i2s(r0);if r1>0 then s:=s+'.'+i2s(r1);r2s:=s;end;
 
 procedure AddEventTempo(tr:word;cu:longword;tm:longword);
@@ -143,7 +142,7 @@ with eventtm[eventtmi] do
 eventtmi:=eventtmi+1;
 end;
 
-procedure AddEventMessure(tr:word;cu:longword;t:single;ms:longword);
+procedure AddEventMessure(tr:word;cu:longword;t:double;ms:longword);
 begin
 with eventmu[eventmun] do
   begin
@@ -440,14 +439,14 @@ LeaveCriticalSection(csfevent0);
 end;
 
 var midiOut:longword;
-var firsttime:single;
+var firsttime:double;
 var pauseb:boolean;
-var pausetime:single;
-var spd0:single=1;
-var spd1:single=1;
+var pausetime:double;
+var spd0:double=1;
+var spd1:double=1;
 
 const volamax=16;
-const vola:packed array[1..volamax]of single=
+const vola:packed array[1..volamax]of double=
 (0,0.01,0.02,0.03,0.04,0.06,0.08,0.12,0.16,0.25,0.35,0.5,0.7,1,1.41,2);
 var volchana:packed array[0..$F]of byte;
 var volchani:byte;
@@ -492,13 +491,13 @@ procedure ResetMidiKeyVol();
 var chani:byte;
 begin for chani:=0 to $F do midiOutShortMsg(midiOut,$00007BB0 or chani);end;
 
-function GetMidiTime():single;
+function GetMidiTime():double;
 begin
 if pauseb then GetMidiTime:=pausetime
 else GetMidiTime:=GetTimeR()*spd0-firsttime;
 end;
 
-function SeekMidiTimeFEvent(seekt:single):longword;
+function SeekMidiTimeFEvent(seekt:double):longword;
 var seeki,seekn:longword;seekx:longint;
 begin
 seekn:=eventn;
@@ -514,7 +513,7 @@ if seekx>0 then if GetFEvent0Ticktime(seeki)<seekt then seeki:=min(seeki+1,seekn
 SeekMidiTimeFEvent:=seeki;
 end;
 
-function SeekMidiTimeFNote(seekt:single):longword;
+function SeekMidiTimeFNote(seekt:double):longword;
 var seeki,seekn:longword;seekx:longint;
 begin
 seekn:=notemapn;
@@ -530,7 +529,7 @@ if seekx>0 then if GetFNote(seeki).note0<seekt then seeki:=min(seeki+1,seekn);
 SeekMidiTimeFNote:=seeki;
 end;
 
-function SeekMidiTimeTempo(seekt:single):longword;
+function SeekMidiTimeTempo(seekt:double):longword;
 var seeki,seekn:longword;seekx:longint;
 begin
 seekn:=eventtmn;
@@ -546,7 +545,7 @@ if seekx>0 then if eventtm[seeki].ticktime<seekt then seeki:=min(seeki+1,seekn);
 SeekMidiTimeTempo:=max(0,seeki-1);
 end;
 
-function SeekMidiTimeChord(seekt:single):longword;
+function SeekMidiTimeChord(seekt:double):longword;
 var seeki,seekn:longword;seekx:longint;
 begin
 seekn:=eventchn;
@@ -562,7 +561,7 @@ if seekx>0 then if eventch[seeki].ticktime<seekt then seeki:=min(seeki+1,seekn);
 SeekMidiTimeChord:=max(0,seeki-1);
 end;
 
-procedure SetMidiTime(settime:single);
+procedure SetMidiTime(settime:double);
 begin
 EnterCriticalSection(cs2);
 if settime<=0 then midiOutReset(midiOut);
@@ -605,8 +604,8 @@ pauseb:=not(pauseb);
 end;
 
 const maxnote=$FFFFFF;
-var note0:packed array[0..maxnote]of single;
-var note1:packed array[0..maxnote]of single;
+var note0:packed array[0..maxnote]of double;
+var note1:packed array[0..maxnote]of double;
 var notec:packed array[0..maxnote]of longword;
 var notech:packed array[0..maxnote]of byte;
 var noteb:packed array[0..maxnote]of boolean;
@@ -767,21 +766,21 @@ var w:longword;
 var h:longword;
 var sz:longword;
 var fw,fh:longword;
-var frametime:single;
-var printtime:single;
-var scrtime:single;
-var delaytime:single=0;
+var frametime:double;
+var printtime:double;
+var scrtime:double;
+var delaytime:double=0;
 var deviceb:shortint=0;
-var devicetime:single=0;
+var devicetime:double=0;
 var msgvolb:shortint=0;
-var msgvoltime:single=0;
+var msgvoltime:double=0;
 
 var k_shift,k_ctrl:boolean;
-var k_pos:single;
+var k_pos:double;
 
-const klen0:single=1.15;
-const klen1:single=0.65;
-var kbd:packed array[0..11]of single;
+const klen0:double=1.15;
+const klen1:double=0.65;
+var kbd:packed array[0..11]of double;
 const keyblack:packed array[0..11]of byte=(0,1,0,1,0,0,1,0,1,0,1,0);
 const keychord:packed array[0..3,0..11]of char=(
 ('1',' ','2',' ','3','4',' ','5',' ','6',' ','7'),
@@ -789,15 +788,15 @@ const keychord:packed array[0..3,0..11]of char=(
 (' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '),
 (' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '));
 
-var kleny0:single=6.5;
-var kleny1:single=4.5;
+var kleny0:double=6.5;
+var kleny1:double=4.5;
 
 var kbdi,kbdn:byte;
 
 const fhr=0.7;
 
 const maxbnote=$100;
-const maxbnotebuf=$10000;
+const maxbnotebuf=$100000;
 var bnote:packed array[0..1,0..maxbnote-1]of pbitmap;
 var bnotej0:packed array[0..1,0..maxbnote-1]of longint;
 var bnotej1:packed array[0..1,0..maxbnotebuf-1]of longint;
@@ -860,10 +859,10 @@ begin IsKeynoteBlack:=keyblack[k mod 12];end;
 function GetKeykey(k:byte):byte;var key:longint;
 begin key:=k+kkey0;while key<0 do key:=key+12;while key>$7F do key:=key-12;GetKeykey:=key;end;
 
-function GetKeynote(k:byte):single;
+function GetKeynote(k:byte):double;
 begin GetKeynote:=7*(k div 12)+kbd[k mod 12];end;
 
-function GetKeynote0(k:byte):single;
+function GetKeynote0(k:byte):double;
 begin if(IsKeynoteBlack(k)=0)then GetKeynote0:=GetKeynote(k)+1 else GetKeynote0:=GetKeynote(k)+klen1;end;
 
 function GetKeynoteX(k:byte):longint;
@@ -884,7 +883,7 @@ begin if(IsKeynoteBlack(k)=1) then GetKeynoteW:=GetKeynoteW1() else GetKeynoteW:
 function GetKeynoteC(k:byte;chan:word):longword;
 begin if(IsKeynoteBlack(k)=1) and (kbdcb=1) then GetKeynoteC:=chancb[chan] else GetKeynoteC:=chancw[chan];end;
 
-procedure SetDrawFont(sz:single);
+procedure SetDrawFont(sz:double);
 begin
 fw:=max(1,round((GetKeynoteW1()-2)*sz));
 fh:=max(1,round(fw*2.2));
@@ -1068,9 +1067,9 @@ begin DrawTextXY(s,x,GetHeight()-round(GetKeynoteW0()*kleny0)-y-fh-2,c,gray0);en
 procedure _DrawTextXY0(s:ansistring;x,y:longint;c:longword);
 begin DrawTextXY(s,x,y,c,gray0);end;
 
-procedure DrawMessureLine(t:single;ms:longword;tempo:longword;c:longword);
+procedure DrawMessureLine(t:double;ms:longword;tempo:longword;c:longword);
 var w0,y:longint;
-var bpm:single;
+var bpm:double;
 begin
 tempo:=tempo and $FFFFFF;
 w0:=GetKeynoteW0();
@@ -1081,7 +1080,7 @@ if tempo>0 then bpm:=60000000/tempo*spd0 else bpm:=0;
 _DrawTextXY(0,r2s(bpm),GetWidth()-fw*length(r2s(bpm)),y,c);
 end;
 
-procedure DrawChordLine(t:single;ch:byte;c:longword);
+procedure DrawChordLine(t:double;ch:byte;c:longword);
 var w0,y:longint;
 begin
 w0:=GetKeynoteW0();
@@ -1335,7 +1334,7 @@ if (max(0,finaltime-1)>0) then
 end;
 
 procedure DrawBPM();
-var bpm:single;
+var bpm:double;
 var bmps:ansistring='';
 begin
 if tempo>0 then bpm:=60000000/tempo*spd0 else bpm:=0;
@@ -1473,7 +1472,7 @@ SetMidiTime(-1);
 end;
 
 procedure ResetMidiSoft();
-var tmptime:single;
+var tmptime:double;
 begin
 tmptime:=GetMidiTime();
 InitMidiChanVol($7F);

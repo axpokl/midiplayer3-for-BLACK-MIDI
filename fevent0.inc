@@ -56,7 +56,7 @@ else
   event0[i]:=e;
 end;
 
-function GetFEvent0TickTime(i:longint):single;inline;
+function GetFEvent0TickTime(i:longint):double;inline;
 begin
 if fb then
   GetFEvent0TickTime:=GetFEvent0(i).ticktime
