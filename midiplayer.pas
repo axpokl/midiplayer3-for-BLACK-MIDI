@@ -49,8 +49,8 @@ var chancc:packed array[0..maxchan-1]of longword;
 var chancw:packed array[0..maxchan-1]of longword;
 var chancb:packed array[0..maxchan-1]of longword;
 var chani:longword;
-const chanc0:packed array[0..11]of longword=
-($55,$AA,$FF,$2A,$7F,$D4,$15,$6A,$BF,$3F,$94,$E9);
+const chanc0:packed array[0..23]of longword=
+(85,170,255,42,127,212,21,63,106,148,191,233,10,31,52,74,95,116,137,159,180,201,222,244);
 
 var chordb:packed array[0..31]of byte=(
 11,06,01,08,03,10,05,00,07,02,09,04,11,06,01,00,
@@ -643,7 +643,7 @@ var ei:longint;
 begin
 for chani:=0 to maxchan-1 do chancn[chani]:=0;
 for chani:=0 to maxchan-1 do chancc[chani]:=chani;
-for chani:=0 to maxchan-1 do chancw[chani]:=HSN2RGB(chanc0[chani mod 12]or $9FFF00);
+for chani:=0 to maxchan-1 do chancw[chani]:=HSN2RGB(chanc0[chani mod 24]or $9FFF00);
 for chani:=0 to maxchan-1 do chancb[chani]:=MixColor(chancw[chani],black0,3/4);
 EnterCriticalSection(csfevent0);
 eventchi:=0;
