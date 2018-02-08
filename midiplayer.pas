@@ -26,7 +26,6 @@ const maxeventmu=$1000000;
 var eventmu:packed array[0..maxeventmu-1]of tevent;
 var eventmun:longword=0;
 var eventmui:longword;
-var eventmu0:longword;
 
 const maxeventch=$100000;
 var eventch:packed array[0..maxeventch-1]of tevent;
@@ -150,9 +149,9 @@ with eventmu[eventmun] do
   curtick:=cu;
   msg:=ms;
   ticktime:=t;
-  if eventmu0=0 then msg:=msg or $01000000;
+  if eventmui=0 then msg:=msg or $01000000;
   end;
-eventmu0:=(eventmu0+1) mod sig0;
+eventmui:=(eventmui+1) mod sig0;
 eventmun:=eventmun+1;
 end;
 
@@ -384,7 +383,7 @@ tempo00:=0;
 eventtmi:=0;
 eventchi:=0;
 tpqm:=tpq;
-AddEventMessure(0,0,0,tempo);eventmu0:=1;
+AddEventMessure(0,0,0,tempo);eventmui:=1;
 for fi:=0 to eventn-1 do
   begin
   if eventn>0 then begin drawr:=fi/eventn;if fi and $FFF=0 then DrawTitle();end;
@@ -669,8 +668,6 @@ for fi:=0 to eventn-1 do
       if GetFNoteNote1(notem[notei])>event0[ei].ticktime then SetFNoteNote1(notem[notei],event0[ei].ticktime);
       kbd0:=min(notei and $7F,kbd0);
       kbd1:=max(notei and $7F,kbd1);
-      //if noteb[notei]=true then SetFNoteNote1(notem[notei],event0[ei].ticktime);
-      //noteb[notei]:=true;
       while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[ei].curtick) do
         begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
       notech[notei]:=chord;
@@ -1134,6 +1131,7 @@ end;
 
 procedure DrawMessureLineAll();
 var grayx:longword;
+var eventmui,eventchi:longint;
 begin
 grayx:=gray0;if kmessure=1 then grayx:=gray1;
 if eventmun>0 then
@@ -1746,7 +1744,6 @@ if eventi<eventn then
   msgbufn:=-msgbufn0;
   while GetMidiTime()>GetFEvent0TickTime(eventi) do
     begin
-    if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
     while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=event0[eventi].curtick) do begin tempo:=eventtm[eventtmi].msg;eventtmi:=eventtmi+1;end;
     while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[eventi].curtick) do begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
     if event0[eventi].msg and $F0 shr 4<$F then
