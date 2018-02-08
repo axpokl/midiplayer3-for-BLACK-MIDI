@@ -461,14 +461,7 @@ var msgbufi:shortint;
 var notemapa:longint;
 var notemapb:longint;
 
-var kbdc:packed array[$00..$7F]of longint;
-var kbdcc:packed array[0..11]of longword;
-var kbdci:byte;
-
-procedure InitKbdC();
-begin
-for kbdci:=$00 to $7F do kbdc[kbdci]:=-1;
-end;
+procedure InitKbdC();forward;
 
 procedure InitMidiChanVol(volchan:byte);
 begin
@@ -608,9 +601,18 @@ var note0:packed array[0..maxnote]of double;
 var note1:packed array[0..maxnote]of double;
 var notec:packed array[0..maxnote]of longword;
 var notech:packed array[0..maxnote]of byte;
-var noteb:packed array[0..maxnote]of boolean;
+//var noteb:packed array[0..maxnote]of boolean;
 var notem:packed array[0..maxnote]of longword;
 var notei:longword;
+
+var kbdc:packed array[$00..$7F]of longint;
+var kbdcc:packed array[0..11]of longword;
+var kbdci:byte;
+const maxkbdc=$7FF;
+var kbdc0k:packed array[0..maxkbdc]of longint;
+var kbdc0c:packed array[0..maxkbdc]of longint;
+var kbdc0i:longint;
+var kbdc0n:longword;
 
 const black0=$0F0F0F;
 const black1=$0F0F0F;
@@ -635,7 +637,7 @@ notemap[notemapi].chord:=notech[notei];
 if fb then begin SetFNote(notemap[notemapi],fni);notemapi:=fni;end;
 chancn[notec[notei]]:=chancn[notec[notei]]+1;
 notemapi:=notemapi+1;
-noteb[notei]:=false;
+//noteb[notei]:=false;
 end;
 
 procedure CreateNoteMap();
@@ -661,14 +663,14 @@ for fi:=0 to eventn-1 do
   if not(fb) then ei:=fi else begin ei:=0;event0[ei]:=GetFEvent0(fi);end;
   if event0[ei].msg and $F<>$9 then
     begin
+    notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl maxtrack0) shl 8);
     if event0[ei].msg and $F0=$90 then
       begin
-      notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl maxtrack0) shl 8);
       if GetFNoteNote1(notem[notei])>event0[ei].ticktime then SetFNoteNote1(notem[notei],event0[ei].ticktime);
       kbd0:=min(notei and $7F,kbd0);
       kbd1:=max(notei and $7F,kbd1);
-      if noteb[notei]=true then SetFNoteNote1(notem[notei],event0[ei].ticktime);
-      noteb[notei]:=true;
+      //if noteb[notei]=true then SetFNoteNote1(notem[notei],event0[ei].ticktime);
+      //noteb[notei]:=true;
       while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[ei].curtick) do
         begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
       notech[notei]:=chord;
@@ -678,10 +680,7 @@ for fi:=0 to eventn-1 do
       AddNoteMap(notei);
       end;
     if event0[ei].msg and $F0=$80 then
-      begin
-      notei:=(event0[ei].msg shr 8 and $7F) or ((event0[ei].track or event0[ei].msg and $F shl maxtrack0) shl 8);
       SetFNoteNote1(notem[notei],event0[ei].ticktime);
-      end;
     end;
   end;
 eventtmi:=0;
@@ -882,6 +881,50 @@ begin if(IsKeynoteBlack(k)=1) then GetKeynoteW:=GetKeynoteW1() else GetKeynoteW:
 
 function GetKeynoteC(k:byte;chan:word):longword;
 begin if(IsKeynoteBlack(k)=1) and (kbdcb=1) then GetKeynoteC:=chancb[chan] else GetKeynoteC:=chancw[chan];end;
+
+procedure InitKbdC();
+begin
+for kbdci:=$00 to $7F do kbdc[kbdci]:=-1;
+for kbdc0i:=0 to maxkbdc do
+  begin
+  kbdc0k[kbdc0i]:=-1;
+  kbdc0c[kbdc0i]:=-1;
+  end;
+kbdc0n:=0;
+end;
+
+procedure PushKbdC(k,c:longint);
+begin
+kbdc0k[kbdc0n]:=k;
+kbdc0c[kbdc0n]:=c;
+kbdc0n:=(kbdc0n+1)and maxkbdc;
+end;
+
+procedure PopKbdC(k:longint);
+var kbdc0b:boolean=false;
+begin
+for kbdc0i:=kbdc0n to maxkbdc do if kbdc0b=false then if kbdc0k[kbdc0i]=k then
+  begin
+//  kbdc[kbdc0k[kbdc0i] and $7F]:=-1;
+  kbdc0k[kbdc0i]:=-1;
+  kbdc0c[kbdc0i]:=-1;
+  kbdc0b:=true;
+  end;
+for kbdc0i:=0 to kbdc0n-1 do if kbdc0b=false then if kbdc0k[kbdc0i]=k then
+  begin
+//  kbdc[kbdc0k[kbdc0i] and $7F]:=-1;
+  kbdc0k[kbdc0i]:=-1;
+  kbdc0c[kbdc0i]:=-1;
+  kbdc0b:=true;
+  end;
+end;
+
+procedure ResetKbdC();
+begin
+//for kbdci:=$00 to $7F do kbdc[kbdci]:=-1;
+for kbdc0i:=kbdc0n to maxkbdc do if kbdc0k[kbdc0i]>-1 then kbdc[kbdc0k[kbdc0i] and $7F]:=kbdc0c[kbdc0i];
+for kbdc0i:=0 to kbdc0n-1 do if kbdc0k[kbdc0i]>-1 then kbdc[kbdc0k[kbdc0i] and $7F]:=kbdc0c[kbdc0i];
+end;
 
 procedure SetDrawFont(sz:double);
 begin
@@ -1122,6 +1165,7 @@ var x,w,w0:longint;
 var kbd0i,kbd1i:byte;
 begin
 EnterCriticalSection(cs3);
+ResetKbdC();
 kbd0i:=kbd0;
 kbd1i:=kbd1;
 if IsKeynoteBlack(kbd0i)=1 then kbd0i:=max($00,kbd0i-1);
@@ -1725,22 +1769,28 @@ if eventi<eventn then
               notech[notei]:=chord;
               notec[notei]:=event0[eventi].track or event0[eventi].msg and $F shl maxtrack0;
               if kbdcb=0 then
-                kbdc[notei and $7F]:=GetKeyChordC(notei and $7F,notech[notei])
+                begin
+                PushKbdC(notei,GetKeyChordC(notei and $7F,notech[notei]));
+                kbdc[notei and $7F]:=GetKeyChordC(notei and $7F,notech[notei]);
+                end
               else
+                begin
+                PushKbdC(notei,GetKeynoteC(notei and $7F,notec[notei]));
                 kbdc[notei and $7F]:=GetKeynoteC(notei and $7F,notec[notei]);
+                end;
               end;
             if event0[eventi].msg and $F0=$80 then
+              begin
+              PopKbdC(notei);
               kbdc[notei and $7F]:=-1;
+              end;
             end;
           LeaveCriticalSection(cs3);
           if (event0[eventi].msg and $F0<>$90) or (event0[eventi].msg shr 16 and $FF>=msgvol0) then
             begin
             msgbuf0:=event0[eventi].msg;
             if event0[eventi].msg and $0F<>$09 then
-              begin
-              notei:=GetKeykey(msgbuf0 shr 8 and $7F);
-              msgbuf0:=msgbuf0 and $FFFF00FF or notei shl 8;
-              end;
+              msgbuf0:=msgbuf0 and $FFFF00FF or GetKeykey(msgbuf0 shr 8 and $7F) shl 8;
             if (msgbufn<0) then
               begin
               midiOutShortMsg(midiOut,msgbuf0);
@@ -1748,7 +1798,6 @@ if eventi<eventn then
               end
             else if msgbufn<maxbuf-1 then
               begin
-
               for msgbufi:=0 to 2 do
                 begin
                 msgbuf[msgbufn+msgbufi]:=msgbuf0 and $FF;
