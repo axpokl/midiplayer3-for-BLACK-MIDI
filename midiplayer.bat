@@ -18,6 +18,7 @@ copy midiplayer64.exe midiplayer\midiplayer64.exe
 copy midiplayer.ico midiplayer\midiplayer.ico
 copy midiplayer.txt midiplayer\midiplayer.txt
 copy FORCE_MEMORY midiplayer\FORCE_MEMORY
+copy CHANNEL_COLOR midiplayer\CHANNEL_COLOR
 copy LICENSE midiplayer\LICENSE
 copy README.md midiplayer\README.md
 ::copy midiplayer.reg midiplayer\midiplayer.reg

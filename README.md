@@ -67,3 +67,10 @@ MIDI software synthesizer
 * The Microsoft GS Wavetable Synth or other MIDI output device may not support long MIDI event
 * If your output device does not support long MIDI event, please increase the short MIDI event buffer by pressing Ctrl+F6
 * You can also reduce the short MIDI event buffer to have better MIDI output performance by pressing Ctrl+F5
+
+Change Channel Color
+-------------
+* You can change the channel/track color by changing the content of file "CHANNEL_COLOR".
+* Each line represent a color which has a Hue value from 0-255. E.g. 0=Red, 85=Green and 170=Blue. 
+* The channel/track will sort for it's note count, then use the color in order.
+* It will repeat the color if there was not enough color specific.
