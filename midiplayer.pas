@@ -611,9 +611,9 @@ var notei:longword;
 var kbdc:packed array[$00..$7F]of longint;
 var kbdcc:packed array[0..11]of longword;
 var kbdci:byte;
-const maxkbdc=$FF;
-var kbdc0k:packed array[0..maxkbdc]of longint;
-var kbdc0c:packed array[0..maxkbdc]of longint;
+const maxkbdc0=$10000;
+var kbdc0k:packed array[0..maxkbdc0-1]of longint;
+var kbdc0c:packed array[0..maxkbdc0-1]of longint;
 var kbdc0i:longint;
 var kbdc0n:longword;
 
@@ -774,8 +774,6 @@ var scrtime:double;
 var delaytime:double=0;
 var deviceb:shortint=0;
 var devicetime:double=0;
-var msgvolb:shortint=0;
-var msgvoltime:double=0;
 
 var k_shift,k_ctrl:boolean;
 var k_pos:double;
@@ -888,7 +886,7 @@ begin if(IsKeynoteBlack(k)=1) and (kbdcb=1) then GetKeynoteC:=chancb[chan] else 
 procedure InitKbdC();
 begin
 for kbdci:=$00 to $7F do kbdc[kbdci]:=-1;
-for kbdc0i:=0 to maxkbdc do
+for kbdc0i:=0 to (maxkbdc-1) do
   begin
   kbdc0k[kbdc0i]:=-1;
   kbdc0c[kbdc0i]:=-1;
@@ -900,27 +898,27 @@ procedure PushKbdC(k,c:longint);
 begin
 kbdc0k[kbdc0n]:=k;
 kbdc0c[kbdc0n]:=c;
-kbdc0n:=(kbdc0n+1)and maxkbdc;
+kbdc0n:=(kbdc0n+1)and (maxkbdc-1);
 end;
 
 procedure PopKbdC(k:longint);
 var kbdc0b:boolean=false;
 begin
-for kbdc0i:=kbdc0n to kbdc0n+maxkbdc do
+for kbdc0i:=kbdc0n to kbdc0n+(maxkbdc-1) do
   if kbdc0b=false then
-    if kbdc0k[kbdc0i and maxkbdc]=k then
+    if kbdc0k[kbdc0i and (maxkbdc-1)]=k then
       begin
-      kbdc0k[kbdc0i and maxkbdc]:=-1;
-      kbdc0c[kbdc0i and maxkbdc]:=-1;
+      kbdc0k[kbdc0i and (maxkbdc-1)]:=-1;
+      kbdc0c[kbdc0i and (maxkbdc-1)]:=-1;
       kbdc0b:=true;
       end;
 end;
 
 procedure ResetKbdC();
 begin
-for kbdc0i:=kbdc0n to kbdc0n+maxkbdc do
-  if kbdc0k[kbdc0i and maxkbdc]>-1 then
-    kbdc[kbdc0k[kbdc0i and maxkbdc] and $7F]:=kbdc0c[kbdc0i and maxkbdc];
+for kbdc0i:=kbdc0n to kbdc0n+(maxkbdc-1) do
+  if kbdc0k[kbdc0i and (maxkbdc-1)]>-1 then
+    kbdc[kbdc0k[kbdc0i and (maxkbdc-1)] and $7F]:=kbdc0c[kbdc0i and (maxkbdc-1)];
 end;
 
 procedure SetDrawFont(sz:double);
@@ -1430,19 +1428,9 @@ if deviceb=2 then begin devicetime:=GetTimeR();deviceb:=1;end;
 if deviceb=1 then
   begin
   midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
-  devs:=caps.szPname+'('+i2s(midiOuti+1)+'/'+i2s(midiOutGetNumDevs)+')'+'['+i2s(msgbufn0)+'/'+i2s(caps.wNotes)+']';
+  devs:=caps.szPname+'('+i2s(midiOuti+1)+'/'+i2s(midiOutGetNumDevs)+')'+'['+i2s(msgbufn0)+'/'+i2s(msgvol0)+'/'+i2s(maxkbdc)+'/'+i2s(caps.wNotes)+']';
   _DrawTextXY0(devs,GetWidth()-fw*length(devs),0,white);
   if GetTimeR()>=devicetime+3 then deviceb:=0;
-  end;
-end;
-
-procedure DrawMsgVol();
-begin
-if msgvolb=2 then begin msgvoltime:=GetTimeR();msgvolb:=1;end;
-if msgvolb=1 then
-  begin
-  _DrawTextXY0(i2s(msgvol0),GetWidth()-fw*length(i2s(msgvol0)),_fh*2,white);
-  if GetTimeR()>=msgvoltime+3 then msgvolb:=0;
   end;
 end;
 
@@ -1477,7 +1465,6 @@ if kchb2=0 then
   DrawNoteN();
   DrawFPS();
   DrawDevice();
-  DrawMsgVol();
   DrawLongMsg();
   end;
 DrawReal();
@@ -1616,10 +1603,12 @@ if iskey() then
   if iskey(K_F4) and (k_ctrl) then autofresh:=1-autofresh;
   if iskey(K_F5) and not(k_ctrl) and not(k_shift) then framerate:=max(5,framerate-((framerate-1) div 60+1));
   if iskey(K_F6) and not(k_ctrl) and not(k_shift) then framerate:=min(480,framerate+(framerate div 60+1));
-  if iskey(K_F5) and (k_ctrl) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
-  if iskey(K_F6) and (k_ctrl) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
-  if iskey(K_F5) and (k_shift) then begin msgvol0:=max(0,msgvol0-1);msgvolb:=2;end;
-  if iskey(K_F6) and (k_shift) then begin msgvol0:=min($7F,msgvol0+1);msgvolb:=2;end;
+  if iskey(K_F5) and not(k_shift) and (k_ctrl) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
+  if iskey(K_F6) and not(k_shift) and (k_ctrl) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
+  if iskey(K_F5) and (k_shift) and not(k_ctrl) then begin msgvol0:=max(0,msgvol0-1);deviceb:=2;end;
+  if iskey(K_F6) and (k_shift) and not(k_ctrl) then begin msgvol0:=min($7F,msgvol0+1);deviceb:=2;end;
+  if iskey(K_F5) and (k_shift) and (k_ctrl) then begin maxkbdc:=max(1,maxkbdc shr 1);deviceb:=2;end;
+  if iskey(K_F6) and (k_shift) and (k_ctrl) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);deviceb:=2;end;
   if iskey(K_F7) or iskey(K_F8) then begin k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;end;
   if iskey(K_F7) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
   if iskey(K_F8) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
@@ -1710,7 +1699,7 @@ begin
 for chanc0i:=0 to chanc0n-1 do chanc00[chanc0i]:=chanc0[chanc0i];
 if(fileexists(fdir+'CHANNEL_COLOR')) then
   begin
-  assign(fchan,'CHANNEL_COLOR');
+  assign(fchan,fdir+'CHANNEL_COLOR');
   reset(fchan);
   chanc0n:=0;
   while not(eof(fchan)) do
