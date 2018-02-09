@@ -1,34 +1,44 @@
-const maxfnoten0=16;
+const maxfnoten0=12;
 const maxfnoten=1 shl maxfnoten0;
+const maxfnotem0=4;
+const maxfnotem=1 shl maxfnotem0;
 var fnote:file of tnotemap;
 var fnotew:boolean;
-var bfnote:array[0..maxfnoten-1]of tnotemap;
+var bfnote:array[0..maxfnotem-1,0..maxfnoten-1]of tnotemap;
 var bfnote_:array[0..maxfnoten-1]of tnotemap;
-var bifnote,bjfnote:longint;
+var bifnote:longint;
+var bjfnote:array[0..maxfnotem-1]of longint;
+var bjfnotei,bjfnotej,bjfnotek:longint;
 
 procedure FlushFNote();inline;
 begin
-if bjfnote>=0 then
+if bjfnote[bjfnotej]>=0 then
   begin
-  seek(fnote,bjfnote shl maxfnoten0);
-  blockwrite(fnote,bfnote,maxfnoten);
+  seek(fnote,bjfnote[bjfnotej] shl maxfnoten0);
+  blockwrite(fnote,bfnote[bjfnotej],maxfnoten);
   end;
 end;
 
 procedure GetFNoteBlock(i:longint);inline;
 begin
-if bjfnote<>i shr maxfnoten0 then
+bjfnotej:=-1;
+for bjfnotei:=0 to maxfnotem-1 do
+  if bjfnote[bjfnotei]=i shr maxfnoten0 then
+    bjfnotej:=bjfnotei;
+if bjfnotej=-1 then
   begin
+  bjfnotek:=(bjfnotek+1)and(maxfnotem-1);
+  bjfnotej:=bjfnotek;
   if fnotew then FlushFNote();
-  bjfnote:=i shr maxfnoten0;
+  bjfnote[bjfnotej]:=i shr maxfnoten0;
   if fnotew then
-    if filesize(fnote)<=(bjfnote shl maxfnoten0) then
+    if filesize(fnote)<=(bjfnote[bjfnotej] shl maxfnoten0) then
       begin
-      seek(fnote,bjfnote shl maxfnoten0);
+      seek(fnote,bjfnote[bjfnotej] shl maxfnoten0);
       blockwrite(fnote,bfnote_,maxfnoten);
       end;
-  seek(fnote,bjfnote shl maxfnoten0);
-  blockread(fnote,bfnote,maxfnoten);
+  seek(fnote,bjfnote[bjfnotej] shl maxfnoten0);
+  blockread(fnote,bfnote[bjfnotej],maxfnoten);
   end;
 end;
 
@@ -38,7 +48,7 @@ if fb then
   begin
   GetFNoteBlock(i);
   bifnote:=i and (maxfnoten-1);
-  GetFNote:=bfnote[bifnote];
+  GetFNote:=bfnote[bjfnotej,bifnote];
   end
 else
   GetFNote:=notemap[i];
@@ -50,7 +60,7 @@ if fb then
   begin
   GetFNoteBlock(i);
   bifnote:=i and (maxfnoten-1);
-  bfnote[bifnote]:=e;
+  bfnote[bjfnotej,bifnote]:=e;
   end
 else
   notemap[i]:=e;
