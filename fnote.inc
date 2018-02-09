@@ -1,6 +1,6 @@
-const maxfnoten0=12;
+const maxfnoten0=15;
 const maxfnoten=1 shl maxfnoten0;
-const maxfnotem0=4;
+const maxfnotem0=1;
 const maxfnotem=1 shl maxfnotem0;
 var fnote:file of tnotemap;
 var fnotew:boolean;

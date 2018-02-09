@@ -1768,6 +1768,7 @@ if eventi<eventn then
   msgbufn:=-msgbufn0;
   while GetMidiTime()>GetFEvent0TickTime(eventi) do
     begin
+    if isnextmsg then DoAct();
     if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
     while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=event0[eventi].curtick) do begin tempo:=eventtm[eventtmi].msg;eventtmi:=eventtmi+1;end;
     while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[eventi].curtick) do begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
