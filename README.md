@@ -1,6 +1,11 @@
 Free Pascal midiplayer3 for Black MIDI by ax_pokl
 =============
 
+Release and Source Code
+-------------
+* Latest version: http://www.axpokl.com/midiplayer3.zip
+* Source code: https://github.com/axpokl/midiplayer3-for-BLACK-MIDI
+
 How to Play
 -------------
 * Drag file to play
@@ -74,4 +79,4 @@ Change Channel Color
 * You can change the channel/track color by changing the content of file "CHANNEL_COLOR".
 * Each line represent a color which has a Hue value from 0-255. E.g. 0=Red, 85=Green and 170=Blue. 
 * The channel/track will sort by it's note count, then use the color in order.
-* It will repeat the color if there was not enough color specific.
+* The color will repeat if there is not enough color for channel/track in the file specific.
