@@ -660,7 +660,7 @@ for notei:=0 to maxnote-1 do notem[notei]:=0;
 setlength(notemap,maxevent);
 kbd0:=kbd0n;
 kbd1:=kbd1n;
-if fb then begin close(fnote);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;end;
+if fb then begin close(fnote);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;end;
 for fi:=0 to eventn-1 do
   begin
   if eventn>0 then if fi and $FFF=0 then begin drawr:=fi/eventn;DrawTitle();end;
@@ -689,8 +689,8 @@ eventtmi:=0;
 //eventmui:=0;
 eventchi:=0;
 drawr:=0;
-if fb then FlushFNote();
-if fb then begin close(fnote);fnotew:=false;reset(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;end;
+if fb then FlushFNoteAll();
+if fb then begin close(fnote);fnotew:=false;reset(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;end;
 LeaveCriticalSection(csfevent0);
 notemapn:=notemapi;
 end;
@@ -1027,7 +1027,7 @@ for keyi:=0 to $7F do
     h:=0;
     end;
   end;
-if fb then if flushb then FlushFNote();
+if fb then if flushb then FlushFNoteAll();
 end;
 
 procedure DrawBNote(ni:longword);
@@ -1267,7 +1267,7 @@ EnterCriticalSection(cs4);
 InitBnote0(force);
 DrawMessureLineAll();
 InitFNoteDraw(0,notemapn-1);
-if fb then FlushFNote();
+if fb then FlushFNoteAll();
 scrtime:=(GetHeight()-round(GetKeynoteW0()*kleny0))/(mult*GetWidth()/mult0);
 delaytime:=scrtime;
 if not(force) then
@@ -1748,7 +1748,7 @@ if fb then
   begin
   assign(fevent0,GetTempDir(false)+'fevent0'+rs);fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
   assign(fevent,GetTempDir(false)+'fevent'+rs);fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
-  assign(fnote,GetTempDir(false)+'fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;
+  assign(fnote,GetTempDir(false)+'fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
   end;
 InitDraw();
 loadfile();

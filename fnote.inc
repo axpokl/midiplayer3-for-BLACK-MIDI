@@ -1,6 +1,6 @@
-const maxfnoten0=15;
+const maxfnoten0=12;
 const maxfnoten=1 shl maxfnoten0;
-const maxfnotem0=1;
+const maxfnotem0=4;
 const maxfnotem=1 shl maxfnotem0;
 var fnote:file of tnotemap;
 var fnotew:boolean;
@@ -8,7 +8,8 @@ var bfnote:array[0..maxfnotem-1,0..maxfnoten-1]of tnotemap;
 var bfnote_:array[0..maxfnoten-1]of tnotemap;
 var bifnote:longint;
 var bjfnote:array[0..maxfnotem-1]of longint;
-var bjfnotei,bjfnotej,bjfnotek:longint;
+var bjfnotei,bjfnotej:longint;
+var bjfnotek:longint;
 
 procedure FlushFNote();inline;
 begin
@@ -18,6 +19,9 @@ if bjfnote[bjfnotej]>=0 then
   blockwrite(fnote,bfnote[bjfnotej],maxfnoten);
   end;
 end;
+
+procedure FlushFNoteAll();inline;
+begin for bjfnotej:=0 to maxfnotem-1 do FlushFNote();end;
 
 procedure GetFNoteBlock(i:longint);inline;
 begin
