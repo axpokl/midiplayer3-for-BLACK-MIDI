@@ -44,6 +44,7 @@ var trackn:longword;
 var trackj:longword;
 
 var chancn:packed array[0..maxchan-1]of longword;
+var chanci:packed array[0..maxchan-1]of longword;
 var chancc:packed array[0..maxchan-1]of longword;
 var chancw:packed array[0..maxchan-1]of longword;
 var chancb:packed array[0..maxchan-1]of longword;
@@ -607,7 +608,7 @@ var notei:longword;
 var kbdc:packed array[$00..$7F]of longint;
 var kbdcc:packed array[0..11]of longword;
 var kbdci:byte;
-const maxkbdc=$7FF;
+const maxkbdc=$FF;
 var kbdc0k:packed array[0..maxkbdc]of longint;
 var kbdc0c:packed array[0..maxkbdc]of longint;
 var kbdc0i:longint;
@@ -643,9 +644,10 @@ procedure CreateNoteMap();
 var ei:longint;
 begin
 for chani:=0 to maxchan-1 do chancn[chani]:=0;
-for chani:=0 to maxchan-1 do chancc[chani]:=chani;
-for chani:=0 to maxchan-1 do chancw[chani]:=HSN2RGB(chanc0[chani mod 24]or $9FFF00);
-for chani:=0 to maxchan-1 do chancb[chani]:=MixColor(chancw[chani],black0,3/4);
+for chani:=0 to maxchan-1 do chanci[chani]:=chani;
+for chani:=0 to maxchan-1 do chancc[chani]:=HSN2RGB(chanc0[chani mod 24]or $9FFF00);
+for chani:=0 to maxchan-1 do chancw[chani]:=chancc[chani];
+for chani:=0 to maxchan-1 do chancb[chani]:=MixColor(chancc[chani],black0,3/4);
 EnterCriticalSection(csfevent0);
 eventchi:=0;
 notemapi:=0;
@@ -703,7 +705,7 @@ while (q1<q2) do
   if (q1<q2) then
     begin
     swapc(chancn[q1],chancn[q2]);
-    swapc(chancc[q1],chancc[q2]);
+    swapc(chanci[q1],chanci[q2]);
     q1:=q1+1;
     end;
   while (q1<q2) and (chancn[q1]>qv) do
@@ -711,7 +713,7 @@ while (q1<q2) do
   if (q1<q2) then
     begin
     swapc(chancn[q1],chancn[q2]);
-    swapc(chancc[q1],chancc[q2]);
+    swapc(chanci[q1],chanci[q2]);
     q2:=q2-1;
     end;
   end;
@@ -722,27 +724,27 @@ end;
 procedure SortNoteMapColorQuick2(n1,n2:longword);
 var qv,q1,q2:longword;
 begin
-qv:=chancc[n1];
+qv:=chanci[n1];
 q1:=n1;
 q2:=n2;
 while (q1<q2) do
   begin
-  while (q1<q2) and (chancc[q2]>qv) do
+  while (q1<q2) and (chanci[q2]>qv) do
     q2:=q2-1;
   if (q1<q2) then
     begin
     swapc(chancn[q1],chancn[q2]);
-    swapc(chancc[q1],chancc[q2]);
+    swapc(chanci[q1],chanci[q2]);
     swapc(chancw[q1],chancw[q2]);
     swapc(chancb[q1],chancb[q2]);
     q1:=q1+1;
     end;
-  while (q1<q2) and (chancc[q1]<qv) do
+  while (q1<q2) and (chanci[q1]<qv) do
     q1:=q1+1;
   if (q1<q2) then
     begin
     swapc(chancn[q1],chancn[q2]);
-    swapc(chancc[q1],chancc[q2]);
+    swapc(chanci[q1],chanci[q2]);
     swapc(chancw[q1],chancw[q2]);
     swapc(chancb[q1],chancb[q2]);
     q2:=q2-1;
@@ -756,6 +758,7 @@ procedure SortNoteMapColor();
 begin
 SortNoteMapColorQuick1(0,maxchan-1);
 SortNoteMapColorQuick2(0,maxchan-1);
+SortNoteMapColorQuick1(0,maxchan-1);
 end;
 
 var w:longword;
@@ -900,27 +903,21 @@ end;
 procedure PopKbdC(k:longint);
 var kbdc0b:boolean=false;
 begin
-for kbdc0i:=kbdc0n to maxkbdc do if kbdc0b=false then if kbdc0k[kbdc0i]=k then
-  begin
-//  kbdc[kbdc0k[kbdc0i] and $7F]:=-1;
-  kbdc0k[kbdc0i]:=-1;
-  kbdc0c[kbdc0i]:=-1;
-  kbdc0b:=true;
-  end;
-for kbdc0i:=0 to kbdc0n-1 do if kbdc0b=false then if kbdc0k[kbdc0i]=k then
-  begin
-//  kbdc[kbdc0k[kbdc0i] and $7F]:=-1;
-  kbdc0k[kbdc0i]:=-1;
-  kbdc0c[kbdc0i]:=-1;
-  kbdc0b:=true;
-  end;
+for kbdc0i:=kbdc0n to kbdc0n+maxkbdc do
+  if kbdc0b=false then
+    if kbdc0k[kbdc0i and maxkbdc]=k then
+      begin
+      kbdc0k[kbdc0i and maxkbdc]:=-1;
+      kbdc0c[kbdc0i and maxkbdc]:=-1;
+      kbdc0b:=true;
+      end;
 end;
 
 procedure ResetKbdC();
 begin
-//for kbdci:=$00 to $7F do kbdc[kbdci]:=-1;
-for kbdc0i:=kbdc0n to maxkbdc do if kbdc0k[kbdc0i]>-1 then kbdc[kbdc0k[kbdc0i] and $7F]:=kbdc0c[kbdc0i];
-for kbdc0i:=0 to kbdc0n-1 do if kbdc0k[kbdc0i]>-1 then kbdc[kbdc0k[kbdc0i] and $7F]:=kbdc0c[kbdc0i];
+for kbdc0i:=kbdc0n to kbdc0n+maxkbdc do
+  if kbdc0k[kbdc0i and maxkbdc]>-1 then
+    kbdc[kbdc0k[kbdc0i and maxkbdc] and $7F]:=kbdc0c[kbdc0i and maxkbdc];
 end;
 
 procedure SetDrawFont(sz:double);
@@ -1369,6 +1366,21 @@ if max(0,finaltime-1)>0 then
   end;
 end;
 
+procedure DrawChannel();
+var chani:longword=0;
+var chanci0:longword=0;
+begin
+while chancn[chani]>0 do
+  begin
+  Bar(0,chani*fh+fh,fh,fh,chancc[chani]);
+  DrawTextXY(i2s(chancn[chani]),fh,chani*fh+fh,chancc[chani]);
+  chanci0:=chanci[chani];
+  if chanci0 and $F=0 then chanci0:=chanci0 shr 12 else chanci0:=chanci0 and $F;
+  DrawTextXY(i2s(chanci0,2),0,chani*fh+fh,black);
+  chani:=chani+1;
+  end;
+end;
+
 procedure DrawChord();
 begin
 if (max(0,finaltime-1)>0) then
@@ -1456,6 +1468,7 @@ DrawKeyboard();
 if kchb2=0 then
   begin
   DrawTime();
+  DrawChannel();
   DrawChord();
   DrawBPM();
   DrawNoteN();
@@ -1744,6 +1757,7 @@ if eventi<eventn then
   msgbufn:=-msgbufn0;
   while GetMidiTime()>GetFEvent0TickTime(eventi) do
     begin
+    if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
     while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=event0[eventi].curtick) do begin tempo:=eventtm[eventtmi].msg;eventtmi:=eventtmi+1;end;
     while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[eventi].curtick) do begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
     if event0[eventi].msg and $F0 shr 4<$F then
