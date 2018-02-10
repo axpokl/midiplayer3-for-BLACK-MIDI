@@ -88,7 +88,7 @@ kchord0:=0;
 kkey0:=0;
 kmessure:=0;
 msgvol0:=2;
-maxkbdc:=32;
+maxkbdc:=$100;
 end;
 
 procedure savefile();

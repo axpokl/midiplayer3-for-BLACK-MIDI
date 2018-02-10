@@ -597,6 +597,7 @@ begin
 if pauseb=false then pausetime:=GetMidiTime();
 SetMidiTime(pausetime);
 pauseb:=not(pauseb);
+if not(pauseb) then InitKbdC();
 end;
 
 const maxnote=$FFFFFF;
@@ -615,7 +616,9 @@ const maxkbdc0=$10000;
 var kbdc0k:packed array[0..maxkbdc0-1]of longint;
 var kbdc0c:packed array[0..maxkbdc0-1]of longint;
 var kbdc0i:longint;
-var kbdc0n:longword;
+var kbdc0n,kbdc0n0:longword;
+var kbdc0m,kbdc0m0:longword;
+var kbdc0p:longword;
 
 const black0=$0F0F0F;
 const black1=$0F0F0F;
@@ -892,19 +895,24 @@ for kbdc0i:=0 to (maxkbdc-1) do
   kbdc0c[kbdc0i]:=-1;
   end;
 kbdc0n:=0;
+kbdc0m:=0;
+kbdc0p:=0;
 end;
 
 procedure PushKbdC(k,c:longint);
 begin
 kbdc0k[kbdc0n]:=k;
 kbdc0c[kbdc0n]:=c;
-kbdc0n:=(kbdc0n+1)and (maxkbdc-1);
+kbdc0n:=(kbdc0n+1)and(maxkbdc-1);
+kbdc0k[kbdc0n]:=-1;
+kbdc0p:=kbdc0p+1;
 end;
 
 procedure PopKbdC(k:longint);
 var kbdc0b:boolean=false;
 begin
-for kbdc0i:=kbdc0n to kbdc0n+(maxkbdc-1) do
+kbdc0n0:=kbdc0n;if kbdc0m>kbdc0n0 then kbdc0n0:=kbdc0n0 or maxkbdc;kbdc0m0:=kbdc0n0-kbdc0m;
+for kbdc0i:=kbdc0m to kbdc0n0-1 do
   if kbdc0b=false then
     if kbdc0k[kbdc0i and (maxkbdc-1)]=k then
       begin
@@ -912,11 +920,15 @@ for kbdc0i:=kbdc0n to kbdc0n+(maxkbdc-1) do
       kbdc0c[kbdc0i and (maxkbdc-1)]:=-1;
       kbdc0b:=true;
       end;
+kbdc0p:=max(0,kbdc0p-1);
+while (kbdc0m<>kbdc0n) and (kbdc0k[kbdc0m]=-1) do
+  kbdc0m:=(kbdc0m+1)and(maxkbdc-1);
 end;
 
 procedure ResetKbdC();
 begin
-for kbdc0i:=kbdc0n to kbdc0n+(maxkbdc-1) do
+kbdc0n0:=kbdc0n;if kbdc0m>kbdc0n0 then kbdc0n0:=kbdc0n0 or maxkbdc;kbdc0m0:=kbdc0n0-kbdc0m;
+for kbdc0i:=kbdc0m to kbdc0n0-1 do
   if kbdc0k[kbdc0i and (maxkbdc-1)]>-1 then
     kbdc[kbdc0k[kbdc0i and (maxkbdc-1)] and $7F]:=kbdc0c[kbdc0i and (maxkbdc-1)];
 end;
@@ -1417,7 +1429,7 @@ var fpss:ansistring='';
 begin
 fpss:=i2s(GetFPS())+'/'+i2s(framerate);
 if abs(GetFPSR-framerate)>1 then
-  _DrawTextXY0(fpss,GetWidth()-fw*length(fpss),0,white);
+  _DrawTextXY0(fpss,GetWidth()-fw*length(fpss),_fh,white);
 end;
 
 procedure DrawDevice();
@@ -1435,7 +1447,10 @@ if deviceb=1 then
 end;
 
 procedure DrawLongMsg();
-begin if msgbufn>0 then _DrawTextXY0(i2s(msgbufn),GetWidth()-fw*length(i2s(msgbufn)),_fh,white);end;
+begin 
+if kbdc0p>0 then _DrawTextXY0(i2s(kbdc0m0)+'/'+i2s(kbdc0p),GetWidth()-fw*length(i2s(kbdc0m0)+'/'+i2s(kbdc0p)),0,white);
+if msgbufn>0 then _DrawTextXY0(i2s(msgbufn),GetWidth()-fw*length(i2s(msgbufn)),_fh,white);
+end;
 
 procedure DrawReal();
 begin
@@ -1463,9 +1478,9 @@ if kchb2=0 then
   DrawChord();
   DrawBPM();
   DrawNoteN();
+  DrawLongMsg();
   DrawFPS();
   DrawDevice();
-  DrawLongMsg();
   end;
 DrawReal();
 FreshWin();
@@ -1607,8 +1622,8 @@ if iskey() then
   if iskey(K_F6) and not(k_shift) and (k_ctrl) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
   if iskey(K_F5) and (k_shift) and not(k_ctrl) then begin msgvol0:=max(0,msgvol0-1);deviceb:=2;end;
   if iskey(K_F6) and (k_shift) and not(k_ctrl) then begin msgvol0:=min($7F,msgvol0+1);deviceb:=2;end;
-  if iskey(K_F5) and (k_shift) and (k_ctrl) then begin maxkbdc:=max(1,maxkbdc shr 1);deviceb:=2;end;
-  if iskey(K_F6) and (k_shift) and (k_ctrl) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);deviceb:=2;end;
+  if iskey(K_F5) and (k_shift) and (k_ctrl) then begin maxkbdc:=max(1,maxkbdc shr 1);InitKbdC();deviceb:=2;end;
+  if iskey(K_F6) and (k_shift) and (k_ctrl) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();deviceb:=2;end;
   if iskey(K_F7) or iskey(K_F8) then begin k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;end;
   if iskey(K_F7) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
   if iskey(K_F8) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
