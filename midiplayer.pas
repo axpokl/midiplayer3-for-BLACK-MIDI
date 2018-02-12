@@ -808,7 +808,7 @@ var bnoten0:longint=-1;
 var bnoten00:longint=-1;
 var bnotej:longint;
 var bnoteh:longword=0;
-var bnoteh0:longword=$400;
+var bnoteh0:longword=$1000;
 var bnoteb:boolean=false;
 var initb:boolean=false;
 var bnoteb0:longint;
