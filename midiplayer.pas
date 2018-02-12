@@ -798,7 +798,7 @@ var kbdi,kbdn:byte;
 
 const fhr=0.7;
 
-const maxbnote=$100;
+const maxbnote=$40;
 const maxbnotebuf=$100000;
 var bnote:packed array[0..1,0..maxbnote-1]of pbitmap;
 var bnotej0:packed array[0..1,0..maxbnote-1]of longint;
@@ -808,7 +808,7 @@ var bnoten0:longint=-1;
 var bnoten00:longint=-1;
 var bnotej:longint;
 var bnoteh:longword=0;
-var bnoteh0:longword=$1000;
+var bnoteh0:longword=$400;
 var bnoteb:boolean=false;
 var initb:boolean=false;
 var bnoteb0:longint;
