@@ -621,6 +621,7 @@ const GDIImageFormatBMP:TGUID='{557CF400-1A04-11D3-9A73-0000F81EF32E}';
       GDIImageFormatTIF:TGUID='{557CF405-1A04-11D3-9A73-0000F81EF32E}';
       GDIImageFormatPNG:TGUID='{557CF406-1A04-11D3-9A73-0000F81EF32E}';
       GDIImageFormatICO:TGUID='{557CF407-1A04-11D3-9A73-0000F81EF32E}';
+const DEFAULTCLASSNAME:PWideChar='DisplayClass';
 
 // Internal Variable 内部变量
 
@@ -631,7 +632,7 @@ var _w,_h,_x,_y:longint;              //窗口宽高坐标
 var _hw:longword;                     //窗口句柄
     _dc:longword;                     //绘图句柄
 
-var _wc:wndClass;                     //窗口注册结构
+var _wc:wndClassW;                    //窗口注册结构
     _wca:ATOM;                        //窗口注册句柄
     _ms:msg;                          //消息结构
     _mst:msg;                         //消息结构缓存
@@ -776,8 +777,11 @@ function NewThread(th:pointer):longword;
 procedure PauseThread(thi:longword);
 procedure ResumeThread(thi:longword);
 procedure StopThread(thi:longword);
+function MsgBoxW(s,title:unicodestring;i:longword):longword;
 function MsgBox(s,title:ansistring;i:longword):longword;
+procedure MsgBoxW(s,title:unicodestring);
 procedure MsgBox(s,title:ansistring);
+procedure MsgBoxW(s:unicodestring);
 procedure MsgBox(s:ansistring);
 procedure Delay(t:double);
 procedure Delay(t:longword);
@@ -805,14 +809,18 @@ procedure SetDrawProcedure(th:tprocedure);
 function GetTimeR():double;
 function GetTime():longword;
 procedure SetTitle(s:ansistring);
-procedure SetSize(w,h:longword);
+procedure SetTitleW(s:unicodestring);
 function GetTitle():ansistring;
+function GetTitleW():unicodestring;
+procedure SetSize(w,h:longword);
 function GetWidth():longword;
 function GetHeight():longword;
 function GetSize():longword;
 function GetScrWidth():longint;
 function GetScrHeight():longint;
 function GetScrSize():longword;
+function GetScrCapsX():double;
+function GetScrCapsY():double;
 function GetBorderTitle():longint;
 function GetBorderWidth():longint;
 function GetBorderHeight():longint;
@@ -1052,6 +1060,7 @@ function GetMouseMove():longword;
 function WaitMouseMove():longword;
 function IsDropFile():boolean;
 function GetDropFile():ansistring;
+function GetDropFileW():unicodestring;
 function WaitDropFile():ansistring;
 function GetMouseAbsX():longint;
 function GetMouseAbsY():longint;
@@ -1179,7 +1188,7 @@ case uM of
     if (GetMousePosX>=0) and (GetMousePosY>=0)
     and (GetMousePosX<=_w) and (GetMousePosY<=_h)
     then SetCursor(LoadCursor(0,IDC_ARROW))
-    else WndProc:=DefWindowProc(hW,uM,wP,lP);
+    else WndProc:=DefWindowProcW(hW,uM,wP,lP);
   WM_USER:
     begin
     _msusr[_msusri].message:=uM;
@@ -1199,7 +1208,7 @@ case uM of
     ExitThread(0);
     end;
   end;
-  WndProc:=DefWindowProc(hW,uM,wP,lP);
+  WndProc:=DefWindowProcW(hW,uM,wP,lP);
 end;
 
 function WinRegister():ATOM;
@@ -1213,9 +1222,9 @@ with _wc do
   hInstance:=MainInstance;
   hbrBackground:=CreateSolidBrush(_cbg);
   lpszMenuName:=nil;
-  lpszClassName:='DisplayClass';
+  lpszClassName:=DEFAULTCLASSNAME;
   end;
-WinRegister:=RegisterClass(_wc);
+WinRegister:=RegisterClassW(_wc);
 end;
 
 procedure WinCreate();
@@ -1231,7 +1240,7 @@ AdjustWindowRect(rect,_style,false);
 _w:=right-left;
 _h:=bottom-top;
 end;
-_hw:=CreateWindow(_wc.lpszClassName,nil,
+_hw:=CreateWindowW(DEFAULTCLASSNAME,nil,
 _style,_x,_y,_w,_h,0,0,MainInstance,nil);
 end;
 
@@ -1532,10 +1541,16 @@ begin Windows.ResumeThread(_th[thi]);end;
 procedure StopThread(thi:longword);
 begin Windows.TerminateThread(_th[thi],0);end;
 
+function MsgBoxW(s,title:unicodestring;i:longword):longword;
+begin MsgBoxW:=MessageBoxW(_hw,pwchar(s),pwchar(title),i);end;
 function MsgBox(s,title:ansistring;i:longword):longword;
 begin MsgBox:=MessageBox(_hw,pchar(s),pchar(title),i);end;
+procedure MsgBoxW(s,title:unicodestring);
+begin MsgboxW(s,title,0);end;
 procedure MsgBox(s,title:ansistring);
 begin Msgbox(s,title,0);end;
+procedure MsgBoxW(s:unicodestring);
+begin MsgBoxW(s,'');end;
 procedure MsgBox(s:ansistring);
 begin MsgBox(s,'');end;
 
@@ -1630,9 +1645,13 @@ end;
 function GetTime():longword;
 begin GetTime:=Trunc(GetTimeR*1000);end;
 procedure SetTitle(s:ansistring);
-begin SetWindowText(_hw,as2pc(s));end;
+begin SetWindowText(_hw,pchar(s));end;
+procedure SetTitleW(s:unicodestring);
+begin SetWindowTextW(_hw,pwchar(s));end;
 function GetTitle():ansistring;var c:array[0..MAXCHAR-1]of char;
-begin GetWindowText(_hw,@c,MAXCHAR);GetTitle:=pc2as(@c);end;
+begin GetWindowTextA(_hw,@c,MAXCHAR);GetTitle:=copy(pchar(@c),0,length(pchar(@c)));end;
+function GetTitleW():unicodestring;var c:array[0..MAXCHAR-1]of widechar;
+begin GetWindowTextW(_hw,@c,MAXCHAR);GetTitleW:=copy(pwchar(@c),0,length(pwchar(@c)));end;
 procedure SetSize(w,h:longword);var rect:TRECT;
 begin with rect do begin left:=GetPosX;top:=GetPosY;right:=left+w;bottom:=top+h;
 AdjustWindowRect(rect,_style,false);MoveWindow(_hw,GetPosX,GetPosY,right-left,bottom-top,true);end;end;
@@ -1648,6 +1667,10 @@ function GetScrHeight():longint;
 begin GetScrHeight:=GetSystemMetrics(SM_CYSCREEN);end;
 function GetScrSize():longword;
 begin GetScrSize:=GetScrWidth()*$10000+GetScrHeight();end;
+function GetScrCapsX():double;
+begin GetScrCapsX:=144/GetDeviceCaps(GetDC(GetDesktopWindow()),LOGPIXELSX);end;
+function GetScrCapsY():double;
+begin GetScrCapsY:=144/GetDeviceCaps(GetDC(GetDesktopWindow()),LOGPIXELSY);end;
 function GetBorderTitle():longint;
 begin GetBorderTitle:=GetSystemMetrics(SM_CYCAPTION);end;
 function GetBorderWidth():longint;
@@ -2681,7 +2704,9 @@ begin WaitMouseMove:=LO(WaitMsg(WM_MOUSEMOVE));end;
 function IsDropFile():boolean;
 begin IsDropFile:=IsMsg(WM_DROPFILES);end;
 function GetDropFile():ansistring;var c:array[0..MAXCHAR-1]of char;
-begin DragQueryFile(_ms.wParam,0,@c,MAXCHAR);GetDropFile:=pc2as(@c);end;
+begin DragQueryFileA(_ms.wParam,0,@c,MAXCHAR);GetDropFile:=copy(pchar(@c),0,length(pchar(@c)));end;
+function GetDropFileW():unicodestring;var c:array[0..MAXCHAR-1]of widechar;
+begin DragQueryFileW(_ms.wParam,0,@c,MAXCHAR);GetDropFileW:=copy(pwchar(@c),0,length(pwchar(@c)));end;
 function WaitDropFile():ansistring;
 begin WaitMsg(WM_DROPFILES);WaitDropFile:=GetDropFile();end;
 function GetMouseAbsX():longint;var p:point;
