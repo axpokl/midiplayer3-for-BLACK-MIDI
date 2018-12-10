@@ -20,7 +20,7 @@ var eventk:longint=0;
 const maxeventtm=$100000;
 var eventtm:packed array[0..maxeventtm-1]of tevent;
 var eventtmn:longword=0;
-var eventtmi:longword=0;
+var eventtmi:longint=0;
 
 const maxeventmu=$1000000;
 var eventmu:packed array[0..maxeventmu-1]of tevent;
@@ -30,7 +30,7 @@ var eventmui:longword;
 const maxeventch=$100000;
 var eventch:packed array[0..maxeventch-1]of tevent;
 var eventchn:longword=0;
-var eventchi:longword;
+var eventchi:longint;
 
 const maxeventseek=$1000;
 
@@ -174,7 +174,7 @@ procedure AddEvent(tr:word;cu,ms,tm:longword;ch:shortint);
 var fi:longint;
 begin
 if ms and $FFFF=$51FF then AddEventTempo(tr,cu,tm)
-else if ms and $FFFF=$59FF then AddEventChord(tr,cu,ch);
+else if ms and $FFFF=$59FF then if tr=1 then AddEventChord(tr,cu,ch);
 if fb then begin fi:=eventi;eventi:=0;end;
 if not(fb) then if maxevent<=eventi then
   begin
@@ -423,7 +423,7 @@ for fi:=0 to eventn-1 do
     begin
     eventch[eventchi].ticktime:=ticktime0;
     chord:=eventch[eventchi].msg;
-    if chordtmp=-1 then chordtmp:=chord;
+    if chordtmp=-1 then if eventch[eventchi].curtick=0 then chordtmp:=chord else chordtmp:=7;
     eventchi:=eventchi+1;
     end;
   if fb then SetFEvent0(event0[eventi],fi);
@@ -525,11 +525,11 @@ if seekx>0 then if GetFNote(seeki).note0<seekt then seeki:=min(seeki+1,seekn);
 SeekMidiTimeFNote:=seeki;
 end;
 
-function SeekMidiTimeTempo(seekt:double):longword;
+function SeekMidiTimeTempo(seekt:double):longint;
 var seeki,seekn:longword;seekx:longint;
 begin
 seekn:=eventtmn;
-seeki:=seekn div 2;
+seeki:=(seekn-1) div 2;
 seekx:=(seeki+1) div 2;
 repeat
 if seekx=0 then break;
@@ -538,14 +538,14 @@ if seekx=1 then break;
 seekx:=(seekx+1) div 2;
 until false;
 if seekx>0 then if eventtm[seeki].ticktime<seekt then seeki:=min(seeki+1,seekn);
-SeekMidiTimeTempo:=max(0,seeki-1);
+SeekMidiTimeTempo:=seeki-1;
 end;
 
-function SeekMidiTimeChord(seekt:double):longword;
+function SeekMidiTimeChord(seekt:double):longint;
 var seeki,seekn:longword;seekx:longint;
 begin
 seekn:=eventchn;
-seeki:=seekn div 2;
+seeki:=(seekn-1) div 2;
 seekx:=(seeki+1) div 2;
 repeat
 if seekx=0 then break;
@@ -554,7 +554,7 @@ if seekx=1 then break;
 seekx:=(seekx+1) div 2;
 until false;
 if seekx>0 then if eventch[seeki].ticktime<seekt then seeki:=min(seeki+1,seekn);
-SeekMidiTimeChord:=max(0,seeki-1);
+SeekMidiTimeChord:=seeki-1;
 end;
 
 procedure SetMidiTime(settime:double);
@@ -578,8 +578,8 @@ if (fi<maxeventseek) or (fi>min(eventj,eventn-1)-maxeventseek) then
       midiOutShortMsg(midiOut,event0[eventk].msg);
     end;
   end;
-if (eventtmn>0) then begin eventtmi:=SeekMidiTimeTempo(settime);tempo0:=eventtm[eventtmi].msg;end;
-if (eventchn>0) then begin eventchi:=SeekMidiTimeChord(settime);chord:=eventch[eventchi].msg;end;
+if (eventtmn>0) then begin eventtmi:=SeekMidiTimeTempo(settime);if eventtmi<0 then tempo0:=500000 else tempo0:=eventtm[eventtmi].msg;end;eventtmi:=max(0,eventtmi);
+if (eventchn>0) then begin eventchi:=SeekMidiTimeChord(settime);if eventchi<0 then chord:=7 else chord:=eventch[eventchi].msg;end;eventchi:=max(0,eventchi);
 LeaveCriticalSection(csfevent0);
 tempo:=tempo0;
 eventi:=eventj;
@@ -649,6 +649,7 @@ end;
 procedure CreateNoteMap();
 var ei:longint;
 begin
+chord:=7;
 for chani:=0 to maxchan-1 do chancn[chani]:=0;
 for chani:=0 to maxchan-1 do chanci[chani]:=chani;
 for chani:=0 to maxchan-1 do chancc[chani]:=HSN2RGB(chanc00[chani mod chanc0n]or $9FFF00);
@@ -1447,7 +1448,7 @@ if deviceb=1 then
 end;
 
 procedure DrawLongMsg();
-begin 
+begin
 if kbdc0p>0 then _DrawTextXY0(i2s(kbdc0m0)+'/'+i2s(kbdc0p),GetWidth()-fw*length(i2s(kbdc0m0)+'/'+i2s(kbdc0p)),0,white);
 if msgbufn>0 then _DrawTextXY0(i2s(msgbufn),GetWidth()-fw*length(i2s(msgbufn)),_fh,white);
 end;
