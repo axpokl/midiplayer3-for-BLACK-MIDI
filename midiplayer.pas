@@ -141,8 +141,8 @@ with eventtm[eventtmi] do
   track:=tr;
   curtick:=cu;
   msg:=tm;
+  eventtmi:=eventtmi+1;
   end;
-eventtmi:=eventtmi+1;
 end;
 
 procedure AddEventMessure(tr:word;cu:longword;t:double;ms:longword);
@@ -154,27 +154,28 @@ with eventmu[eventmun] do
   msg:=ms;
   ticktime:=t;
   if eventmui=0 then msg:=msg or $01000000;
+  eventmui:=(eventmui+1) mod sig0;
+  eventmun:=eventmun+1;
   end;
-eventmui:=(eventmui+1) mod sig0;
-eventmun:=eventmun+1;
 end;
 
 procedure AddEventChord(tr:word;cu:longword;ch:longword);
 begin
 with eventch[eventchi] do
   begin
+  if eventchi>0 then if cu<eventch[eventchi-1].curtick then exit;
   track:=tr;
   curtick:=cu;
   msg:=ch;
+  eventchi:=eventchi+1;
   end;
-eventchi:=eventchi+1;
 end;
 
 procedure AddEvent(tr:word;cu,ms,tm:longword;ch:shortint);
 var fi:longint;
 begin
 if ms and $FFFF=$51FF then AddEventTempo(tr,cu,tm)
-else if ms and $FFFF=$59FF then if tr=1 then AddEventChord(tr,cu,ch);
+else if ms and $FFFF=$59FF then AddEventChord(tr,cu,ch);
 if fb then begin fi:=eventi;eventi:=0;end;
 if not(fb) then if maxevent<=eventi then
   begin
@@ -538,7 +539,7 @@ if seekx=1 then break;
 seekx:=(seekx+1) div 2;
 until false;
 if seekx>0 then if eventtm[seeki].ticktime<seekt then seeki:=min(seeki+1,seekn);
-SeekMidiTimeTempo:=seeki-1;
+SeekMidiTimeTempo:=max(0,seeki-1);
 end;
 
 function SeekMidiTimeChord(seekt:double):longint;
@@ -553,7 +554,8 @@ if eventch[seeki].ticktime>=seekt then seeki:=max(0,seeki-seekx) else seeki:=min
 if seekx=1 then break;
 seekx:=(seekx+1) div 2;
 until false;
-if seekx>0 then if eventch[seeki].ticktime<seekt then seeki:=min(seeki+1,seekn);
+if seeki>0 then if eventch[seeki-1].ticktime>seekt then seeki:=seeki-1;
+if seeki<seekn-1 then if eventch[seeki].ticktime<seekt then seeki:=seeki+1;
 SeekMidiTimeChord:=seeki-1;
 end;
 
@@ -578,8 +580,8 @@ if (fi<maxeventseek) or (fi>min(eventj,eventn-1)-maxeventseek) then
       midiOutShortMsg(midiOut,event0[eventk].msg);
     end;
   end;
-if (eventtmn>0) then begin eventtmi:=SeekMidiTimeTempo(settime);if eventtmi<0 then tempo0:=500000 else tempo0:=eventtm[eventtmi].msg;end;eventtmi:=max(0,eventtmi);
-if (eventchn>0) then begin eventchi:=SeekMidiTimeChord(settime);if eventchi<0 then chord:=7 else chord:=eventch[eventchi].msg;end;eventchi:=max(0,eventchi);
+if (eventtmn>0) then begin eventtmi:=SeekMidiTimeTempo(settime);tempo0:=eventtm[eventtmi].msg;end;
+if (eventchn>0) then begin eventchi:=SeekMidiTimeChord(settime);if (eventchi>=0) then chord:=eventch[eventchi].msg else chord:=7;end;eventchi:=max(0,eventchi);
 LeaveCriticalSection(csfevent0);
 tempo:=tempo0;
 eventi:=eventj;
