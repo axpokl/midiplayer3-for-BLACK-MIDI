@@ -2,10 +2,10 @@ const find_max=$10000;
 var find_info:TSearchRec;
 var find_count:longword;
 var find_current:longword;
-var find_result:array[0..find_max] of ansistring;
+var find_result:array[0..find_max] of unicodestring;
 
-procedure find_file(s:ansistring);
-var dir:ansistring;
+procedure find_file(s:unicodestring);
+var dir:unicodestring;
 begin
 find_current:=0;
 find_result[0]:='';
@@ -17,22 +17,22 @@ if find_current>find_count then
   begin
   find_count:=0;
   dir:=ExtractFilePath(s);
-  if findfirst(dir+'*',0,find_info)=0 then
+  if findfirst(dir+'*',0,TUnicodeSearchRec(find_info))=0 then
     begin
     find_count:=find_count+1;
-    find_result[find_count]:=dir+find_info.name;
+    find_result[find_count]:=dir+UnicodeString(find_info.name);
     if find_result[find_count]=s then find_current:=find_count;
     while findnext(find_info)=0 do
       begin
       find_count:=find_count+1;
-      find_result[find_count]:=dir+find_info.name;
+      find_result[find_count]:=dir+UnicodeString(find_info.name);
       if find_result[find_count]=s then find_current:=find_count;
       end;
     end;
   end;
 end;
 
-function get_file(n:longword):ansistring;
+function get_file(n:longword):unicodestring;
 begin
 if n<1 then n:=n+find_count;
 if n>find_count then n:=n-find_count;

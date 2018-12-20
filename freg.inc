@@ -12,6 +12,15 @@ begin
 RegCloseKey(regkey);
 end;
 
+procedure GetKeySW(kname:ansistring;var s:unicodestring);
+var regtype:longword=REG_SZ;
+var ca:array[0..$100*2-1]of byte;
+var size:longword=$100*2;
+begin
+if RegQueryValueExW(regkey,PWChar(unicodestring(kname)),nil,@regtype,@ca,@size)=ERROR_SUCCESS then
+  s:=copy(UnicodeString(pwchar(@ca)),0,length(unicodestring(pwchar(@ca))));
+end;
+
 procedure GetKeyS(kname:ansistring;var s:ansistring);
 var regtype:longword=REG_SZ;
 var ca:array[0..$100-1]of byte;
@@ -30,6 +39,11 @@ if RegQueryValueEx(regkey,PChar(kname),nil,@regtype,@ca,@size)=ERROR_SUCCESS the
   i:=ca[3] shl 24 or ca[2] shl 16 or ca[1] shl 8 or ca[0]
 end;
 
+procedure SetKeySW(kname:ansistring;s:unicodestring);
+begin
+RegSetValueExW(regkey,PWChar(UnicodeString(kname)),0,REG_SZ,PWChar(s),length(s)*2);
+end;
+
 procedure SetKeyS(kname:ansistring;s:ansistring);
 begin
 RegSetValueEx(regkey,PChar(kname),0,REG_SZ,PChar(s),length(PChar(s)));
@@ -41,7 +55,7 @@ RegSetValueEx(regkey,PChar(kname),0,REG_DWORD,@i,sizeof(DWORD));
 end;
 
 var rs:ansistring;
-var fnames:ansistring;
+var fnames:unicodestring;
 var framerate:longword;
 var loop:longword;
 var midipos:longword;
@@ -49,9 +63,9 @@ var voli:longword;
 var kbdcb:longword;
 var kchb:longword=0;
 var kchb2:longword=0;
-var para:ansistring;
+var para:unicodestring;
 var parai:longword;
-var fdir:ansistring;
+var fdir:unicodestring;
 var hwm:longword;
 const mult0=600;
 var mult:longword;
@@ -64,7 +78,7 @@ var kmessure:longword;
 var msgvol0:longword;
 var maxkbdc:longword;
 
-procedure PlayMidi(fname:ansistring);forward;
+procedure PlayMidi(fname:unicodestring);forward;
 
 procedure SetMidiTime(settime:double);forward;
 
@@ -93,7 +107,7 @@ end;
 
 procedure savefile();
 begin
-SetKeyS('fnames',fnames);
+SetKeySW('fnames',fnames);
 SetKeyI('framerate',framerate);
 SetKeyI('midipos',round((GetMidiTime()+1)*1000));
 SetKeyI('voli',voli);
@@ -114,7 +128,7 @@ end;
 procedure loadfile();
 begin
 resetfile();
-GetKeyS('fnames',fnames);
+GetKeySW('fnames',fnames);
 GetKeyI('framerate',framerate);
 GetKeyI('midipos',midipos);
 GetKeyI('voli',voli);

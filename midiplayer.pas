@@ -1,6 +1,6 @@
 {$R midiplayer.res}
 program midiplayer;
-uses Windows,MMSystem,Display,Sysutils;
+uses Windows,MMSystem,Display,Sysutils,lazutf8;
 
 var maxevent:longword=$1;
 var fb:boolean=true;
@@ -197,9 +197,9 @@ eventi:=eventi+1;
 if finaltick<cu then finaltick:=cu;
 end;
 
-procedure LoadMidi(fname:string);
+procedure LoadMidi(fname:UnicodeString);
 begin
-OpenFile(fname);
+OpenFileW(fname);
 fpos:=0;
 flen:=GetFileLen();
 len0:=GetFileLen();
@@ -1490,25 +1490,25 @@ FreshWin();
 end;
 
 procedure DrawTitle();
-var stitle:ansistring;
+var stitle0,stitle1:ansistring;
 begin
-stitle:='';
-stitle:=stitle+ExtractFileName(fnames);
+stitle0:='';
+stitle1:='';
 if (max(0,finaltime-1)>0) then
   begin
-  stitle:='('+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)'+stitle;
-  stitle:=stitle+'<'+i2s(find_current)+'/'+i2s(find_count)+'/'+loops[loop]+'>';
-  stitle:=stitle+'['+GetKeyChordS(chord)+']';
+  stitle0:='('+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)';
+  stitle1:='<'+i2s(find_current)+'/'+i2s(find_count)+'/'+loops[loop]+'>';
+  stitle1:=stitle1+'['+GetKeyChordS(chord)+']';
   end;
 if voli>0 then if round(vola[voli]*100)<>100 then
-  stitle:=stitle+'('+i2s(longword(round(vola[voli]*100)))+'%)';
+  stitle1:=stitle1+'('+i2s(longword(round(vola[voli]*100)))+'%)';
 if spd0>0 then if round(spd0*100)<>100 then
-  stitle:=stitle+'['+i2s(longword(round(spd0*100)))+'%]';
+  stitle1:=stitle1+'['+i2s(longword(round(spd0*100)))+'%]';
 if mult>0 then if mult<>100 then
-  stitle:=stitle+'<'+i2s(mult)+'%>';
+  stitle1:=stitle1+'<'+i2s(mult)+'%>';
 if drawr>0 then
-  stitle:='['+i2s(trunc(drawr*100))+'%]'+stitle;
-SetTitle(stitle);
+  stitle0:='['+i2s(trunc(drawr*100))+'%]'+stitle0;
+SetTitleW(UnicodeString(stitle0)+ExtractFileName(fnames)+UnicodeString(stitle1));
 end;
 
 procedure DrawProc();
@@ -1556,7 +1556,7 @@ ResetMidiSoft();
 deviceb:=2;
 end;
 
-procedure PlayMidi(fname:ansistring);
+procedure PlayMidi(fname:UnicodeString);
 begin
 if(fileexists(fname))then
   begin
@@ -1590,19 +1590,19 @@ begin
   if fileexists(fdir+'README.md') then
     ShellExecute(0,nil, PChar('notepad.exe'),PChar(fdir+'README.md'),nil,1)
   else
-    msgbox('Missing help file: '+fdir+'README.md','Help file not found!');
+    MsgboxW(UnicodeString('Missing help file: ')+fdir+UnicodeString('README.md'),UnicodeString('Help file not found!'));
 end;
 
 procedure DoAct();
 begin
 if ismsg(WM_USER) then
   begin
-  if _ms.lParam=0 then para:=para+chr(_ms.wParam mod $100);
+  if _ms.lParam=0 then para:=para+widechar(_ms.wParam mod $10000);
   if _ms.lParam=1 then para:='';
   if _ms.lParam=2 then PlayMidi(para);
   end;
 if isDropFile() then
-  PlayMidi(GetDropFile());
+  PlayMidi(GetDropFileW());
 if (GetSize>0) and (GetSize()<>sz) then
   begin
   sz:=GetSize();
@@ -1693,20 +1693,23 @@ end;
 Procedure DoCommandLine();
 begin
 hwm:=FindWindow('DisplayClass',nil);
-fdir:=ExtractFileDir(ParamStr(0))+'\';
-para:=ParamStr(1);
+fdir:=UnicodeString(ParamStrUTF8(0));
+repeat
+if length(fdir)>0 then delete(fdir,length(fdir),1);
+until (length(fdir)<=1) or (fdir[length(fdir)]='\');
+para:=UnicodeString(ParamStrUTF8(1));
 if hwm<>0 then
   if para<>'' then
     begin
     SendMessage(hwm,WM_USER,0,1);
     for parai:=1 to length(para) do
     begin
-      SendMessage(hwm,WM_USER,longword(ord(para[parai])),0);
+      SendMessage(hwm,WM_USER,longword(word(para[parai])),0);
       end;
     SendMessage(hwm,WM_USER,0,2);
     halt;
     end;
-if ParamStr(2)<>'' then fb:=false;
+if UnicodeString(ParamStrUTF8(2))<>'' then fb:=false;
 if(fileexists(fdir+'FORCE_MEMORY')) then fb:=false;
 GetKeyI('fbi',fbi);if fbi>0 then fb:=false;
 end;

@@ -1092,6 +1092,7 @@ function CopyFile(src,des:ansistring):boolean;
 function MoveFile(src,des:ansistring):boolean;
 function DeleteFile(s:ansistring):boolean;
 procedure OpenFile(s:ansistring);
+procedure OpenFileW(s:unicodestring);
 procedure CloseFile();
 function GetFileLen():longword;
 function GetFilePos():longword;
@@ -2776,7 +2777,12 @@ begin DeleteFile:=Windows.DeleteFile(as2pc(s));end;
 
 procedure OpenFile(s:ansistring);
 begin
-_fhdl:=CreateFile(as2pc(s),GENERIC_READ,FILE_SHARE_READ,nil,OPEN_EXISTING,0,0);
+_fhdl:=CreateFile(pchar(s),GENERIC_READ,FILE_SHARE_READ,nil,OPEN_EXISTING,0,0);
+_fpos:=0;_flen:=GetFileSize(_fhdl,nil);_bufpos:=_buflen+1;
+end;
+procedure OpenFileW(s:unicodestring);
+begin
+_fhdl:=CreateFileW(pwchar(s),GENERIC_READ,FILE_SHARE_READ,nil,OPEN_EXISTING,0,0);
 _fpos:=0;_flen:=GetFileSize(_fhdl,nil);_bufpos:=_buflen+1;
 end;
 procedure CloseFile();
