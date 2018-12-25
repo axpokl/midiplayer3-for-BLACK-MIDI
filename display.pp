@@ -621,7 +621,7 @@ const GDIImageFormatBMP:TGUID='{557CF400-1A04-11D3-9A73-0000F81EF32E}';
       GDIImageFormatTIF:TGUID='{557CF405-1A04-11D3-9A73-0000F81EF32E}';
       GDIImageFormatPNG:TGUID='{557CF406-1A04-11D3-9A73-0000F81EF32E}';
       GDIImageFormatICO:TGUID='{557CF407-1A04-11D3-9A73-0000F81EF32E}';
-const DEFAULTCLASSNAME:PWideChar='DisplayClass';
+const DEFAULTCLASS='DisplayCass';
 
 // Internal Variable 内部变量
 
@@ -634,6 +634,7 @@ var _hw:longword;                     //窗口句柄
 
 var _wc:wndClassW;                    //窗口注册结构
     _wca:ATOM;                        //窗口注册句柄
+    _class:PWideChar=DEFAULTCLASS;   //窗口类名称
     _ms:msg;                          //消息结构
     _mst:msg;                         //消息结构缓存
     _main:bitmap;                     //缓冲位图结构
@@ -1223,7 +1224,7 @@ with _wc do
   hInstance:=MainInstance;
   hbrBackground:=CreateSolidBrush(_cbg);
   lpszMenuName:=nil;
-  lpszClassName:=DEFAULTCLASSNAME;
+  lpszClassName:=_class;
   end;
 WinRegister:=RegisterClassW(_wc);
 end;
@@ -1241,7 +1242,7 @@ AdjustWindowRect(rect,_style,false);
 _w:=right-left;
 _h:=bottom-top;
 end;
-_hw:=CreateWindowW(DEFAULTCLASSNAME,nil,
+_hw:=CreateWindowW(_class,nil,
 _style,_x,_y,_w,_h,0,0,MainInstance,nil);
 end;
 

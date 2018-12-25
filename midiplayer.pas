@@ -1,6 +1,10 @@
 {$R midiplayer.res}
 program midiplayer;
+{$ifdef D3D}
+uses Windows,MMSystem,Display,Sysutils,lazutf8,Direct3D9,D3Dx9;
+{$else}
 uses Windows,MMSystem,Display,Sysutils,lazutf8;
+{$endif}
 
 var maxevent:longword=$1;
 var fb:boolean=true;
@@ -1008,6 +1012,9 @@ FreshBMP(bi,bj);
 DrawTextXY(bnote[bi,bnotej1[bi,bj]],s,x,y,c);
 end;
 
+{$ifdef D3D}
+{$i d3d.inc}
+{$endif}
 procedure FlushBar(flushb:boolean);
 var keyi:byte;
 var y0,h0:longword;
@@ -1023,22 +1030,38 @@ for keyi:=0 to $7F do
     h0:=h;
     while h0>(bnoteh0-y0) do
       begin
-      if (bnotej>=0) then
+      if (bnotej>=0) and (bnotej<maxbnote) then
+{$ifdef D3D}
+        AddBar(bi,bnotej,x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
+{$else}
         _Bar(bi,bnotej,x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
+{$endif}
       h0:=h0-(bnoteh0-y0);
       y0:=0;
       bnotej:=bnotej-1;
       end;
-    if (bnotej>=0) then
+    if (bnotej>=0) and (bnotej<maxbnote) then
+{$ifdef D3D}
+      AddBar(bi,bnotej,x,y0-1,w,h0+1,cfg,cbg);
+{$else}
       _Bar(bi,bnotej,x,y0-1,w,h0+1,cfg,cbg);
+{$endif}
     bnotej:=(sy+fh+2)div bnoteh0;
     y0:=bnoteh0-(sy+fh+2-bnotej*bnoteh0);
     if kchb<=1 then
+{$ifdef D3D}
+      AddDrawTextXY(bi,bnotej,s,sx,y0+1,sc);
+{$else}
       _DrawTextXY(bi,bnotej,s,sx,y0+1,sc);
+{$endif}
     if y0+fh>=bnoteh0 then
       if bnotej>1 then
         if kchb<=1 then
+{$ifdef D3D}
+          AddDrawTextXY(bi,bnotej-1,s,sx,y0-bnoteh0+1,sc);
+{$else}
           _DrawTextXY(bi,bnotej-1,s,sx,y0-bnoteh0+1,sc);
+{$endif}
     h:=0;
     end;
   end;
@@ -1228,6 +1251,10 @@ if notemapn-1>=0 then
   bnoteh:=round(finaltime*mult*GetWidth()/mult0)+GetHeight();
 bnoten0:=bnoteh div bnoteh0;
 bnoten00:=max(bnoten0,bnoten00);
+{$ifdef D3D}
+CreateD3D(GetWidth(),bnoteh0);
+CreateD3DBMP(GetWidth(),bnoteh0);
+{$endif}
 for bnoteb0:=0 to maxbnote-1 do
   begin
   bnotej0[0,bnoteb0]:=-1;
@@ -1294,6 +1321,9 @@ for fni:=0 to notemapn-1 do
   if(notemap[notemapi].note1-notemap[notemapi].note0>delaytime)then DrawBNote(notemapi);
   end;
 FlushBar(true);
+{$ifdef D3D}
+FreshD3DAll();
+{$endif}
 drawr:=0;
 end;
 notemapa:=0;
@@ -1320,6 +1350,9 @@ for notemapi:=notemapa to notemapb do
   end;
 if notemapa<=notemapb then SetFNoteDraw(notemapa,notemapb);
 FlushBar(true);
+{$ifdef D3D}
+FreshD3DAll();
+{$endif}
 drawr:=0;
 LeaveCriticalSection(cs1);
 end;
@@ -1340,6 +1373,9 @@ for notemapi:=0 to notemapn-1 do
   end;
 SetFNoteDraw(0,notemapn-1);
 FlushBar(true);
+{$ifdef D3D}
+FreshD3DAll();
+{$endif}
 drawr:=0;
 bnoteb:=false;
 if pauseb0=false then PauseMidi();
@@ -1464,6 +1500,69 @@ if drawr>0 then
   end;
 end;
 
+type Tbtn=record x,y,w,h:double;id:longword;b:boolean;end;
+
+const maxbtn=$100;
+var btn:array[1..maxbtn]of Tbtn;
+var btni,btnn,btnb:longword;
+var btnBMP:pbitmap;
+const btnsz=32;
+
+procedure InitBtn();
+begin
+btnBMP:=LoadBMP('midiplayer3_btn.png');
+btnn:=8;
+for btni:=1 to btnn do
+  with btn[btni] do
+    begin
+    x:=btni*0.1;
+    y:=btni*0.1;
+    w:=0.05;
+    h:=0.05;
+    id:=btni;
+    b:=true;
+    end;
+end;
+
+function InBtn(btni:longword;ix,iy:longint):boolean;
+var rx,ry:double;
+begin
+rx:=ix/GetWidth();
+ry:=iy/GetHeight();
+InBtn:=true;
+with btn[btni] do
+  begin
+  if rx<x then InBtn:=false;
+  if rx>x+w then InBtn:=false;
+  if ry<y then InBtn:=false;
+  if ry>y+h then InBtn:=false;
+  end;
+end;
+
+procedure GetBtn();
+begin
+btnb:=0;
+for btni:=1 to btnn do
+  if btn[btni].b then
+    if InBtn(btni,GetMousePosX(),GetMousePosY()) then
+      btnb:=btni;
+end;
+
+procedure DrawBtn(btni:longword);
+begin
+if btn[btni].b then
+  with btn[btni] do
+    DrawBMP(btnBMP,_pmain,btnsz*(btni-1),0,btnsz,btnsz,round(x*GetWidth),round(y*GetHeight),round(w*GetWidth),round(h*GetHeight));
+end;
+
+procedure DrawBtnAll();
+begin
+GetBtn();
+if btnb>0 then
+  for btni:=1 to btnn do
+    DrawBtn(btni);
+end;
+
 procedure DrawAll();
 begin
 SetDrawFont();
@@ -1486,6 +1585,7 @@ if kchb2=0 then
   DrawDevice();
   end;
 DrawReal();
+//DrawBtnAll();
 FreshWin();
 end;
 
@@ -1692,7 +1792,7 @@ end;
 
 Procedure DoCommandLine();
 begin
-hwm:=FindWindow('DisplayClass',nil);
+hwm:=FindWindow('MidiPlayer3Class',nil);
 fdir:=UnicodeString(ParamStrUTF8(0));
 repeat
 if length(fdir)>0 then delete(fdir,length(fdir),1);
@@ -1745,6 +1845,7 @@ procedure InitDraw();
 begin
 w:=2*GetScrWidth()div 3;
 h:=2*GetScrHeight()div 3;
+_class:='MidiPlayer3Class';
 CreateWin(w,h,black1);
 _wc.HIcon:=LoadImage(0,'midiplayer.ico',IMAGE_ICON,0,0,LR_LOADFROMFILE);
 sendmessage(_hw,WM_SETICON,ICON_SMALL,longint(_wc.HIcon));
@@ -1753,6 +1854,7 @@ InitkbdPos();
 InitkbdColor();
 InitCS();
 InitChannelColor();
+//InitBtn();
 NewThread(@DrawProc);
 end;
 
@@ -1771,6 +1873,9 @@ if fb then
   assign(fevent,GetTempDir(false)+'fevent'+rs);fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
   assign(fnote,GetTempDir(false)+'fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
   end;
+{$ifdef D3D}
+InitD3D();
+{$endif}
 InitDraw();
 loadfile();
 SetMidiVol(volamax-2);
