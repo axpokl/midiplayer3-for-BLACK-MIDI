@@ -1030,7 +1030,7 @@ for keyi:=0 to $7F do
     h0:=h;
     while h0>(bnoteh0-y0) do
       begin
-      if (bnotej>=0) and (bnotej<maxbnote) then
+      if (bnotej>=0) then
 {$ifdef D3D}
         AddBar(bi,bnotej,x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
 {$else}
@@ -1040,7 +1040,7 @@ for keyi:=0 to $7F do
       y0:=0;
       bnotej:=bnotej-1;
       end;
-    if (bnotej>=0) and (bnotej<maxbnote) then
+    if (bnotej>=0) then
 {$ifdef D3D}
       AddBar(bi,bnotej,x,y0-1,w,h0+1,cfg,cbg);
 {$else}
