@@ -1111,7 +1111,7 @@ var bnotej:longint;
 begin
 bnotej:=y div bnoteh0;
 y0:=bnoteh0-(y-bnotej*bnoteh0);
-if (bnotej>=0) and (bnotej<maxbnote) then
+if (bnotej>=0) {and (bnotej<maxbnote)} then
   _Line(bi,bnotej,x,y0,w,h,c);
 end;
 
