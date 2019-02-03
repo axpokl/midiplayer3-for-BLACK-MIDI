@@ -1,5 +1,5 @@
 const find_max=$10000;
-var find_info:TSearchRec;
+var find_info:TUnicodeSearchRec;
 var find_count:longword;
 var find_current:longword;
 var find_result:array[0..find_max] of unicodestring;
@@ -17,7 +17,7 @@ if find_current>find_count then
   begin
   find_count:=0;
   dir:=ExtractFilePath(s);
-  if findfirst(dir+'*',0,TUnicodeSearchRec(find_info))=0 then
+  if findfirst(dir+'*',0,find_info)=0 then
     begin
     find_count:=find_count+1;
     find_result[find_count]:=dir+UnicodeString(find_info.name);

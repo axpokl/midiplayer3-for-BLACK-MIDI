@@ -403,12 +403,6 @@ for fi:=0 to eventn-1 do
   if fps>0 then ticktime0:=ticktime0+tick/fps;
   event0[eventi].ticktime:=ticktime0;
   finaltime:=max(finaltime,ticktime0+1);
-  if event0[eventi].msg and $FFFF=$58FF then
-    begin
-    sig0:=event0[eventi].msg shr 16 and $FF;
-    sig1:=event0[eventi].msg shr 24 and $FF;
-    tpqm:=tpq shr max(0,sig1-2);
-    end;
   while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=tick0) do
     begin
     eventtm[eventtmi].ticktime:=ticktime0;
@@ -423,6 +417,12 @@ for fi:=0 to eventn-1 do
     if fps>0 then ticktime0m:=ticktime0-tick/fps;;
     AddEventMessure(0,curtickm,ticktime0m,tempo);
     curtickm:=curtickm+tpqm;
+    end;
+  if event0[eventi].msg and $FFFF=$58FF then
+    begin
+    sig0:=event0[eventi].msg shr 16 and $FF;
+    sig1:=event0[eventi].msg shr 24 and $FF;
+    tpqm:=tpq shr max(0,sig1-2);
     end;
   while (eventchi<eventchn) and (eventch[eventchi].curtick<=tick0) do
     begin
@@ -970,6 +970,8 @@ begin
 if bnotej0[bi,bnotej1[bi,bj]]<>bj then
   begin
   bnoteb1[bi]:=(bnoteb1[bi]+1) and (maxbnote-1);
+//  bnoteb1[bi]:=min(maxbnote-1,bnoteb1[bi]+1);
+  if bnote[bi,bnoteb1[bi]]<>nil then bnoteb1[bi]:=random(maxbnote);
   bnoteb0:=bnoteb1[bi];
   ClearBMP(bi,bnoteb0);
   bnotej0[bi,bnoteb0]:=bj;
@@ -1259,6 +1261,8 @@ for bnoteb0:=0 to maxbnote-1 do
   begin
   bnotej0[0,bnoteb0]:=-1;
   bnotej0[1,bnoteb0]:=-1;
+  clearbmp(0,bnoteb0);
+  clearbmp(1,bnoteb0);
   end;
 {
 bnoten0:=min(bnoten0,maxbnote-1);
