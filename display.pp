@@ -622,6 +622,7 @@ const GDIImageFormatBMP:TGUID='{557CF400-1A04-11D3-9A73-0000F81EF32E}';
       GDIImageFormatPNG:TGUID='{557CF406-1A04-11D3-9A73-0000F81EF32E}';
       GDIImageFormatICO:TGUID='{557CF407-1A04-11D3-9A73-0000F81EF32E}';
 const DEFAULTCLASS='DisplayCass';
+const maxpara=$100;
 
 // Internal Variable 内部变量
 
@@ -697,6 +698,12 @@ var _GdiStart:TGdiStartup;
     _GdiGraph:longword;
     _GdiImage:longword;
     _GdiWideChar:array[0..MAXCHAR-1]of WideChar;
+var _para:ansistring='';
+    _para_count:longword;
+    _para_list:array[0..maxpara]of ansistring;
+var _paraw:unicodestring='';
+    _paraw_count:longword;
+    _paraw_list:array[0..maxpara]of unicodestring;
 
 // Functions Interface 函数接口
 
@@ -1087,11 +1094,16 @@ procedure SetAudioPos(id:longword;pos:longword);
 function GetAudioLen(id:longword):longword;
 
 function IsFile(s:ansistring):boolean;
+function IsFileW(s:unicodestring):boolean;
 function NewFile(s:ansistring):boolean;
 function NewDir(s:ansistring):boolean;
 function CopyFile(src,des:ansistring):boolean;
 function MoveFile(src,des:ansistring):boolean;
 function DeleteFile(s:ansistring):boolean;
+function GetFileName(s:ansistring):ansistring;
+function GetFileNameW(s:unicodestring):unicodestring;
+function GetFileDir(s:ansistring):ansistring;
+function GetFileDirW(s:unicodestring):unicodestring;
 procedure OpenFile(s:ansistring);
 procedure OpenFileW(s:unicodestring);
 procedure CloseFile();
@@ -1107,6 +1119,10 @@ function GetWord256():word256;
 function GetInteger():longword;
 function GetPchar():pchar;
 function GetString(len:longword):ansistring;
+function GetPara():ansistring;
+function GetPara(n:longword):ansistring;
+function GetParaW():unicodestring;
+function GetParaW(n:longword):unicodestring;
 
 implementation // 实现
 
@@ -1979,7 +1995,7 @@ Windows.DrawText(b^.dc,as2pc(s),length(s),lpRect,DT_SINGLELINE or DT_CENTER or D
 _fx:=x+w;_fy:=y;
 end;
 procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;cfg,cbg:longword);
-begin
+begin 
 InitTextXY(b,s,cfg,cbg);
 TextOut(b^.dc,x,y,as2pc(s),length(s));
 _fx:=x+GetStringWidth(s);_fy:=y;
@@ -2763,8 +2779,10 @@ begin GetAudioLen:=SendString('status s'+i2s(id)+' length');end;
 
 // File Function 文件函数
 
-function IsFile(s:ansistring):boolean;var fd:WIN32_FIND_DATA;
-begin IsFile:=FindFirstFile(as2pc(s),@fd)<>INVALID_HANDLE_VALUE;end;
+function IsFile(s:ansistring):boolean;var fd:WIN32_FIND_DATA;var fh:handle;
+begin fh:=FindFirstFile(pchar(s),fd);IsFile:=fh<>INVALID_HANDLE_VALUE;if IsFile then FindClose(fh);end;
+function IsFileW(s:unicodestring):boolean;var fd:WIN32_FIND_DATAW;var fh:handle;
+begin fh:=FindFirstFileW(pwchar(s),fd);IsFileW:=fh<>INVALID_HANDLE_VALUE;if IsFileW then FindClose(fh);end;
 function NewFile(s:ansistring):boolean;
 begin NewFile:=CreateFile(as2pc(s),GENERIC_ALL,0,nil,OPEN_ALWAYS,0,0)<>0;end;
 function NewDir(s:ansistring):boolean;
@@ -2775,6 +2793,14 @@ function MoveFile(src,des:ansistring):boolean;
 begin MoveFile:=Windows.MoveFile(as2pc(src),as2pc(des));end;
 function DeleteFile(s:ansistring):boolean;
 begin DeleteFile:=Windows.DeleteFile(as2pc(s));end;
+function GetFileName(s:ansistring):ansistring;var i:integer;
+begin i:=length(s);while (i>0) and (s[i]<>'\') do i:=i-1;GetFileName:=Copy(s,i+1,length(s)-i);end;
+function GetFileNameW(s:unicodestring):unicodestring;var i:integer;
+begin i:=length(s);while (i>0) and (s[i]<>unicodechar('\')) do i:=i-1;GetFileNameW:=Copy(s,i+1,length(s)-i);end;
+function GetFileDir(s:ansistring):ansistring;var i:integer;
+begin i:=length(s);while (i>0) and (s[i]<>'\') do i:=i-1;GetFileDir:=Copy(s,1,i);end;
+function GetFileDirW(s:unicodestring):unicodestring;var i:integer;
+begin i:=length(s);while (i>0) and (s[i]<>unicodechar('\')) do i:=i-1;GetFileDirW:=Copy(s,1,i);end;
 
 procedure OpenFile(s:ansistring);
 begin
@@ -2835,5 +2861,53 @@ begin _pi:=1;new(_pc);repeat _cdat:=GetByte();
 _pc[_pi]:=char(_cdat);_pi:=_pi+1;until _cdat=0;GetPchar:=_pc;end;
 function GetString(len:longword):ansistring;var _pi:longword;
 begin SetLength(GetString,len);for _pi:=1 to len do GetString[_pi]:=char(GetByte());end;
+procedure AddPara(i,j,n:longword);
+begin
+_para_list[n]:=copy(_para,i,j-i);
+if _para_list[n][1]='"' then delete(_para_list[n],1,1);
+if _para_list[n][length(_para_list[n])]='"' then delete(_para_list[n],length(_para_list[n]),1);
+end;
+procedure AddParaW(i,j,n:longword);
+begin
+_paraw_list[n]:=copy(_paraw,i,j-i);
+if _paraw_list[n][1]=unicodechar('"') then delete(_paraw_list[n],1,1);
+if _paraw_list[n][length(_paraw_list[n])]=unicodechar('"') then delete(_paraw_list[n],length(_paraw_list[n]),1);
+end;
+procedure InitPara();
+var q:boolean=true;
+var i,j,n:longword;
+begin
+if _para='' then
+  begin
+  _para:=GetCommandLineA();
+  i:=1;j:=1;n:=0;
+  repeat
+  if _para[j]='"' then q:=not(q);
+  if q then if _para[j]=' ' then begin AddPara(i,j,n);n:=n+1;i:=j+1;end;
+  j:=j+1;
+  until j>length(_para);
+  if i<=length(_para) then AddPara(i,j,n);
+  end;
+end;
+procedure InitParaW();
+var q:boolean=true;
+var i,j,n:longword;
+begin
+if _paraw='' then
+  begin
+  _paraw:=GetCommandLineW();
+  i:=1;j:=1;n:=0;
+  repeat
+  if _paraw[j]=unicodechar('"') then q:=not(q);
+  if q then if _paraw[j]=unicodechar(' ') then begin AddParaW(i,j,n);n:=n+1;i:=j+1;end;
+  j:=j+1;
+  until j>length(_paraw);
+  if i<=length(_paraw) then AddParaW(i,j,n);
+  end;
+end;
+function GetPara():ansistring;begin InitPara();GetPara:=_para;end;
+function GetParaW():unicodestring;begin InitParaW();GetParaW:=_paraw;end;
+function GetPara(n:longword):ansistring;begin InitPara();GetPara:=_para_list[n and (maxpara-1)];end;
+function GetParaW(n:longword):unicodestring;begin InitParaW();GetParaW:=_paraw_list[n and (maxpara-1)];end;
 
 end.

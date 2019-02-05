@@ -145,5 +145,5 @@ GetKeyI('kmessure',kmessure);
 GetKeyI('msgvol0',msgvol0);
 GetKeyI('maxkbdc',maxkbdc);
 if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
-if fileexists(fnames) then begin PlayMidi(fnames);SetMidiTime(midipos/1000-1);end;
+if IsFileW(fnames) then begin PlayMidi(fnames);SetMidiTime(midipos/1000-1);end;
 end;

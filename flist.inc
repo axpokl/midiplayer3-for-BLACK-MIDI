@@ -1,11 +1,22 @@
 const find_max=$10000;
-var find_info:TUnicodeSearchRec;
+var find_handle:handle;
+var find_info:WIN32_FIND_DATAW;
 var find_count:longword;
 var find_current:longword;
 var find_result:array[0..find_max] of unicodestring;
+var find_dir:unicodestring;
+
+procedure add_file(s:unicodestring);
+begin
+if (find_info.cFilename<>'.') and (find_info.cFilename<>'..') then
+  begin
+  find_count:=find_count+1;
+  find_result[find_count]:=find_dir+UnicodeString(find_info.cFilename);
+  if find_result[find_count]=s then find_current:=find_count;
+  end;
+end;
 
 procedure find_file(s:unicodestring);
-var dir:unicodestring;
 begin
 find_current:=0;
 find_result[0]:='';
@@ -16,18 +27,12 @@ until find_result[find_current]=s;
 if find_current>find_count then
   begin
   find_count:=0;
-  dir:=ExtractFilePath(s);
-  if findfirst(dir+'*',0,find_info)=0 then
+  find_dir:=GetFileDirW(s);
+  find_handle:=FindFirstFileW(PWideChar(find_dir+'*'),find_info);
+  if find_handle<>INVALID_HANDLE_VALUE then
     begin
-    find_count:=find_count+1;
-    find_result[find_count]:=dir+UnicodeString(find_info.name);
-    if find_result[find_count]=s then find_current:=find_count;
-    while findnext(find_info)=0 do
-      begin
-      find_count:=find_count+1;
-      find_result[find_count]:=dir+UnicodeString(find_info.name);
-      if find_result[find_count]=s then find_current:=find_count;
-      end;
+    add_file(s);
+    while FindNextFileW(find_handle,find_info) do add_file(s);
     end;
   end;
 end;

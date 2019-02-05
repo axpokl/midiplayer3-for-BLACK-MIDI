@@ -1,9 +1,9 @@
 {$R midiplayer.res}
 program midiplayer;
 {$ifdef D3D}
-uses Windows,MMSystem,Display,Sysutils,lazutf8,Direct3D9,D3Dx9;
+uses Windows,MMSystem,Display,Direct3D9,D3Dx9;
 {$else}
-uses Windows,MMSystem,Display,Sysutils,lazutf8;
+uses Windows,MMSystem,Display;
 {$endif}
 
 var maxevent:longword=$1;
@@ -821,6 +821,8 @@ var initb:boolean=false;
 var bnoteb0:longint;
 var bnoteb1:array[0..1]of longint;
 var bmpname:ansistring;
+var tempdir:ansistring;
+var tempdirs:array[0..$FF]of char;
 
 type tbnotekey=packed record
 x,y,w,h:longint;bi:shortint;cbg,cfg:longword;
@@ -958,7 +960,7 @@ procedure ClearBMP(bi,bnoteb0:longint);
 begin
 if bnote[bi,bnoteb0]<>nil then
   begin
-  bmpname:=GetTempDir(false)+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
+  bmpname:=tempdir+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
   if bnotej0[bi,bnoteb0]>=0 then SaveBMP(bnote[bi,bnoteb0],bmpname);
   ReleaseBMP(bnote[bi,bnoteb0]);
   bnote[bi,bnoteb0]:=nil;
@@ -981,8 +983,8 @@ else
   bnoteb0:=bnotej1[bi,bj];
 if bnote[bi,bnoteb0]=nil then
   begin
-  bmpname:=GetTempDir(false)+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
-  if fileexists(bmpname) then
+  bmpname:=tempdir+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
+  if IsFile(bmpname) then
     begin
     bnote[bi,bnoteb0]:=LoadBMP(bmpname,black1);
     DeleteFile(bmpname);
@@ -1612,7 +1614,7 @@ if mult>0 then if mult<>100 then
   stitle1:=stitle1+'<'+i2s(mult)+'%>';
 if drawr>0 then
   stitle0:='['+i2s(trunc(drawr*100))+'%]'+stitle0;
-SetTitleW(UnicodeString(stitle0)+ExtractFileName(fnames)+UnicodeString(stitle1));
+SetTitleW(UnicodeString(stitle0)+GetFileNameW(fnames)+UnicodeString(stitle1));
 end;
 
 procedure DrawProc();
@@ -1662,7 +1664,7 @@ end;
 
 procedure PlayMidi(fname:UnicodeString);
 begin
-if(fileexists(fname))then
+if(IsFileW(fname))then
   begin
   if pauseb=false then PauseMidi();
   SetMidiTime(-1);
@@ -1691,7 +1693,7 @@ end;
 
 procedure helpproc();
 begin
-  if fileexists(fdir+'README.md') then
+  if IsFileW(fdir+'README.md') then
     ShellExecute(0,nil, PChar('notepad.exe'),PChar(fdir+'README.md'),nil,1)
   else
     MsgboxW(UnicodeString('Missing help file: ')+fdir+UnicodeString('README.md'),UnicodeString('Help file not found!'));
@@ -1797,11 +1799,11 @@ end;
 Procedure DoCommandLine();
 begin
 hwm:=FindWindow('MidiPlayer3Class',nil);
-fdir:=UnicodeString(ParamStrUTF8(0));
+fdir:=UnicodeString(GetParaW(0));
 repeat
 if length(fdir)>0 then delete(fdir,length(fdir),1);
 until (length(fdir)<=1) or (fdir[length(fdir)]='\');
-para:=UnicodeString(ParamStrUTF8(1));
+para:=UnicodeString(GetParaW(1));
 if hwm<>0 then
   if para<>'' then
     begin
@@ -1813,8 +1815,8 @@ if hwm<>0 then
     SendMessage(hwm,WM_USER,0,2);
     halt;
     end;
-if UnicodeString(ParamStrUTF8(2))<>'' then fb:=false;
-if(fileexists(fdir+'FORCE_MEMORY')) then fb:=false;
+if UnicodeString(GetParaW(2))<>'' then fb:=false;
+if(IsFileW(fdir+'FORCE_MEMORY')) then fb:=false;
 GetKeyI('fbi',fbi);if fbi>0 then fb:=false;
 end;
 
@@ -1822,7 +1824,7 @@ procedure InitChannelColor();
 var fchan:text;
 begin
 for chanc0i:=0 to chanc0n-1 do chanc00[chanc0i]:=chanc0[chanc0i];
-if(fileexists(fdir+'CHANNEL_COLOR')) then
+if(IsFileW(fdir+'CHANNEL_COLOR')) then
   begin
   assign(fchan,fdir+'CHANNEL_COLOR');
   reset(fchan);
@@ -1863,19 +1865,20 @@ NewThread(@DrawProc);
 end;
 
 begin
+GetTempPath($100,tempdirs);tempdir:=tempdirs;
 OpenKey();
 DoCommandLine();
 GetKeyS('rs',rs);
-DeleteFile(GetTempDir(false)+'fevent0'+rs);
-DeleteFile(GetTempDir(false)+'fevent'+rs);
-DeleteFile(GetTempDir(false)+'fnote'+rs);
+DeleteFile(tempdir+'fevent0'+rs);
+DeleteFile(tempdir+'fevent'+rs);
+DeleteFile(tempdir+'fnote'+rs);
 randomize();rs:=i2hs(longword(random($FFFFFFFF)));
 SetKeyS('rs',rs);
 if fb then
   begin
-  assign(fevent0,GetTempDir(false)+'fevent0'+rs);fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
-  assign(fevent,GetTempDir(false)+'fevent'+rs);fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
-  assign(fnote,GetTempDir(false)+'fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
+  assign(fevent0,tempdir+'fevent0'+rs);fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
+  assign(fevent,tempdir+'fevent'+rs);fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+  assign(fnote,tempdir+'fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
   end;
 {$ifdef D3D}
 InitD3D();
@@ -1995,14 +1998,14 @@ if msgbufn>0 then
 until not(iswin());
 if fb then
   begin
-  close(fevent0);DeleteFile(GetTempDir(false)+'fevent0'+rs);
-  close(fevent);DeleteFile(GetTempDir(false)+'fevent'+rs);
-  close(fnote);DeleteFile(GetTempDir(false)+'fnote'+rs);
+  close(fevent0);DeleteFile(tempdir+'fevent0'+rs);
+  close(fevent);DeleteFile(tempdir+'fevent'+rs);
+  close(fnote);DeleteFile(tempdir+'fnote'+rs);
   end;
 for bnotej:=-1 to bnoten00 do
   begin
-  bmpname:=GetTempDir(false)+'bmp'+'_'+i2s(0)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
-  bmpname:=GetTempDir(false)+'bmp'+'_'+i2s(1)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
+  bmpname:=tempdir+'bmp'+'_'+i2s(0)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
+  bmpname:=tempdir+'bmp'+'_'+i2s(1)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
   end;
 midiOutClose(midiOut);
 savefile();
