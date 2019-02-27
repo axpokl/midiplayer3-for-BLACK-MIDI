@@ -2883,7 +2883,7 @@ if _para='' then
   i:=1;j:=1;n:=0;
   repeat
   if _para[j]='"' then q:=not(q);
-  if q then if _para[j]=' ' then
+  if q and (_para[j]=' ') then
     begin
     AddPara(i,j,n);
     while _para[j]=' ' do j:=j+1;
@@ -2910,7 +2910,7 @@ if _paraw='' then
   i:=1;j:=1;n:=0;
   repeat
   if _paraw[j]=unicodechar('"') then q:=not(q);
-  if q then if _paraw[j]=unicodechar(' ') then
+  if q and (_paraw[j]=unicodechar(' ')) then
     begin
     AddParaW(i,j,n);
     repeat
