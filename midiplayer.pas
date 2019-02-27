@@ -805,7 +805,7 @@ var kbdi,kbdn:byte;
 
 const fhr=0.7;
 
-const maxbnote=$40;
+const maxbnote=$80;
 const maxbnotebuf=$100000;
 var bnote:packed array[0..1,0..maxbnote-1]of pbitmap;
 var bnotej0:packed array[0..1,0..maxbnote-1]of longint;
@@ -1115,7 +1115,7 @@ var bnotej:longint;
 begin
 bnotej:=y div bnoteh0;
 y0:=bnoteh0-(y-bnotej*bnoteh0);
-if (bnotej>=0) {and (bnotej<maxbnote)} then
+if ((bnotej>=0) and ((bnotej<maxbnote) or bnoteb)) then
   _Line(bi,bnotej,x,y0,w,h,c);
 end;
 

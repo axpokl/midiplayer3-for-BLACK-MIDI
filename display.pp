@@ -1995,7 +1995,7 @@ Windows.DrawText(b^.dc,as2pc(s),length(s),lpRect,DT_SINGLELINE or DT_CENTER or D
 _fx:=x+w;_fy:=y;
 end;
 procedure DrawTextXY(b:pbitmap;s:ansistring;x,y:longint;cfg,cbg:longword);
-begin 
+begin
 InitTextXY(b,s,cfg,cbg);
 TextOut(b^.dc,x,y,as2pc(s),length(s));
 _fx:=x+GetStringWidth(s);_fy:=y;
@@ -2864,14 +2864,14 @@ begin SetLength(GetString,len);for _pi:=1 to len do GetString[_pi]:=char(GetByte
 procedure AddPara(i,j,n:longword);
 begin
 _para_list[n]:=copy(_para,i,j-i);
-if _para_list[n][1]='"' then delete(_para_list[n],1,1);
-if _para_list[n][length(_para_list[n])]='"' then delete(_para_list[n],length(_para_list[n]),1);
+if length(_para_list[n])>0 then if _para_list[n][1]='"' then delete(_para_list[n],1,1);
+if length(_para_list[n])>0 then if _para_list[n][length(_para_list[n])]='"' then delete(_para_list[n],length(_para_list[n]),1);
 end;
 procedure AddParaW(i,j,n:longword);
 begin
 _paraw_list[n]:=copy(_paraw,i,j-i);
-if _paraw_list[n][1]=unicodechar('"') then delete(_paraw_list[n],1,1);
-if _paraw_list[n][length(_paraw_list[n])]=unicodechar('"') then delete(_paraw_list[n],length(_paraw_list[n]),1);
+if length(_paraw_list[n])>0 then if _paraw_list[n][1]=unicodechar('"') then delete(_paraw_list[n],1,1);
+if length(_paraw_list[n])>0 then if _paraw_list[n][length(_paraw_list[n])]=unicodechar('"') then delete(_paraw_list[n],length(_paraw_list[n]),1);
 end;
 procedure InitPara();
 var q:boolean=true;
@@ -2883,8 +2883,19 @@ if _para='' then
   i:=1;j:=1;n:=0;
   repeat
   if _para[j]='"' then q:=not(q);
-  if q then if _para[j]=' ' then begin AddPara(i,j,n);n:=n+1;i:=j+1;end;
-  j:=j+1;
+  if q then if _para[j]=' ' then
+    begin
+    AddPara(i,j,n);
+    while _para[j]=' ' do j:=j+1;
+    repeat
+    j:=j+1;
+    if j>length(_para) then break;
+    until not(_para[j]=' ');
+    i:=j;
+    n:=n+1;
+    end
+  else
+    j:=j+1;
   until j>length(_para);
   if i<=length(_para) then AddPara(i,j,n);
   end;
@@ -2899,8 +2910,18 @@ if _paraw='' then
   i:=1;j:=1;n:=0;
   repeat
   if _paraw[j]=unicodechar('"') then q:=not(q);
-  if q then if _paraw[j]=unicodechar(' ') then begin AddParaW(i,j,n);n:=n+1;i:=j+1;end;
-  j:=j+1;
+  if q then if _paraw[j]=unicodechar(' ') then
+    begin
+    AddParaW(i,j,n);
+    repeat
+    j:=j+1;
+    if j>length(_paraw) then break;
+    until not(_paraw[j]=unicodechar(' '));
+    i:=j;
+    n:=n+1;
+    end
+  else
+    j:=j+1;
   until j>length(_paraw);
   if i<=length(_paraw) then AddParaW(i,j,n);
   end;
