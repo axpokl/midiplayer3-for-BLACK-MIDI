@@ -1,0 +1,36 @@
+maxbnot1
+msgbufmax
+help file path
+parameter
+left mouse --> channel (show, mute...)
+right mouse --> option
+
+fast skip to next event?
+
+
+
+Help
+Reset File
+Reset All
+
+Reset Hardware/Change MIDI Device(+-)
+Stream or Long(of)
+ignore same notes(of)
+
+
+Short MIDI event buffer(+-)
+Minimum MIDI event volume(+-)
+Set max note buffer(+-)
+
+Reset Bar/Auto Reset Bar(of)
+FPS(+-)
+
+Keyboard multi note buffer(+-)
+
+Bar Size(+-)
+Bar Color(+-)
+Key Number(+-)
+
+Information Text(of)
+Messure/Chord line(+-)
+Loop Mode(+-)

@@ -39,17 +39,20 @@ Other Functions
 * Ctrl+F2	Reset All
 * F3	Reset Hardware
 * Ctrl+F3	Change MIDI Device
+* Shift+F3	Stream or Long Message
 * F4	Reset Bar 
 * Ctrl+F4	Auto Reset Bar
+* Shift+F4	On/Off ignore same notes
 * F5/F6	Set FPS [5-480][Default=120]
 * Ctrl+F5/F6	Set short MIDI event buffer
 * ShiftF5/F6	Set minimum MIDI event volume
-* Ctrl+ShiftF5/F6	Set keyboard multi note buffer
+* Ctrl+Shift+F5/F6	Set max note buffer
 * F7/F8	Set Bar Size	[0%-1000%][Default=10%,Ctrl=3%,Shift=1%]
+* Ctrl+Shift+F7/F8	Set keyboard multi note buffer
 * F9	Set Bar Color	[0=Chord,1=Track/Channel(With Black Key),2=Track/Channel]
 * F11	Set Key Number	[0=Number,1=Chord,2=Blank]
 * Ctrl+F11	On/Off Information Text
-* Shift+F1	On/Off Messure/Chord line
+* Shift+F11	On/Off Messure/Chord line
 * F12	Set Loop Mode [S=Single,A=All,N=None]
 
 Reset or Uninstall the midiplayer3
