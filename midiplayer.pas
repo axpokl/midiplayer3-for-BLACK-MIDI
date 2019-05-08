@@ -446,7 +446,7 @@ if fb then begin close(fevent0);fevent0w:=false;reset(fevent0);bjfevent0:=-1;end
 LeaveCriticalSection(csfevent0);
 end;
 
-var midiOut:longword;
+var midiOut:longword=0;
 var firsttime:double;
 var pauseb:boolean;
 var pausetime:double;
@@ -468,7 +468,7 @@ var msgbufn,msgbufnmax:longint;
 var msgbufi:shortint;
 var msgbufb:boolean;
 var msgbufb0:boolean=true;
-var msgbufb1:boolean=false;
+var msgbufb1:boolean=true;
 var msgchan:array[0..$F,0..$FF,0..1]of byte;
 var msgchan0:array[0..$F,0..$FF,0..1]of boolean;
 var msgchani,msgchanj,msgchank:byte;
@@ -493,8 +493,16 @@ if msgbufn<maxbuf-1 then
   msgbuf[msgbufn+0]:=buf1;
   msgbuf[msgbufn+1]:=buf2;
   msgbuf[msgbufn+2]:=buf3;
+  msgbufn:=msgbufn+3;
   end;
-msgbufn:=msgbufn+3;
+end;
+
+procedure AddMsgBuf(buf1,buf2,buf3:byte);
+begin
+if msgbufb1=true then 
+  AddMsgBufLong(buf1,buf2,buf3)
+else 
+  AddMsgBufStream(buf1,buf2,buf3);
 end;
 
 procedure CleanMsgChan();
@@ -1691,20 +1699,30 @@ SetMidiTime(-1);
 SetMidiTime(tmptime);
 end;
 
-procedure ResetMidiHard(i:longword);
+procedure ResetMidiHard(i:longword;b:boolean);
 var n:longword;
 begin
 n:=midiOutGetNumDevs();
 if n>0 then midiOuti:=i mod n else midiOuti:=0;
-midiOutClose(midiOut);
-midiStreamClose(midiOut);
+if midiOut>0 then
+  if msgbufb1=true then
+    midiOutClose(midiOut)
+  else
+    midiStreamClose(midiOut);
+writeln('@',msgbufb1);
+if b then msgbufb1:=not(msgbufb1);
+writeln('#',msgbufb1);
 if msgbufb1=true then
-  midiOutOpen(@midiOut,midiOuti,0,0,0)
+  writeln('1',midiOutOpen(@midiOut,midiOuti,0,0,0))
 else
-  midiStreamOpen(@midiOut,@midiOuti,1,0,0,0);
+  writeln('2',midiStreamOpen(@midiOut,@midiOuti,DWORD(1),0,0,0));
+writeln(midiOut);
 ResetMidiSoft();
 deviceb:=2;
 end;
+
+procedure ResetMidiHard(i:longword);
+begin ResetMidiHard(i,false);end;
 
 procedure PlayMidi(fname:UnicodeString);
 begin
@@ -1767,7 +1785,7 @@ if iskey() then
   if iskey(K_F2) and (k_ctrl) then begin resetfile();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);savefile();initb:=false;PlayMidi(fnames);end;
   if iskey(K_F3) and not(k_ctrl) and not(k_shift) then ResetMidiHard(midiOuti);
   if iskey(K_F3) and (k_ctrl) then ResetMidiHard(midiOuti+1);
-  if iskey(K_F3) and (k_shift) then begin msgbufb1:=not(msgbufb1);ResetMidiHard(midiOuti);writeln(msgbufb1);end;
+  if iskey(K_F3) and (k_shift) then ResetMidiHard(midiOuti,true);
   if iskey(K_F4) and not(k_ctrl) and not(k_shift) then bnoteb:=true;
   if iskey(K_F4) and (k_ctrl) and not(k_shift) then autofresh:=1-autofresh;
   if iskey(K_F4) and (k_shift) then msgbufb0:=not(msgbufb0);
@@ -2007,28 +2025,23 @@ if eventi<eventn then
               msgbuf1:=(msgbuf0) and $FF;
               msgbuf2:=(msgbuf0 shr 8) and $FF;
               msgbuf3:=(msgbuf0 shr 16) and $FF;
-              if msgbufb1=true then
-                AddMsgBufLong(msgbuf1,msgbuf2,msgbuf3)
-              else
+              if msgbufb0=true then
                 begin
-                if msgbufb0=true then
-                  begin
-                  msgbufb:=true;
-                  if msgbuf1 and $F0=$90 then
-                    if (msgchan0[msgbuf1 and $F][msgbuf2][0]=true) and (msgchan[msgbuf1 and $F][msgbuf2][0]=msgbuf3) then
-                      msgbufb:=false
-                    else
-                      begin msgchan0[msgbuf1 and $F][msgbuf2][0]:=true;msgchan[msgbuf1 and $F][msgbuf2][0]:=msgbuf3;end;
-                  if msgbuf1 and $F0=$80 then
-                    if (msgchan0[msgbuf1 and $F][msgbuf2][1]=true) and (msgchan[msgbuf1 and $F][msgbuf2][1]=msgbuf3) then
-                      msgbufb:=false
-                    else
-                      begin msgchan0[msgbuf1 and $F][msgbuf2][1]:=true;msgchan[msgbuf1 and $F][msgbuf2][1]:=msgbuf3;end;
-                  if msgbufb then AddMsgBufStream(msgbuf1,msgbuf2,msgbuf3);
-                  end
-                else
-                  AddMsgBufStream(msgbuf1,msgbuf2,msgbuf3);
+                msgbufb:=true;
+                if msgbuf1 and $F0=$90 then
+                  if (msgchan0[msgbuf1 and $F][msgbuf2][0]=true) and (msgchan[msgbuf1 and $F][msgbuf2][0]=msgbuf3) then
+                    msgbufb:=false
+                  else
+                    begin msgchan0[msgbuf1 and $F][msgbuf2][0]:=true;msgchan[msgbuf1 and $F][msgbuf2][0]:=msgbuf3;end;
+                if msgbuf1 and $F0=$80 then
+                  if (msgchan0[msgbuf1 and $F][msgbuf2][1]=true) and (msgchan[msgbuf1 and $F][msgbuf2][1]=msgbuf3) then
+                    msgbufb:=false
+                  else
+                    begin msgchan0[msgbuf1 and $F][msgbuf2][1]:=true;msgchan[msgbuf1 and $F][msgbuf2][1]:=msgbuf3;end;
+                if msgbufb then AddMsgBuf(msgbuf1,msgbuf2,msgbuf3);
                 end
+              else	  
+                AddMsgBuf(msgbuf1,msgbuf2,msgbuf3);
               end
             end
           end
@@ -2040,10 +2053,10 @@ if eventi<eventn then
     end;
   end;
 LeaveCriticalSection(csfevent0);
-if msgbufb1=false then
-  msgbufnmax:=msgbufn div 12
+if msgbufb1=true then
+  msgbufnmax:=msgbufn
 else
-  msgbufnmax:=msgbufn;
+  msgbufnmax:=msgbufn div 12;
 if msgbufn>0 then
   begin
 //writeln(msgbufn);

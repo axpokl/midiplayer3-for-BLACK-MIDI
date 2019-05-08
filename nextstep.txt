@@ -4,6 +4,7 @@ help file path
 parameter
 left mouse --> channel (show, mute...)
 right mouse --> option
+readme
 
 fast skip to next event?
 
