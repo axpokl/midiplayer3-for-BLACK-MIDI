@@ -1,13 +1,13 @@
 var regkey:HKEY;
 
-procedure OpenKey();
+procedure OpenReg();
 begin
 RegCreateKeyEx(HKEY_CURRENT_USER,
 PChar('SoftWare\ax_midi_player'),
 0,nil,0,KEY_ALL_ACCESS,nil,regkey,nil);
 end;
 
-procedure CloseKey();
+procedure CloseReg();
 begin
 RegCloseKey(regkey);
 end;
@@ -84,7 +84,7 @@ procedure SetMidiTime(settime:double);forward;
 
 function GetMidiTime():double;forward;
 
-procedure resetfile();
+procedure ResetReg();
 begin
 fnames:='midiplayer by ax_pokl';
 framerate:=120;
@@ -105,7 +105,7 @@ msgvol0:=2;
 maxkbdc:=$100;
 end;
 
-procedure savefile();
+procedure SaveReg();
 begin
 SetKeySW('fnames',fnames);
 SetKeyI('framerate',framerate);
@@ -125,9 +125,8 @@ SetKeyI('msgvol0',msgvol0);
 SetKeyI('maxkbdc',maxkbdc);
 end;
 
-procedure loadfile();
+procedure LoadReg();
 begin
-resetfile();
 GetKeySW('fnames',fnames);
 GetKeyI('framerate',framerate);
 GetKeyI('midipos',midipos);
@@ -144,6 +143,4 @@ GetKeyI('msgbufn0',msgbufn0);
 GetKeyI('kmessure',kmessure);
 GetKeyI('msgvol0',msgvol0);
 GetKeyI('maxkbdc',maxkbdc);
-if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
-if IsFileW(fnames) then begin PlayMidi(fnames);SetMidiTime(midipos/1000-1);end;
 end;

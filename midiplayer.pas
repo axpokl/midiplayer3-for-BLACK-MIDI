@@ -1,13 +1,11 @@
 {$R midiplayer.res}
+//{$define D3D}
 program midiplayer;
-{$ifdef D3D}
-uses Windows,MMSystem,Display,Direct3D9,D3Dx9;
-{$else}
-uses Windows,MMSystem,Display;
-{$endif}
+
+uses Windows,MMSystem,Display{$ifdef D3D},Direct3D9,D3Dx9{$endif};
 
 var maxevent:longword=$1;
-var fb:boolean=true;
+var fb:boolean=false;
 var fbi:longword=0;
 
 {$i freg.inc}
@@ -499,9 +497,9 @@ end;
 
 procedure AddMsgBuf(buf1,buf2,buf3:byte);
 begin
-if msgbufb1=true then 
+if msgbufb1=true then
   AddMsgBufLong(buf1,buf2,buf3)
-else 
+else
   AddMsgBufStream(buf1,buf2,buf3);
 end;
 
@@ -1048,27 +1046,28 @@ if bnote[bi,bnoteb0]=nil then
   end;
 end;
 
-procedure _Bar(bi,bj:longint;x,y,w,h:longint;cfg,cbg:longword);
+{$ifdef D3D}
+{$i d3d.inc}
+{$else}
+procedure AddBar(bi,bj:longint;x,y,w,h:longint;cfg,cbg:longword);
 begin
 FreshBMP(bi,bj);
 Bar(bnote[bi,bnotej1[bi,bj]],x,y,w,h,cfg,cbg);
 end;
 
-procedure _Line(bi,bj:longint;x,y,w,h:longint;c:longword);
+procedure AddDrawTextXY(bi,bj:longint;s:ansistring;x,y:longint;c:longword);
+begin
+FreshBMP(bi,bj);
+DrawTextXY(bnote[bi,bnotej1[bi,bj]],s,x,y,c);
+end;
+{$endif}
+
+procedure AddLine(bi,bj:longint;x,y,w,h:longint;c:longword);
 begin
 FreshBMP(bi,bj);
 Line(bnote[bi,bnotej1[bi,bj]],x,y,w,h,c);
 end;
 
-procedure _DrawTextXY(bi,bj:longint;s:ansistring;x,y:longint;c:longword);
-begin
-FreshBMP(bi,bj);
-DrawTextXY(bnote[bi,bnotej1[bi,bj]],s,x,y,c);
-end;
-
-{$ifdef D3D}
-{$i d3d.inc}
-{$endif}
 procedure FlushBar(flushb:boolean);
 var keyi:byte;
 var y0,h0:longword;
@@ -1085,37 +1084,21 @@ for keyi:=0 to $7F do
     while h0>(bnoteh0-y0) do
       begin
       if (bnotej>=0) then
-{$ifdef D3D}
         AddBar(bi,bnotej,x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
-{$else}
-        _Bar(bi,bnotej,x,y0-1,w,bnoteh0-y0+2,cfg,cbg);
-{$endif}
       h0:=h0-(bnoteh0-y0);
       y0:=0;
       bnotej:=bnotej-1;
       end;
     if (bnotej>=0) then
-{$ifdef D3D}
       AddBar(bi,bnotej,x,y0-1,w,h0+1,cfg,cbg);
-{$else}
-      _Bar(bi,bnotej,x,y0-1,w,h0+1,cfg,cbg);
-{$endif}
     bnotej:=(sy+fh+2)div bnoteh0;
     y0:=bnoteh0-(sy+fh+2-bnotej*bnoteh0);
     if kchb<=1 then
-{$ifdef D3D}
       AddDrawTextXY(bi,bnotej,s,sx,y0+1,sc);
-{$else}
-      _DrawTextXY(bi,bnotej,s,sx,y0+1,sc);
-{$endif}
     if y0+fh>=bnoteh0 then
       if bnotej>1 then
         if kchb<=1 then
-{$ifdef D3D}
           AddDrawTextXY(bi,bnotej-1,s,sx,y0-bnoteh0+1,sc);
-{$else}
-          _DrawTextXY(bi,bnotej-1,s,sx,y0-bnoteh0+1,sc);
-{$endif}
     h:=0;
     end;
   end;
@@ -1166,7 +1149,7 @@ begin
 bnotej:=y div bnoteh0;
 y0:=bnoteh0-(y-bnotej*bnoteh0);
 if ((bnotej>=0) and ((bnotej<maxbnote) or bnoteb)) then
-  _Line(bi,bnotej,x,y0,w,h,c);
+  AddLine(bi,bnotej,x,y0,w,h,c);
 end;
 
 procedure _Line(b:pbitmap;x,y,w,h:longint;c:longword);
@@ -1182,10 +1165,10 @@ begin
 bnotej:=(sy+fh+2)div bnoteh0;
 y0:=bnoteh0-(sy+fh+2-bnotej*bnoteh0);
 if (bnotej>=0) and (bnotej<maxbnote) then
-_DrawTextXY(bi,bnotej,s,sx,y0+1,sc);
+AddDrawTextXY(bi,bnotej,s,sx,y0+1,sc);
 if y0+fh>=bnoteh0 then
   if (bnotej-1>=0) and (bnotej-1<maxbnote) then
-    _DrawTextXY(bi,bnotej-1,s,sx,y0-bnoteh0+1,sc);
+    AddDrawTextXY(bi,bnotej-1,s,sx,y0-bnoteh0+1,sc);
 end;
 
 procedure _DrawTextXY(s:ansistring;x,y:longint;c:longword);
@@ -1305,10 +1288,8 @@ if notemapn-1>=0 then
   bnoteh:=round(finaltime*mult*GetWidth()/mult0)+GetHeight();
 bnoten0:=bnoteh div bnoteh0;
 bnoten00:=max(bnoten0,bnoten00);
-{$ifdef D3D}
-CreateD3D(GetWidth(),bnoteh0);
-CreateD3DBMP(GetWidth(),bnoteh0);
-{$endif}
+{$ifdef D3D}CreateD3D(GetWidth(),bnoteh0);{$endif}
+{$ifdef D3D}CreateD3DBMP(GetWidth(),bnoteh0);{$endif}
 for bnoteb0:=0 to maxbnote-1 do
   begin
   bnotej0[0,bnoteb0]:=-1;
@@ -1377,9 +1358,7 @@ for fni:=0 to notemapn-1 do
   if(notemap[notemapi].note1-notemap[notemapi].note0>delaytime)then DrawBNote(notemapi);
   end;
 FlushBar(true);
-{$ifdef D3D}
-FreshD3DAll();
-{$endif}
+{$ifdef D3D}FreshD3DAll();{$endif}
 drawr:=0;
 end;
 notemapa:=0;
@@ -1406,9 +1385,7 @@ for notemapi:=notemapa to notemapb do
   end;
 if notemapa<=notemapb then SetFNoteDraw(notemapa,notemapb);
 FlushBar(true);
-{$ifdef D3D}
-FreshD3DAll();
-{$endif}
+{$ifdef D3D}FreshD3DAll();{$endif}
 drawr:=0;
 LeaveCriticalSection(cs1);
 end;
@@ -1429,9 +1406,7 @@ for notemapi:=0 to notemapn-1 do
   end;
 SetFNoteDraw(0,notemapn-1);
 FlushBar(true);
-{$ifdef D3D}
-FreshD3DAll();
-{$endif}
+{$ifdef D3D}FreshD3DAll();{$endif}
 drawr:=0;
 bnoteb:=false;
 if pauseb0=false then PauseMidi();
@@ -1748,7 +1723,7 @@ if(IsFileW(fname))then
   kkey0:=0;
   LeaveCriticalSection(cs1);
   if autofresh=1 then bnoteb:=true;
-  savefile();
+  SaveReg();
   while IsNextMsg() do ;
   end;
 end;
@@ -1782,7 +1757,7 @@ if iskey() then
   k_ctrl:=GetKeyState(VK_CONTROL)<0;
   if iskey(K_F1) then newthread(@helpproc);
   if iskey(K_F2) and not(k_ctrl) then PlayMidi(fnames);
-  if iskey(K_F2) and (k_ctrl) then begin resetfile();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);savefile();initb:=false;PlayMidi(fnames);end;
+  if iskey(K_F2) and (k_ctrl) then begin ResetReg();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
   if iskey(K_F3) and not(k_ctrl) and not(k_shift) then ResetMidiHard(midiOuti);
   if iskey(K_F3) and (k_ctrl) then ResetMidiHard(midiOuti+1);
   if iskey(K_F3) and (k_shift) then ResetMidiHard(midiOuti,true);
@@ -1924,16 +1899,13 @@ sendmessage(_hw,WM_SETICON,ICON_SMALL,longint(_wc.HIcon));
 SetFontName('Consolas');
 InitkbdPos();
 InitkbdColor();
-InitCS();
 InitChannelColor();
 //InitBtn();
 NewThread(@DrawProc);
 end;
 
+procedure OpenRS();
 begin
-GetTempPath($100,tempdirs);tempdir:=tempdirs;
-OpenKey();
-DoCommandLine();
 GetKeyS('rs',rs);
 DeleteFile(tempdir+'fevent0'+rs);
 DeleteFile(tempdir+'fevent'+rs);
@@ -1946,13 +1918,41 @@ if fb then
   assign(fevent,tempdir+'fevent'+rs);fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
   assign(fnote,tempdir+'fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
   end;
-{$ifdef D3D}
-InitD3D();
-{$endif}
+end;
+
+procedure CloseRS();
+begin
+if fb then
+  begin
+  close(fevent0);DeleteFile(tempdir+'fevent0'+rs);
+  close(fevent);DeleteFile(tempdir+'fevent'+rs);
+  close(fnote);DeleteFile(tempdir+'fnote'+rs);
+  end;
+for bnotej:=-1 to bnoten00 do
+  begin
+  bmpname:=tempdir+'bmp'+'_'+i2s(0)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
+  bmpname:=tempdir+'bmp'+'_'+i2s(1)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
+  end;
+end;
+
+begin
+GetTempPath($100,tempdirs);tempdir:=tempdirs;
+ResetReg();
+OpenReg();
+LoadReg();
+DoCommandLine();
+OpenRS();
+{$ifdef D3D}InitD3D();{$endif}
+InitCS();
 InitDraw();
-loadfile();
-SetMidiVol(volamax-2);
+if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
+if IsFileW(fnames) then
+  begin
+  PlayMidi(fnames);
+  SetMidiTime(midipos/1000-1);
+  end;
 ResetMidiHard(midiOuti);
+SetMidiVol(volamax-2);
 repeat
 if isnextmsg then DoAct() else Delay(1);
 if GetMidiTime()>finaltime then
@@ -2040,7 +2040,7 @@ if eventi<eventn then
                     begin msgchan0[msgbuf1 and $F][msgbuf2][1]:=true;msgchan[msgbuf1 and $F][msgbuf2][1]:=msgbuf3;end;
                 if msgbufb then AddMsgBuf(msgbuf1,msgbuf2,msgbuf3);
                 end
-              else	  
+              else
                 AddMsgBuf(msgbuf1,msgbuf2,msgbuf3);
               end
             end
@@ -2080,18 +2080,8 @@ if msgbufn>0 then
   end;
 //for msgbufn:=0 to maxbuf-1 do msgbuf[msgbufn]:=0;
 until not(iswin());
-if fb then
-  begin
-  close(fevent0);DeleteFile(tempdir+'fevent0'+rs);
-  close(fevent);DeleteFile(tempdir+'fevent'+rs);
-  close(fnote);DeleteFile(tempdir+'fnote'+rs);
-  end;
-for bnotej:=-1 to bnoten00 do
-  begin
-  bmpname:=tempdir+'bmp'+'_'+i2s(0)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
-  bmpname:=tempdir+'bmp'+'_'+i2s(1)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
-  end;
 midiOutClose(midiOut);
-savefile();
-CloseKey();
+CloseRS();
+SaveReg();
+CloseReg();
 end.
