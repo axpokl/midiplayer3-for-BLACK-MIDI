@@ -7,8 +7,8 @@ del *.exe
 del midiplayer.exe
 del midiplayer.zip
 windres -i midiplayer.rc -o midiplayer.res
-fpc midiplayer.pas -omidiplayer32.exe -Os
-ppcrossx64 midiplayer.pas -omidiplayer64.exe -Os
+fpc midiplayer.pas -omidiplayer32.exe -Os -WG
+ppcrossx64 midiplayer.pas -omidiplayer64.exe -Os -WG
 start midiplayer64.exe
 if not exist midiplayer64.exe pause
 if not exist midiplayer64.exe exit

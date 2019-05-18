@@ -58,6 +58,7 @@ var rs:ansistring;
 var fnames:unicodestring;
 var framerate:longword;
 var loop:longword;
+var miditime:longword;
 var midipos:longword;
 var voli:longword;
 var kbdcb:longword;
@@ -78,16 +79,11 @@ var kmessure:longword;
 var msgvol0:longword;
 var maxkbdc:longword;
 
-procedure PlayMidi(fname:unicodestring);forward;
-
-procedure SetMidiTime(settime:double);forward;
-
-function GetMidiTime():double;forward;
-
 procedure ResetReg();
 begin
 fnames:='midiplayer by ax_pokl';
 framerate:=120;
+miditime:=0;
 midipos:=0;
 voli:=0;
 loop:=1;
@@ -109,7 +105,7 @@ procedure SaveReg();
 begin
 SetKeySW('fnames',fnames);
 SetKeyI('framerate',framerate);
-SetKeyI('midipos',round((GetMidiTime()+1)*1000));
+SetKeyI('midipos',miditime);
 SetKeyI('voli',voli);
 SetKeyI('loop',loop);
 SetKeyI('kbdcb',kbdcb);

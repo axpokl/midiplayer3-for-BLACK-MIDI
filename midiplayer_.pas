@@ -10,7 +10,7 @@ var fbi:longword=0;
 var midiOut:longword=0;
 
 {$i freg.inc}
-{$i flist.inc}
+//{$i flist.inc}
 
 type tevent=packed record track:word;curtick,msg:longword;ticktime:double;end;
 var event:packed array of tevent;
@@ -353,7 +353,7 @@ eventmun:=0;
 eventchn:=eventchi;
 track0[0]:=0;
 for tracki:=1 to trackn-1 do track0[tracki]:=track1[tracki-1];
-EnterCriticalSection(csfevent0);
+//EnterCriticalSection(csfevent0);
 if fb then begin close(fevent0);fevent0w:=true;rewrite(fevent0);bjfevent0:=-1;end;
 eventj:=0;
 trackheapi:=0;
@@ -442,7 +442,7 @@ drawr:=0;
 if tempo00=0 then tempo00:=500000;
 if fb then FlushFEvent0();
 if fb then begin close(fevent0);fevent0w:=false;reset(fevent0);bjfevent0:=-1;end;
-LeaveCriticalSection(csfevent0);
+//LeaveCriticalSection(csfevent0);
 end;
 
 var firsttime:double;
@@ -457,6 +457,7 @@ const vola:packed array[1..volamax]of double=
 var volchana:packed array[0..$F]of byte;
 var volchani:byte;
 
+{
 var msghdr:MIDIHDR;
 const maxbuf=$100000;
 var msgbuf:packed array[0..maxbuf]of byte;//longword;
@@ -513,11 +514,12 @@ for msgchani:=0 to $F do
       msgchan0[msgchani][msgchanj][msgchank]:=false;
       end;
 end;
-
+}
+{
 var notemapa:longint;
 var notemapb:longint;
 
-procedure InitKbdC();forward;
+//procedure InitKbdC();forward;
 
 procedure InitMidiChanVol(volchan:byte);
 begin
@@ -611,6 +613,7 @@ if seeki<seekn-1 then if eventch[seeki].ticktime<seekt then seeki:=seeki+1;
 SeekMidiTimeChord:=seeki-1;
 end;
 
+
 procedure SetMidiTime(settime:double);
 begin
 EnterCriticalSection(cs2);
@@ -642,7 +645,7 @@ if voli>0 then SetMidiVol(voli);
 if settime<=0 then if chordtmp<>-1 then chord:=chordtmp;
 notemapa:=0;
 notemapb:=0;
-if settime=-1 then InitKbdC();
+//if settime=-1 then InitKbdC();
 LeaveCriticalSection(cs2);
 end;
 
@@ -651,8 +654,9 @@ begin
 if pauseb=false then pausetime:=GetMidiTime();
 SetMidiTime(pausetime);
 pauseb:=not(pauseb);
-if not(pauseb) then InitKbdC();
+//if not(pauseb) then InitKbdC();
 end;
+}
 
 const maxnote=$FFFFFF;
 var note0:packed array[0..maxnote]of double;
@@ -684,7 +688,7 @@ const kbd0n=21;
 const kbd1n=21+87;
 var kbd0:byte=kbd0n;
 var kbd1:byte=kbd1n;
-
+{
 procedure AddNoteMap(notei:longword);
 begin
 notem[notei]:=notemapi;
@@ -700,16 +704,19 @@ notemapi:=notemapi+1;
 //noteb[notei]:=false;
 end;
 
+}
 procedure CreateNoteMap();
 var ei:longint;
 begin
+{
 chord:=7;
 for chani:=0 to maxchan-1 do chancn[chani]:=0;
 for chani:=0 to maxchan-1 do chanci[chani]:=chani;
 for chani:=0 to maxchan-1 do chancc[chani]:=HSN2RGB(chanc00[chani mod chanc0n]or $9FFF00);
 for chani:=0 to maxchan-1 do chancw[chani]:=chancc[chani];
 for chani:=0 to maxchan-1 do chancb[chani]:=MixColor(chancc[chani],black0,3/4);
-EnterCriticalSection(csfevent0);
+}
+//EnterCriticalSection(csfevent0);
 eventchi:=0;
 notemapi:=0;
 notemapn:=0;
@@ -737,22 +744,25 @@ for fi:=0 to eventn-1 do
       notec[notei]:=event0[ei].track or event0[ei].msg and $F shl maxtrack0;
       note0[notei]:=event0[ei].ticktime;
       note1[notei]:=finaltime;
-      AddNoteMap(notei);
+//      AddNoteMap(notei);
       end;
-    if event0[ei].msg and $F0=$80 then
-      SetFNoteNote1(notem[notei],event0[ei].ticktime);
+//    if event0[ei].msg and $F0=$80 then
+//      SetFNoteNote1(notem[notei],event0[ei].ticktime);
     end;
   end;
+{
 eventtmi:=0;
 //eventmui:=0;
 eventchi:=0;
 drawr:=0;
 if fb then FlushFNoteAll();
 if fb then begin close(fnote);fnotew:=false;reset(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;end;
-LeaveCriticalSection(csfevent0);
+//LeaveCriticalSection(csfevent0);
 notemapn:=notemapi;
+}
 end;
 
+(*
 procedure SortNoteMapColorQuick1(n1,n2:longword);
 var qv,q1,q2:longword;
 begin
@@ -821,6 +831,7 @@ SortNoteMapColorQuick1(0,maxchan-1);
 SortNoteMapColorQuick2(0,maxchan-1);
 SortNoteMapColorQuick1(0,maxchan-1);
 end;
+*)
 
 var w:longword;
 var h:longword;
@@ -833,6 +844,7 @@ var delaytime:double=0;
 var deviceb:shortint=0;
 var devicetime:double=0;
 
+(*
 var k_shift,k_ctrl:boolean;
 var k_pos:double;
 
@@ -1008,7 +1020,7 @@ procedure ClearBMP(bi,bnoteb0:longint);
 begin
 if bnote[bi,bnoteb0]<>nil then
   begin
-  bmpname:=tempdir+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
+//  bmpname:=tempdir+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
   if bnotej0[bi,bnoteb0]>=0 then SaveBMP(bnote[bi,bnoteb0],bmpname);
   ReleaseBMP(bnote[bi,bnoteb0]);
   bnote[bi,bnoteb0]:=nil;
@@ -1031,7 +1043,7 @@ else
   bnoteb0:=bnotej1[bi,bj];
 if bnote[bi,bnoteb0]=nil then
   begin
-  bmpname:=tempdir+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
+//  bmpname:=tempdir+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
   if IsFile(bmpname) then
     begin
     bnote[bi,bnoteb0]:=LoadBMP(bmpname,black1);
@@ -1049,6 +1061,7 @@ end;
 {$ifdef D3D}
 {$i d3d.inc}
 {$else}
+
 procedure AddBar(bi,bj:longint;x,y,w,h:longint;cfg,cbg:longword);
 begin
 FreshBMP(bi,bj);
@@ -1620,6 +1633,8 @@ DrawReal();
 FreshWin();
 end;
 
+*)
+
 procedure DrawTitle();
 var stitle0,stitle1:ansistring;
 begin
@@ -1627,9 +1642,9 @@ stitle0:='';
 stitle1:='';
 if (max(0,finaltime-1)>0) then
   begin
-  stitle0:='('+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)';
-  stitle1:='<'+i2s(find_current)+'/'+i2s(find_count)+'/'+loops[loop]+'>';
-  stitle1:=stitle1+'['+GetKeyChordS(chord)+']';
+//  stitle0:='('+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)';
+//  stitle1:='<'+i2s(find_current)+'/'+i2s(find_count)+'/'+loops[loop]+'>';
+//  stitle1:=stitle1+'['+GetKeyChordS(chord)+']';
   end;
 if voli>0 then if round(vola[voli]*100)<>100 then
   stitle1:=stitle1+'('+i2s(longword(round(vola[voli]*100)))+'%)';
@@ -1642,6 +1657,7 @@ if drawr>0 then
 SetTitleW(UnicodeString(stitle0)+GetFileNameW(fnames)+UnicodeString(stitle1));
 end;
 
+(*
 procedure DrawProc();
 begin
 repeat
@@ -1656,6 +1672,9 @@ else
 until not(iswin());
 end;
 
+*)
+
+{
 procedure ResetMidi();
 begin
 spd0:=1;
@@ -1673,27 +1692,28 @@ InitMidiChanVol($7F);
 SetMidiTime(-1);
 SetMidiTime(tmptime);
 end;
+}
 
 procedure ResetMidiHard(i:longword;b:boolean);
 var n:longword;
 begin
-n:=midiOutGetNumDevs();
-if n>0 then midiOuti:=i mod n else midiOuti:=0;
-if midiOut>0 then
-  if msgbufb1=true then
-    midiOutClose(midiOut)
-  else
-    midiStreamClose(midiOut);
+//n:=midiOutGetNumDevs();
+//if n>0 then midiOuti:=i mod n else midiOuti:=0;
+//if midiOut>0 then
+//  if msgbufb1=true then
+    midiOutClose(midiOut);
+//  else
+//    midiStreamClose(midiOut);
 //writeln('@',msgbufb1);
-if b then msgbufb1:=not(msgbufb1);
+//if b then msgbufb1:=not(msgbufb1);
 //writeln('#',msgbufb1);
-if msgbufb1=true then
-  midiOutOpen(@midiOut,midiOuti,0,0,0)
-else
-  midiStreamOpen(@midiOut,@midiOuti,DWORD(1),0,0,0);
+//if msgbufb1=true then
+  writeln('1',midiOutOpen(@midiOut,midiOuti,0,0,0));
+//else
+//  writeln('2',midiStreamOpen(@midiOut,@midiOuti,DWORD(1),0,0,0));
 //writeln(midiOut);
-ResetMidiSoft();
-deviceb:=2;
+//ResetMidiSoft();
+//deviceb:=2;
 end;
 
 procedure ResetMidiHard(i:longword);
@@ -1703,32 +1723,34 @@ procedure PlayMidi(fname:UnicodeString);
 begin
 if(IsFileW(fname))then
   begin
-  if pauseb=false then PauseMidi();
-  SetMidiTime(-1);
-  find_file(fname);
-  fnames:=fname;
-  EnterCriticalSection(cs2);
+  //if pauseb=false then PauseMidi();
+  //SetMidiTime(-1);
+  //find_file(fname);
+  //fnames:=fname;
+  //EnterCriticalSection(cs2);
   maxevent:=1;
   event:=nil;setlength(event,maxevent);
   event0:=nil;setlength(event0,maxevent);
   LoadMidi(fname);
   PrepareMidi();
-  LeaveCriticalSection(cs2);
-  EnterCriticalSection(cs1);
+  //LeaveCriticalSection(cs2);
+  //EnterCriticalSection(cs1);
   CreateNoteMap();
-  SortNoteMapColor();
-  ResetMidi();
+  //SortNoteMapColor();
+  //ResetMidi();
+  {
   initb:=false;
   kchord0:=0;
   kkey0:=0;
   LeaveCriticalSection(cs1);
   if autofresh=1 then bnoteb:=true;
-  miditime:=round((GetMidiTime()+1)*1000);
   SaveReg();
   while IsNextMsg() do ;
+  }
   end;
 end;
 
+{
 procedure helpproc();
 begin
   if IsFileW(fdir+'README.md') then
@@ -1888,23 +1910,25 @@ InitializeCriticalSection(cs3);
 InitializeCriticalSection(cs4);
 InitializeCriticalSection(csfevent0);
 end;
+}
 
 procedure InitDraw();
 begin
-w:=2*GetScrWidth()div 3;
-h:=2*GetScrHeight()div 3;
-_class:='MidiPlayer3Class';
+//w:=2*GetScrWidth()div 3;
+//h:=2*GetScrHeight()div 3;
+//_class:='MidiPlayer3Class';
 CreateWin(w,h,black1);
-_wc.HIcon:=LoadImage(0,'midiplayer.ico',IMAGE_ICON,0,0,LR_LOADFROMFILE);
-sendmessage(_hw,WM_SETICON,ICON_SMALL,longint(_wc.HIcon));
-SetFontName('Consolas');
-InitkbdPos();
-InitkbdColor();
-InitChannelColor();
+//_wc.HIcon:=LoadImage(0,'midiplayer.ico',IMAGE_ICON,0,0,LR_LOADFROMFILE);
+//sendmessage(_hw,WM_SETICON,ICON_SMALL,longint(_wc.HIcon));
+//SetFontName('Consolas');
+//InitkbdPos();
+//InitkbdColor();
+//InitChannelColor();
 //InitBtn();
-NewThread(@DrawProc);
+//NewThread(@DrawProc);
 end;
 
+{
 procedure OpenRS();
 begin
 GetKeyS('rs',rs);
@@ -1935,26 +1959,28 @@ for bnotej:=-1 to bnoten00 do
   bmpname:=tempdir+'bmp'+'_'+i2s(1)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
   end;
 end;
+}
 
 begin
-GetTempPath($100,tempdirs);tempdir:=tempdirs;
+//GetTempPath($100,tempdirs);tempdir:=tempdirs;
 ResetReg();
 OpenReg();
 LoadReg();
-DoCommandLine();
-OpenRS();
-{$ifdef D3D}InitD3D();{$endif}
-InitCS();
+//DoCommandLine();
+//OpenRS();
+//{$ifdef D3D}InitD3D();{$endif}
+//InitCS();
 InitDraw();
-if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
-if IsFileW(fnames) then
-  begin
+//if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
+//if IsFileW(fnames) then
+//  begin
   PlayMidi(fnames);
-  SetMidiTime(midipos/1000-1);
-  end;
+//  SetMidiTime(midipos/1000-1);
+//  end;
 ResetMidiHard(midiOuti);
-SetMidiVol(volamax-2);
-repeat
+//SetMidiVol(volamax-2);
+//repeat
+{
 if isnextmsg then DoAct() else Delay(1);
 if GetMidiTime()>finaltime then
   case loop of
@@ -2080,10 +2106,10 @@ if msgbufn>0 then
   midiOutUnPrepareHeader(midiOut,@msghdr,sizeof(msghdr));
   end;
 //for msgbufn:=0 to maxbuf-1 do msgbuf[msgbufn]:=0;
-miditime:=round((GetMidiTime()+1)*1000);
-until not(iswin());
+}
+//until not(iswin());
 midiOutClose(midiOut);
-CloseRS();
+//CloseRS();
 SaveReg();
 CloseReg();
 end.
