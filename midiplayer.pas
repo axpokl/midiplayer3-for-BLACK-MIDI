@@ -36,6 +36,9 @@ var eventchn:longword=0;
 var eventchi:longint;
 
 const maxeventseek=$1000;
+var eventmsg:array[$0000..$FFFF]of word;
+var eventmsgb:array[$0000..$FFFF]of boolean;
+var eventmsgi:word;
 
 const maxtrack0=12;
 const maxtrack=1 shl maxtrack0;
@@ -612,9 +615,6 @@ SeekMidiTimeChord:=seeki-1;
 end;
 
 procedure SetMidiTime(settime:double);
-var eventmsg:array[$0000..$FFFF]of word;
-var eventmsgb:array[$0000..$FFFF]of boolean;
-var eventmsgi:word;
 begin
 EnterCriticalSection(cs2);
 if settime<=0 then midiOutReset(midiOut);
@@ -623,7 +623,12 @@ firsttime:=GetTimeR()*spd0-settime;
 EnterCriticalSection(csfevent0);
 eventj:=SeekMidiTimeFEvent(settime);
 tempo0:=tempo00;
-for eventmsgi:=0 to $FFFF do eventmsgb[eventmsgi]:=false;
+for eventmsgi:=0 to $FFFF do
+  begin
+  if eventmsgb[eventmsgi] then
+    midiOutShortMsg(midiOut,eventmsg[eventmsgi] shl 16);
+  eventmsgb[eventmsgi]:=false;
+  end;
 for fi:=0 to min(eventj,eventn-1) do
 if (fi<maxeventseek) or (fi>min(eventj,eventn-1)-maxeventseek) then
   begin
@@ -637,13 +642,11 @@ if (fi<maxeventseek) or (fi>min(eventj,eventn-1)-maxeventseek) then
       eventmsg[event0[eventk].msg and $FFFF]:=event0[eventk].msg shr 16;
       eventmsgb[event0[eventk].msg and $FFFF]:=true;
       end;
-//writeln(event0[eventk].ticktime:0:5,#9,i2hs(event0[eventk].msg));
 //      midiOutShortMsg(midiOut,event0[eventk].msg);
     end;
   end;
 for eventmsgi:=0 to $FFFF do
   if eventmsgb[eventmsgi] then
-//  writeln(eventmsg[eventmsgi] shl 16 or eventmsgi);
     midiOutShortMsg(midiOut,eventmsg[eventmsgi] shl 16 or eventmsgi);
 if (eventtmn>0) then begin eventtmi:=SeekMidiTimeTempo(settime);tempo0:=eventtm[eventtmi].msg;end;
 if (eventchn>0) then begin eventchi:=SeekMidiTimeChord(settime);if (eventchi>=0) then chord:=eventch[eventchi].msg else chord:=7;end;eventchi:=max(0,eventchi);
