@@ -1,3 +1,4 @@
+cd /d "%~dp0"
 del *.zip
 del *.ppu
 del *.o
@@ -7,7 +8,7 @@ del *.exe
 del midiplayer.exe
 del midiplayer.zip
 windres -i midiplayer.rc -o midiplayer.res
-fpc midiplayer.pas -omidiplayer32.exe -Os -WG
+fpc midiplayer.pas -omidiplayer32.exe -gl -Crtoi -WG
 ppcrossx64 midiplayer.pas -omidiplayer64.exe -Os -WG
 start midiplayer64.exe
 if not exist midiplayer64.exe pause
