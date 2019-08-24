@@ -1748,7 +1748,7 @@ end;
 procedure helpproc();
 begin
   if IsFileW(fdir+'README.md') then
-    ShellExecute(0,nil, PChar('notepad.exe'),PChar(fdir+'README.md'),nil,1)
+    ShellExecuteW(0,nil,PWChar('notepad.exe'),PWChar(fdir+'README.md'),nil,1)
   else
     MsgboxW(UnicodeString('Missing help file: ')+fdir+UnicodeString('README.md'),UnicodeString('Help file not found!'));
 end;
