@@ -51,8 +51,8 @@ Other Functions
 * Ctrl+Shift+F7/F8	Set keyboard multi note buffer
 * F9	Set Bar Color	[0=Chord,1=Track/Channel(With Black Key),2=Track/Channel]
 * F11	Set Key Number	[0=Number,1=Chord,2=Blank]
-* Ctrl+F11	On/Off Information Text
-* Shift+F11	On/Off Messure/Chord line
+* Ctrl+F11	Set Information Text
+* Shift+F11	Set Messure/Chord line
 * F12	Set Loop Mode [S=Single,A=All,N=None]
 
 Reset or Uninstall the midiplayer3

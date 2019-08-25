@@ -1620,17 +1620,14 @@ DrawBNoteAll0();
 DrawBNoteAll();
 DrawBNoteBB();
 DrawKeyboard();
-if kchb2=0 then
-  begin
-  DrawTime();
-  DrawChannel();
-  DrawChord();
-  DrawBPM();
-  DrawNoteN();
-  DrawLongMsg();
-  DrawFPS();
-  DrawDevice();
-  end;
+if kchb2<=2 then DrawTime();
+if kchb2<=0 then DrawChannel();
+if kchb2<=2 then DrawChord();
+if kchb2<=2 then DrawBPM();
+if kchb2<=3 then DrawNoteN();
+if kchb2<=2 then DrawLongMsg();
+if kchb2<=1 then DrawFPS();
+DrawDevice();
 DrawReal();
 //DrawBtnAll();
 FreshWin();
@@ -1796,7 +1793,7 @@ if iskey() then
   if iskey(K_F8) and (k_shift) and (k_ctrl) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();deviceb:=2;end;
   if iskey(K_F9) then begin kbdcb:=(kbdcb+1)mod 3;initb:=false;end;
   if iskey(K_F11) and not(k_ctrl) and not(k_shift) then begin kchb:=(kchb+1) mod 3;initb:=false;end;
-  if iskey(K_F11) and (k_ctrl) then begin kchb2:=(kchb2+1) mod 2;end;
+  if iskey(K_F11) and (k_ctrl) then begin kchb2:=(kchb2+1) mod 5;end;
   if iskey(K_F11) and (k_shift) then begin kmessure:=(kmessure+1) mod 5;initb:=false;end;
   if iskey(K_F12) then loop:=(loop+1) mod 3;
   if iskey(K_RIGHT) or iskey(K_LEFT) then begin k_pos:=1;if k_ctrl then k_pos:=5;if k_shift then k_pos:=30;end;
