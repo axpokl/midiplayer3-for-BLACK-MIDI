@@ -2,7 +2,7 @@
 //{$define D3D}
 program midiplayer;
 
-uses Windows,MMSystem,Display{$ifdef D3D},Direct3D9,D3Dx9{$endif};
+uses {$ifdef video}videooutput,{$endif}Windows,MMSystem,Display{$ifdef D3D},Direct3D9,D3Dx9{$endif};
 
 var maxevent:longword=$1;
 var fb:boolean=false;
@@ -875,7 +875,7 @@ procedure MakeChord();
 var x:double;
 begin
 chordmu[0].ticktime0:=-1;
-for chordmun:=0 to eventmun-1 do 
+for chordmun:=0 to eventmun-1 do
    begin
    chordmu[chordmun].ticktime1:=eventmu[chordmun].ticktime;
    chordmu[chordmun+1].ticktime0:=eventmu[chordmun].ticktime;
