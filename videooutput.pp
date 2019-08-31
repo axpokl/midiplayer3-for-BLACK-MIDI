@@ -49,7 +49,7 @@ fmt^.video_codec_id:=ofmt^.video_codec;
 cdc:=avcodec_find_encoder(ofmt^.video_codec);
 ctx:=avcodec_alloc_context3(cdc);
 ctx^.codec_id:=ofmt^.video_codec;
-ctx^.gop_size:=10;
+ctx^.gop_size:=framerate;
 ctx^.bit_rate:=round(_w*_h*quality);
 ctx^.width:=_w;
 ctx^.height:=_h;
@@ -71,12 +71,12 @@ pkt.size:=vbufyuvl;
 pkt.stream_index:=fmt^.streams[0]^.index;
 pkt.flags:=pkt.flags or AV_PKT_FLAG_KEY;
 avcodec_encode_video2(ctx,@pkt,vf,@vfb);
-writeln(vfb);
+//writeln(vfb);
 if(vfb<>0)then
   begin
   ctx^.coded_frame^.pts:=idx;
   pkt.pts:=av_rescale_q(idx,ctx^.time_base,fmt^.streams[0]^.time_base);
-  writeln(pkt.pts,#9,idx);
+  //writeln(pkt.pts,#9,idx);
   av_interleaved_write_frame(fmt,@pkt);
   idx:=idx+1;
   end;

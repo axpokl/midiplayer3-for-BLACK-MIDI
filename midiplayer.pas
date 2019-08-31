@@ -1,5 +1,5 @@
 {$R midiplayer.res}
-//{$define D3D}
+//{$define video}
 program midiplayer;
 
 uses {$ifdef video}videooutput,{$endif}Windows,MMSystem,Display{$ifdef D3D},Direct3D9,D3Dx9{$endif};
@@ -952,6 +952,7 @@ var bnotej:longint;
 var bnoteh:longword=0;
 var bnoteh0:longword=$1000;
 var bnoteb:boolean=false;
+{$ifdef video}var videob:boolean=false;{$endif}
 var initb:boolean=false;
 var bnoteb0:longint;
 var bnoteb1:array[0..1]of longint;
@@ -1697,8 +1698,8 @@ if kchb2<=2 then DrawChord();
 if kchb2<=2 then DrawBPM();
 if kchb2<=3 then DrawNoteN();
 if kchb2<=2 then DrawLongMsg();
-if kchb2<=1 then DrawFPS();
-DrawDevice();
+if kchb2<=1 then {$ifdef video}if not(videob)then{$endif}DrawFPS();
+{$ifdef video}if not(videob)then{$endif}DrawDevice();
 DrawReal();
 //DrawBtnAll();
 FreshWin();
@@ -1726,6 +1727,18 @@ if drawr>0 then
 SetTitleW(UnicodeString(stitle0)+GetFileNameW(fnames)+UnicodeString(stitle1));
 end;
 
+{$ifdef video}
+var fnamec:pchar;
+var fname:ansistring='midiplayer.mkv';
+var frate:longword=30;
+var quality:double=4;
+var videotime:double;
+var videobb:pbitbuf;
+var videovol:shortint;
+var fvideo:text;
+var vsz:longint=0;
+{$endif}
+
 procedure DrawProc();
 begin
 repeat
@@ -1737,6 +1750,46 @@ if GetTimeR()>frametime+1/framerate then
   end
 else
   Delay(1);
+{$ifdef video}
+if videob then
+  begin
+  if(IsFileW(fdir+'RECORD_VIDEO')) then
+    begin
+    assign(fvideo,fdir+'RECORD_VIDEO');
+    reset(fvideo);
+    readln(fvideo,fname);fnamec:=PChar(fname);
+    readln(fvideo,frate);
+    readln(fvideo,quality);
+    close(fvideo);
+    end;
+  pauseb:=true;
+  while(_w and 1=1)or(_h and 1=1)do
+    begin
+    vsz:=vsz+1;
+    SetSize((_w shr vsz) shl vsz,(_h shr vsz) shl vsz);
+    end;
+  videobb:=CreateBB(GetWin());
+  EncodeVideo(fnamec,frate,quality);
+  videotime:=-1;
+  SetMidiTime(-1);
+//  videovol:=voli;SetMidiVol(0);
+  while (videotime<finaltime) and (IsWin()) do
+    begin
+//    SetMidiTime(videotime);
+    pausetime:=videotime;
+    DrawAll();
+    Display.GetBB(videobb);
+    EncodeFrame(videobb);
+    videotime:=videotime+1/frate;
+    end;
+  ReleaseVideo();
+  ReleaseBB(videobb);
+  pauseb:=false;
+  SetMidiTime(-1);
+  SetMidiVol(videovol);
+  end;
+videob:=false;
+{$endif}
 until not(iswin());
 end;
 
@@ -1851,6 +1904,7 @@ if iskey() then
   if iskey(K_F3) and (k_ctrl) and (k_shift) then msgbufb0:=not(msgbufb0);
   if iskey(K_F4) and not(k_ctrl) and not(k_shift) then bnoteb:=true;
   if iskey(K_F4) and (k_ctrl) and not(k_shift) then autofresh:=1-autofresh;
+  {$ifdef video}if iskey(K_F4) and (k_shift) and not(k_ctrl) then begin bnoteb:=true;videob:=true;end;{$endif}
   if iskey(K_F5) and not(k_ctrl) and not(k_shift) then framerate:=max(5,framerate-((framerate-1) div 60+1));
   if iskey(K_F6) and not(k_ctrl) and not(k_shift) then framerate:=min(480,framerate+(framerate div 60+1));
   if iskey(K_F5) and not(k_shift) and (k_ctrl) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
@@ -2051,6 +2105,7 @@ if GetMidiTime()>finaltime then
     end;
 EnterCriticalSection(csfevent0);
 CleanMsgChan();
+{$ifdef video}if not(videob)then{$endif}
 if eventi<eventn then
   begin
   msgbufn:=-msgbufn0;
