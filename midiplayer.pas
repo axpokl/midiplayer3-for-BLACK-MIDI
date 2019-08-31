@@ -838,6 +838,77 @@ SortNoteMapColorQuick2(0,maxchan-1);
 SortNoteMapColorQuick1(0,maxchan-1);
 end;
 
+type tchord=packed record
+  ticktime0:double;
+  ticktime1:double;
+  chord:byte;
+  end;
+const maxchordmu=maxeventmu;
+var chordmu:packed array[0..maxeventmu-1]of tchord;
+var chordmui,chordmuj,chordmun:longword;
+var notetime:array[0..$F,0..11]of double;
+var notetimei,notetimej:byte;
+const notetimechc:array[0..11]of shortint=(0,1,0,1,0,0,1,0,1,0,1,0);
+var notetimech:array[0..11]of double;
+var notetimechi:byte;
+var notetimechmin:double;
+
+procedure CalcChord();
+begin
+notetimei:=chordmui and $F;
+write(chordmui-1:3,' ');
+//for notetimej:=0 to 11 do if notetime[notetimei,notetimej]>0 then write(notetime[notetimei,notetimej]:0:3,' ')else write('      ');writeln();
+for notetimechi:=0 to 11 do
+  begin
+  notetimech[notetimechi]:=0;
+  for notetimej:=0 to 11 do notetimech[notetimechi]:=notetimech[notetimechi]+notetime[notetimei,notetimej]*notetimechc[(notetimej+notetimechi)mod 12];
+  end;
+notetimechmin:=notetimech[0];
+for notetimechi:=1 to 11 do notetimechmin:=min(notetimechmin,notetimech[notetimechi]);
+for notetimechi:=0 to 11 do notetimech[notetimechi]:=notetimech[notetimechi]-notetimechmin;
+for notetimechi:=0 to 11 do if notetimech[(notetimechi*5)mod 12]>0 then write(notetimech[(notetimechi*5)mod 12]:0:2,' ') else write('     ');writeln();
+for notetimej:=0 to 11 do notetime[notetimei,notetimej]:=0;
+chordmui:=chordmui+1;
+end;
+
+procedure MakeChord();
+var x:double;
+begin
+chordmu[0].ticktime0:=-1;
+for chordmun:=0 to eventmun-1 do 
+   begin
+   chordmu[chordmun].ticktime1:=eventmu[chordmun].ticktime;
+   chordmu[chordmun+1].ticktime0:=eventmu[chordmun].ticktime;
+   end;
+chordmu[eventmun].ticktime1:=finaltime;
+chordmun:=eventmun+1;
+//for chordmui:=0 to chordmun-1 do with chordmu[chordmui] do writeln(chordmui:5,#9,ticktime0:0:10,#9,ticktime1:0:10);
+for notetimei:=0 to $F do
+  for notetimej:=0 to 11 do
+    notetime[notetimei,notetimej]:=0;
+chordmui:=0;
+for fni:=0 to notemapn-1 do
+  begin
+  if notemapn>0 then if fni and $FFF=0 then begin drawr:=fni/notemapn;DrawTitle();end;
+  if fb then begin notemapi:=0;notemap[notemapi]:=GetFNote(fni);end else notemapi:=fni;
+  with notemap[notemapi] do
+    begin
+    while note0>=chordmu[chordmui].ticktime1 do CalcChord();
+    chordmuj:=chordmui-1;
+    repeat
+    chordmuj:=chordmuj+1;
+    notetimei:=chordmuj and $F;
+    notetimej:=note mod 12;
+x:=(min(chordmu[chordmuj].ticktime1,note1)-max(chordmu[chordmuj].ticktime0,note0));
+    notetime[notetimei,notetimej]:=notetime[notetimei,notetimej]+x;
+//writeln(fni:3,#9,notemapi:3,#9,note0:0:5,chordmui:3,#9,chordmuj:3,#9,notetimei:3,#9,notetimej:3,#9,notetime[notetimei,notetimej]:0:5,#9,note:5,#9,x:0:10);
+    until(chordmu[chordmuj].ticktime1>=note1)or(chordmuj-chordmui>=$F);
+//writeln(note:5,#9,note0:0:5,#9,note1:0:5,#9,i2hs(notec):5,#9,chord:5);
+    end;
+  end;
+CalcChord();
+end;
+
 var w:longword;
 var h:longword;
 var sz:longword;
@@ -1730,6 +1801,7 @@ if(IsFileW(fname))then
   EnterCriticalSection(cs1);
   CreateNoteMap();
   SortNoteMapColor();
+  //MakeChord();
   ResetMidi();
   initb:=false;
   kchord0:=0;
@@ -1748,6 +1820,7 @@ begin
     ShellExecuteW(0,nil,PWChar('notepad.exe'),PWChar(fdir+'README.md'),nil,1)
   else
     MsgboxW(UnicodeString('Missing help file: ')+fdir+UnicodeString('README.md'),UnicodeString('Help file not found!'));
+  helpb:=1;
 end;
 
 procedure DoAct();
@@ -1773,11 +1846,11 @@ if iskey() then
   if iskey(K_F2) and not(k_ctrl) then PlayMidi(fnames);
   if iskey(K_F2) and (k_ctrl) then begin ResetReg();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
   if iskey(K_F3) and not(k_ctrl) and not(k_shift) then ResetMidiHard(midiOuti);
-  if iskey(K_F3) and (k_ctrl) then ResetMidiHard(midiOuti+1);
-  if iskey(K_F3) and (k_shift) then ResetMidiHard(midiOuti,true);
+  if iskey(K_F3) and not(k_shift) and (k_ctrl) then ResetMidiHard(midiOuti+1);
+  if iskey(K_F3) and not(k_ctrl) and (k_shift) then ResetMidiHard(midiOuti,true);
+  if iskey(K_F3) and (k_ctrl) and (k_shift) then msgbufb0:=not(msgbufb0);
   if iskey(K_F4) and not(k_ctrl) and not(k_shift) then bnoteb:=true;
   if iskey(K_F4) and (k_ctrl) and not(k_shift) then autofresh:=1-autofresh;
-  if iskey(K_F4) and (k_shift) then msgbufb0:=not(msgbufb0);
   if iskey(K_F5) and not(k_ctrl) and not(k_shift) then framerate:=max(5,framerate-((framerate-1) div 60+1));
   if iskey(K_F6) and not(k_ctrl) and not(k_shift) then framerate:=min(480,framerate+(framerate div 60+1));
   if iskey(K_F5) and not(k_shift) and (k_ctrl) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
@@ -1873,6 +1946,7 @@ if hwm<>0 then
 if UnicodeString(GetParaW(2))<>'' then fb:=false;
 if(IsFileW(fdir+'FORCE_MEMORY')) then fb:=false;
 GetKeyI('fbi',fbi);if fbi>0 then fb:=false;
+if helpb=0 then newthread(@helpproc);
 end;
 
 procedure InitChannelColor();

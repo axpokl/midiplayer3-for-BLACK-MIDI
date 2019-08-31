@@ -78,6 +78,7 @@ var kkey0:longint;
 var kmessure:longword;
 var msgvol0:longword;
 var maxkbdc:longword;
+var helpb:longword;
 
 procedure ResetReg();
 begin
@@ -99,6 +100,7 @@ kkey0:=0;
 kmessure:=0;
 msgvol0:=2;
 maxkbdc:=$100;
+helpb:=0;
 end;
 
 procedure SaveReg();
@@ -119,6 +121,7 @@ SetKeyI('msgbufn0',msgbufn0);
 SetKeyI('kmessure',kmessure);
 SetKeyI('msgvol0',msgvol0);
 SetKeyI('maxkbdc',maxkbdc);
+SetKeyI('helpb',helpb);
 end;
 
 procedure LoadReg();
@@ -139,4 +142,5 @@ GetKeyI('msgbufn0',msgbufn0);
 GetKeyI('kmessure',kmessure);
 GetKeyI('msgvol0',msgvol0);
 GetKeyI('maxkbdc',maxkbdc);
+GetKeyI('helpb',helpb);
 end;
