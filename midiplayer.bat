@@ -5,6 +5,7 @@ del *.o
 del *.or
 del *.a
 del *.exe
+del *.mkv
 del midiplayer.exe
 del midiplayer.zip
 windres -i midiplayer.rc -o midiplayer.res

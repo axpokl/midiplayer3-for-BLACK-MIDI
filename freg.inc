@@ -99,7 +99,7 @@ kchord0:=0;
 kkey0:=0;
 kmessure:=0;
 msgvol0:=2;
-maxkbdc:=$100;
+maxkbdc:=$40;
 helpb:=0;
 end;
 

@@ -451,6 +451,8 @@ end;
 var firsttime:double;
 var pauseb:boolean;
 var pausetime:double;
+{$ifdef video}var videotime:double;{$endif}
+{$ifdef video}var videob:boolean=false;{$endif}
 var spd0:double=1;
 var spd1:double=1;
 
@@ -545,6 +547,7 @@ begin for chani:=0 to $F do midiOutShortMsg(midiOut,$00007BB0 or chani);end;
 
 function GetMidiTime():double;
 begin
+{$ifdef video}if videob then GetMidiTime:=videotime else{$endif}
 if pauseb then GetMidiTime:=pausetime
 else GetMidiTime:=GetTimeR()*spd0-firsttime;
 end;
@@ -952,7 +955,6 @@ var bnotej:longint;
 var bnoteh:longword=0;
 var bnoteh0:longword=$1000;
 var bnoteb:boolean=false;
-{$ifdef video}var videob:boolean=false;{$endif}
 var initb:boolean=false;
 var bnoteb0:longint;
 var bnoteb1:array[0..1]of longint;
@@ -1732,11 +1734,9 @@ var fnamec:pchar;
 var fname:ansistring='midiplayer.mkv';
 var frate:longword=30;
 var quality:double=4;
-var videotime:double;
-var videobb:pbitbuf;
-var videovol:shortint;
 var fvideo:text;
 var vsz:longint=0;
+var videobb:pbitbuf;
 {$endif}
 
 procedure DrawProc();
@@ -1762,7 +1762,7 @@ if videob then
     readln(fvideo,quality);
     close(fvideo);
     end;
-  pauseb:=true;
+  videotime:=-1;
   while(_w and 1=1)or(_h and 1=1)do
     begin
     vsz:=vsz+1;
@@ -1770,13 +1770,11 @@ if videob then
     end;
   videobb:=CreateBB(GetWin());
   EncodeVideo(fnamec,frate,quality);
-  videotime:=-1;
+  if not(pauseb) then PauseMidi();
   SetMidiTime(-1);
-//  videovol:=voli;SetMidiVol(0);
   while (videotime<finaltime) and (IsWin()) do
     begin
-//    SetMidiTime(videotime);
-    pausetime:=videotime;
+    //SetMidiTime(videotime);
     DrawAll();
     Display.GetBB(videobb);
     EncodeFrame(videobb);
@@ -1784,9 +1782,9 @@ if videob then
     end;
   ReleaseVideo();
   ReleaseBB(videobb);
-  pauseb:=false;
   SetMidiTime(-1);
-  SetMidiVol(videovol);
+  PauseMidi();
+  videotime:=-1;
   end;
 videob:=false;
 {$endif}
@@ -2105,7 +2103,6 @@ if GetMidiTime()>finaltime then
     end;
 EnterCriticalSection(csfevent0);
 CleanMsgChan();
-{$ifdef video}if not(videob)then{$endif}
 if eventi<eventn then
   begin
   msgbufn:=-msgbufn0;
