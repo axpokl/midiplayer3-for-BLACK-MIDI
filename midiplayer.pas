@@ -1852,7 +1852,7 @@ if(IsFileW(fname))then
   EnterCriticalSection(cs1);
   CreateNoteMap();
   SortNoteMapColor();
-  MakeChord();
+  //MakeChord();
   ResetMidi();
   initb:=false;
   kchord0:=0;

@@ -1272,7 +1272,7 @@ _winb:=true;
 GetTimeR();_tbegin:=_tcount;
 while IsWin() do
   begin
-  GetMessage(_mst,_hw,0,0);
+  GetMessage(_mst,0,0,0);
   SendMsg();
   _mswini:=(_mswini+1)mod _mswinmax;
   _mswin[_mswini]:=_mst;
