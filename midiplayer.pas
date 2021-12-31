@@ -25,7 +25,7 @@ var eventtm:packed array[0..maxeventtm-1]of tevent;
 var eventtmn:longword=0;
 var eventtmi:longint=0;
 
-const maxeventmu=$1000000;
+const maxeventmu=$100000;
 var eventmu:packed array[0..maxeventmu-1]of tevent;
 var eventmun:longword=0;
 var eventmui:longword;
@@ -40,7 +40,7 @@ var eventmsg:array[$0000..$FFFF]of word;
 var eventmsgb:array[$0000..$FFFF]of boolean;
 var eventmsgi:word;
 
-const maxtrack0=12;
+const maxtrack0=10;
 const maxtrack=1 shl maxtrack0;
 const maxchan=maxtrack shl 4;
 var track0:packed array[0..maxtrack-1]of longword;

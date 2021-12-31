@@ -1,4 +1,4 @@
-const maxfeventn0=12;
+const maxfeventn0=10;
 const maxfeventn=1 shl maxfeventn0;
 const maxfeventm0=maxtrack0;
 const maxfeventm=1 shl maxfeventm0;
