@@ -1149,6 +1149,7 @@ procedure AddDrawTextXY(bi,bj:longint;s:ansistring;x,y:longint;c:longword);
 begin
 FreshBMP(bi,bj);
 DrawTextXY(bnote[bi,bnotej1[bi,bj]],s,x,y,c);
+if bj>0 then if y+fh>bnoteh0 then DrawTextXY(bnote[bi,bnotej1[bi,bj-1]],s,x,y-bnoteh0,c);
 end;
 {$endif}
 
