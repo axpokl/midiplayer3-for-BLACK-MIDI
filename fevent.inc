@@ -10,7 +10,7 @@ var bifevent:longint;
 var bjfevent:array[0..maxfeventm-1]of longint;
 var bjfeventi:word;
 
-procedure FlushFEvent(tracki:word);inline;
+procedure FlushFEvent(tracki:word);
 begin
 if bjfevent[tracki]>=0 then
   begin
@@ -19,7 +19,7 @@ if bjfevent[tracki]>=0 then
   end;
 end;
 
-procedure GetFEventBlock(i:longint;tracki:word);inline;
+procedure GetFEventBlock(i:longint;tracki:word);
 begin
 if bjfevent[tracki]<>i shr maxfeventn0 then
   begin
@@ -36,7 +36,7 @@ if bjfevent[tracki]<>i shr maxfeventn0 then
   end;
 end;
 
-function GetFEvent(i:longint;tracki:word):tevent;inline;
+function GetFEvent(i:longint;tracki:word):tevent;
 begin
 if fb then
   begin
@@ -48,7 +48,7 @@ else
   GetFEvent:=event[i];
 end;
 
-procedure SetFEvent(e:tevent;tracki:word;i:longint);inline;
+procedure SetFEvent(e:tevent;tracki:word;i:longint);
 begin
 if fb then
   begin
@@ -60,7 +60,7 @@ else
   event[i]:=e;
 end;
 
-function GetFEventCurTick(i:longint;tracki:word):longword;inline;
+function GetFEventCurTick(i:longint;tracki:word):longword;
 begin
 if fb then
   begin

@@ -6,7 +6,7 @@ var bfevent0:array[0..maxfevent0n-1]of tevent;
 var bfevent0_:array[0..maxfevent0n-1]of tevent;
 var bifevent0,bjfevent0:longint;
 
-procedure FlushFEvent0();inline;
+procedure FlushFEvent0();
 begin
 if bjfevent0>=0 then
   begin
@@ -15,7 +15,7 @@ if bjfevent0>=0 then
   end;
 end;
 
-procedure GetFEvent0Block(i:longint);inline;
+procedure GetFEvent0Block(i:longint);
 begin
 if bjfevent0<>i shr maxfevent0n0 then
   begin
@@ -32,7 +32,7 @@ if bjfevent0<>i shr maxfevent0n0 then
   end;
 end;
 
-function GetFEvent0(i:longint):tevent;inline;
+function GetFEvent0(i:longint):tevent;
 begin
 if fb then
   begin
@@ -44,7 +44,7 @@ else
   GetFEvent0:=event0[i];
 end;
 
-procedure SetFEvent0(e:tevent;i:longint);inline;
+procedure SetFEvent0(e:tevent;i:longint);
 begin
 if fb then
   begin
@@ -56,7 +56,7 @@ else
   event0[i]:=e;
 end;
 
-function GetFEvent0TickTime(i:longint):double;inline;
+function GetFEvent0TickTime(i:longint):double;
 begin
 if fb then
   GetFEvent0TickTime:=GetFEvent0(i).ticktime

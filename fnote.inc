@@ -11,7 +11,7 @@ var bjfnote:array[0..maxfnotem-1]of longint;
 var bjfnotei,bjfnotej:longint;
 var bjfnotek:longint;
 
-procedure FlushFNote();inline;
+procedure FlushFNote();
 begin
 if bjfnote[bjfnotej]>=0 then
   begin
@@ -20,10 +20,10 @@ if bjfnote[bjfnotej]>=0 then
   end;
 end;
 
-procedure FlushFNoteAll();inline;
+procedure FlushFNoteAll();
 begin for bjfnotej:=0 to maxfnotem-1 do FlushFNote();end;
 
-procedure GetFNoteBlock(i:longint);inline;
+procedure GetFNoteBlock(i:longint);
 begin
 bjfnotej:=-1;
 for bjfnotei:=0 to maxfnotem-1 do
@@ -46,7 +46,7 @@ if bjfnotej=-1 then
   end;
 end;
 
-function GetFNote(i:longint):tnotemap;inline;
+function GetFNote(i:longint):tnotemap;
 begin
 if fb then
   begin
@@ -58,7 +58,7 @@ else
   GetFNote:=notemap[i];
 end;
 
-procedure SetFNote(e:tnotemap;i:longint);inline;
+procedure SetFNote(e:tnotemap;i:longint);
 begin
 if fb then
   begin
@@ -70,7 +70,7 @@ else
   notemap[i]:=e;
 end;
 
-procedure SetFNoteNote1(i:longint;note1:double);inline;
+procedure SetFNoteNote1(i:longint;note1:double);
 var e:tnotemap;
 begin
 e:=GetFNote(i);
@@ -81,7 +81,7 @@ if e.note1<>note1 then
   end;
 end;
 
-function GetFNoteNote1(i:longint):double;inline;
+function GetFNoteNote1(i:longint):double;
 var e:tnotemap;
 begin
 e:=GetFNote(i);
@@ -100,7 +100,7 @@ var notemapdrawi0:longint;
 var notemapdrawa0:longint;
 var notemapdrawb0:longint;
 
-procedure InitFNoteDraw(a,b:longint);inline;
+procedure InitFNoteDraw(a,b:longint);
 begin
 notemapdraw[0]:=a-3;
 notemapdraw[1]:=a-2;
@@ -109,7 +109,7 @@ notemapdraw[3]:=b+3;
 notemapdrawn:=4;
 end;
 
-procedure SetFNoteDraw(a,b:longint);inline;
+procedure SetFNoteDraw(a,b:longint);
 begin
 notemapdrawa:=0;
 while notemapdrawa<notemapdrawn do
@@ -164,7 +164,7 @@ for notemapdrawi0:=notemapdrawb0 to notemapdrawn0-1 do
 notemapdrawn:=notemapdrawi;
 end;
 
-function GetFNoteDraw(i:longint):boolean;inline;
+function GetFNoteDraw(i:longint):boolean;
 begin
 GetFNoteDraw:=false;
 notemapdrawi:=0;

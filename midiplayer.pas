@@ -5,7 +5,7 @@ program midiplayer;
 uses {$ifdef video}videooutput,{$endif}Windows,MMSystem,Display{$ifdef D3D},Direct3D9,D3Dx9{$endif};
 
 var maxevent:longword=$1;
-var fb:boolean=false;
+var fb:boolean=true;
 var fbi:longword=0;
 var midiOut:longword=0;
 
@@ -380,6 +380,7 @@ while (eventj<eventn) do
   SortEventHeap(0);
   eventj:=eventj+1;
   end;
+if not(fb) then setlength(event,0);
 if fb then FlushFEvent0();
 drawr:=0;
 tempo:=500000;
