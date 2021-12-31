@@ -167,6 +167,7 @@
     GetBBPixel          获取缓存点
     SetBBPixel          设置缓存点
     Line                画线
+    LineBB              画缓存线
     Bar                 画方
     Clear               清屏
     Triangle            画三角
@@ -938,6 +939,7 @@ procedure SetBBPixel(bb:pbitbuf;x,y,c:longword);
 procedure Line(b:pbitmap;x,y,w,h:longint;c:longword);
 procedure Line(x,y,w,h:longint;c:longword);
 procedure Line(x,y,w,h:longint);
+procedure LineBB(bb:pbitbuf;x,y,w,h:longint;c:longword);
 procedure Bar(b:pbitmap;x,y,w,h:longint;cfg,cbg:longword);
 procedure Bar(x,y,w,h:longint;cfg,cbg:longword);
 procedure Bar(x,y,w,h:longint;c:longword);
@@ -2100,6 +2102,28 @@ procedure Line(x,y,w,h:longint;c:longword);
 begin Line(nil,x,y,w,h,c);end;
 procedure Line(x,y,w,h:longint);
 begin Line(x,y,w,h,0);end;
+procedure LineBB(bb:pbitbuf;x,y,w,h:longint;c:longword);
+var x1,x2,y1,y2,x0,y0,xd,yd,t,s,e:longint;var k:boolean;
+begin
+x1:=x;
+y1:=y;
+x2:=x+w;
+y2:=y+h;
+k:=abs(y2-y1)>abs(x2-x1);
+if k then begin t:=x1;x1:=y1;y1:=t;t:=x2;x2:=y2;y2:=t;end;
+if x1>x2 then begin t:=x1;x1:=x2;x2:=t;t:=y1;y1:=y2;y2:=t;end;
+xd:=x2-x1;
+yd:=abs(y2-y1);
+e:=xd shr 1;
+y0:=y1;
+if y1<y2 then s:=1 else s:=-1;
+for x0:=x1 to x2 do
+  begin
+  if (x0>=0) and (y0>=0) then if k then SetBBPixel(bb,y0,x0,c) else SetBBPixel(bb,x0,y0,c);
+  e:=e-yd;
+  if e<0 then begin y0:=y0+s;e:=e+xd;end;
+  end;
+end;
 procedure Bar(b:pbitmap;x,y,w,h:longint;cfg,cbg:longword);
 var lpRect:RECT;
 begin
