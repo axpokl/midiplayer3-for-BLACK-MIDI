@@ -6,7 +6,6 @@ uses {$ifdef video}videooutput,{$endif}Windows,MMSystem,Display{$ifdef D3D},Dire
 
 var maxevent:longword=$1;
 var fb:boolean=true;
-var fbi:longword=0;
 var midiOut:longword=0;
 
 {$i freg.inc}
@@ -455,7 +454,6 @@ var pausetime:double;
 {$ifdef video}var videotime:double;{$endif}
 {$ifdef video}var videob:boolean=false;{$endif}
 var spd0:double=1;
-var spd1:double=1;
 
 const volamax=16;
 const vola:packed array[1..volamax]of double=
@@ -1008,7 +1006,7 @@ function IsKeynoteBlack(k:byte):byte;
 begin IsKeynoteBlack:=keyblack[k mod 12];end;
 
 function GetKeykey(k:byte):byte;var key:longint;
-begin key:=k+kkey0;while key<0 do key:=key+12;while key>$7F do key:=key-12;GetKeykey:=key;end;
+begin key:=k+kkey0-127;while key<0 do key:=key+12;while key>$7F do key:=key-12;GetKeykey:=key;end;
 
 function GetKeynote(k:byte):double;
 begin GetKeynote:=7*(k div 12)+kbd[k mod 12];end;
@@ -1836,6 +1834,8 @@ end;
 procedure ResetMidiHard(i:longword);
 begin ResetMidiHard(i,false);end;
 
+var startb:boolean=true;
+
 procedure PlayMidi(fname:UnicodeString);
 begin
 if(IsFileW(fname))then
@@ -1857,11 +1857,17 @@ if(IsFileW(fname))then
   //MakeChord();
   ResetMidi();
   initb:=false;
-  kchord0:=0;
-  kkey0:=0;
+  if startb=false then
+    begin
+    spd1:=100;
+    kchord0:=0;
+    kkey0:=127;
+    end;
+  spd0:=spd1/100;
+  startb:=false;
   LeaveCriticalSection(cs1);
   if autofresh=1 then bnoteb:=true;
-  miditime:=round((GetMidiTime()+1)*1000);
+  //midipos:=round((GetMidiTime()+1)*1000);
   SaveReg();
   while IsNextMsg() do ;
   end;
@@ -1895,52 +1901,52 @@ if iskey() then
   begin
   k_shift:=GetKeyState(VK_SHIFT)<0;
   k_ctrl:=GetKeyState(VK_CONTROL)<0;
-  if iskey(K_F1) then newthread(@helpproc);
-  if iskey(K_F2) and not(k_ctrl) then PlayMidi(fnames);
-  if iskey(K_F2) and (k_ctrl) then begin ResetReg();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
-  if iskey(K_F3) and not(k_ctrl) and not(k_shift) then ResetMidiHard(midiOuti);
-  if iskey(K_F3) and not(k_shift) and (k_ctrl) then ResetMidiHard(midiOuti+1);
-  if iskey(K_F3) and not(k_ctrl) and (k_shift) then ResetMidiHard(midiOuti,true);
-  if iskey(K_F3) and (k_ctrl) and (k_shift) then msgbufb0:=not(msgbufb0);
-  if iskey(K_F4) and not(k_ctrl) and not(k_shift) then bnoteb:=true;
-  if iskey(K_F4) and (k_ctrl) and not(k_shift) then autofresh:=1-autofresh;
-  {$ifdef video}if iskey(K_F4) and (k_shift) and not(k_ctrl) then begin bnoteb:=true;videob:=true;end;{$endif}
-  if iskey(K_F5) and not(k_ctrl) and not(k_shift) then framerate:=max(5,framerate-((framerate-1) div 60+1));
-  if iskey(K_F6) and not(k_ctrl) and not(k_shift) then framerate:=min(480,framerate+(framerate div 60+1));
-  if iskey(K_F5) and not(k_shift) and (k_ctrl) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
-  if iskey(K_F6) and not(k_shift) and (k_ctrl) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
-  if iskey(K_F5) and (k_shift) and not(k_ctrl) then begin msgvol0:=max(0,msgvol0-1);deviceb:=2;end;
-  if iskey(K_F6) and (k_shift) and not(k_ctrl) then begin msgvol0:=min($7F,msgvol0+1);deviceb:=2;end;
-  if iskey(K_F5) and (k_shift) and (k_ctrl) then begin end;
-  if iskey(K_F6) and (k_shift) and (k_ctrl) then begin end;
-  if iskey(K_F7) or iskey(K_F8)  then begin k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;end;
-  if iskey(K_F7) and not((k_shift) and (k_ctrl)) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
-  if iskey(K_F8) and not((k_shift) and (k_ctrl)) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
-  if iskey(K_F7) and (k_shift) and (k_ctrl) then begin maxkbdc:=max(1,maxkbdc shr 1);InitKbdC();deviceb:=2;end;
-  if iskey(K_F8) and (k_shift) and (k_ctrl) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();deviceb:=2;end;
-  if iskey(K_F9) then begin kbdcb:=(kbdcb+1)mod 3;initb:=false;end;
-  if iskey(K_F11) and not(k_ctrl) and not(k_shift) then begin kchb:=(kchb+1) mod 3;initb:=false;end;
-  if iskey(K_F11) and (k_ctrl) then begin kchb2:=(kchb2+1) mod 5;end;
-  if iskey(K_F11) and (k_shift) then begin kmessure:=(kmessure+1) mod 5;initb:=false;end;
-  if iskey(K_F12) then loop:=(loop+1) mod 3;
+  if iskey(K_SPACE) then PauseMidi();
   if iskey(K_RIGHT) or iskey(K_LEFT) then begin k_pos:=1;if k_ctrl then k_pos:=5;if k_shift then k_pos:=30;end;
   if iskey(K_LEFT) then begin SetMidiTime(max(-1,GetMidiTime()-k_pos));InitKbdC();end;
   if iskey(K_RIGHT) then begin SetMidiTime(min(finaltime,GetMidiTime()+k_pos));InitKbdC();end;
-  if iskey(K_SPACE) then PauseMidi();
-  if iskey(K_ADD) or iskey(K_SUB) or iskey(187) or iskey(189) then begin k_pos:=0.1;if k_ctrl then k_pos:=0.03;if k_shift then k_pos:=0.01;end;
-  if iskey(K_ADD) or iskey(187) then begin spd1:=min(16.00,spd0+k_pos);end;
-  if iskey(K_SUB) or iskey(189) then begin spd1:=max(0,spd0-k_pos);end;
-  if iskey(K_ADD) or iskey(K_SUB) or iskey(187) or iskey(189) then begin firsttime:=firsttime+GetTimeR()*(spd1-spd0);spd0:=spd1;end;
   if iskey(K_UP) then SetMidiVol(min(volamax,voli+1));
   if iskey(K_DOWN) then SetMidiVol(max(1,voli-1));
+  if iskey(K_ADD) or iskey(K_SUB) or iskey(187) or iskey(189) then begin k_pos:=0.1;if k_ctrl then k_pos:=0.03;if k_shift then k_pos:=0.01;end;
+  if iskey(K_ADD) or iskey(187) then begin spd1:=min(1600,round((spd0+k_pos)*100));end;
+  if iskey(K_SUB) or iskey(189) then begin spd1:=max(0,round((spd0-k_pos)*100));end;
+  if iskey(K_ADD) or iskey(K_SUB) or iskey(187) or iskey(189) then begin firsttime:=firsttime+GetTimeR()*(spd1/100-spd0);spd0:=spd1/100;end;
+  if iskey(221) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
+  if iskey(219) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
+  if iskey(222) then begin kkey0:=min(255,(kkey0+1));kchord0:=(kchord0+7) mod 12;initb:=false;ResetMidiKeyVol();end;
+  if iskey(186) then begin kkey0:=max(0,(kkey0-1));kchord0:=(kchord0+5) mod 12;initb:=false;ResetMidiKeyVol();end;
   if iskey(K_PGUP) then PlayMidi(get_file(find_current-1));
   if iskey(K_PGDN) then PlayMidi(get_file(find_current+1));
   if iskey(K_HOME) then PlayMidi(get_file(1));
   if iskey(K_END) then PlayMidi(get_file(find_count));
-  if iskey(221) and not(k_ctrl) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
-  if iskey(219) and not(k_ctrl) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
-  if iskey(221) and (k_ctrl) then begin kkey0:=(kkey0+1);kchord0:=(kchord0+7) mod 12;initb:=false;ResetMidiKeyVol();end;
-  if iskey(219) and (k_ctrl) then begin kkey0:=(kkey0-1);kchord0:=(kchord0+5) mod 12;initb:=false;ResetMidiKeyVol();end;
+  if iskey(K_F) then PlayMidi(fnames);
+  if iskey(K_H) then ResetMidiHard(midiOuti);
+  if iskey(K_S) and not(k_shift) and not(k_ctrl) then ResetMidiHard(midiOuti+1);
+  if iskey(K_S) and not(k_shift) and (k_ctrl) then ResetMidiHard(midiOuti,true);
+  if iskey(K_S) and (k_shift) and not(k_ctrl) then msgbufb0:=not(msgbufb0);
+  if iskey(K_D) then bnoteb:=true;
+  if iskey(K_A) then autofresh:=1-autofresh;
+  if iskey(188) or iskey(190) then begin k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;end;
+  if iskey(188) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
+  if iskey(190) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
+  if iskey(K_C) then begin kbdcb:=(kbdcb+1)mod 3;initb:=false;end;
+  if iskey(K_T) then begin kchb:=(kchb+1) mod 3;initb:=false;end;
+  if iskey(K_I) then begin kchb2:=(kchb2+1) mod 5;end;
+  if iskey(K_L) then begin kmessure:=(kmessure+1) mod 5;initb:=false;end;
+  if iskey(K_M) then loop:=(loop+1) mod 3;
+  if iskey(K_F2) then begin fbi:=1-fbi;end;
+  if iskey(K_F3) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
+  if iskey(K_F4) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
+  if iskey(K_F5) then begin msgvol0:=max(0,msgvol0-1);deviceb:=2;end;
+  if iskey(K_F6) then begin msgvol0:=min($7F,msgvol0+1);deviceb:=2;end;
+  if iskey(K_F7) then begin maxkbdc:=max(1,maxkbdc shr 1);InitKbdC();deviceb:=2;end;
+  if iskey(K_F8) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();deviceb:=2;end;
+  if iskey(K_F11) then framerate:=max(5,framerate-((framerate-1) div 60+1));
+  if iskey(K_F12) then framerate:=min(480,framerate+(framerate div 60+1));
+  if iskey(K_F1) then newthread(@helpproc);
+  if iskey(K_R) then begin ResetReg();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
+  {$ifdef video}if iskey(K_V) then begin bnoteb:=true;videob:=true;end;{$endif}
+
   if iskey(K_ESC) then CloseWin();
   end;
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
@@ -1997,9 +2003,7 @@ if hwm<>0 then
     SendMessage(hwm,WM_USER,0,2);
     halt;
     end;
-if UnicodeString(GetParaW(2))<>'' then fb:=false;
-if(IsFileW(fdir+'FORCE_MEMORY')) then fb:=false;
-GetKeyI('fbi',fbi);if fbi>0 then fb:=false;
+fb:=(fbi>0);
 if helpb=0 then newthread(@helpproc);
 end;
 
@@ -2082,12 +2086,13 @@ GetTempPath($100,tempdirs);tempdir:=tempdirs;
 ResetReg();
 OpenReg();
 LoadReg();
+LoadIni();
 DoCommandLine();
 OpenRS();
 {$ifdef D3D}InitD3D();{$endif}
 InitCS();
 InitDraw();
-if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;end;
+if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;startb:=false;end;
 if IsFileW(fnames) then
   begin
   PlayMidi(fnames);
@@ -2221,7 +2226,7 @@ if msgbufn>0 then
   midiOutUnPrepareHeader(midiOut,@msghdr,sizeof(msghdr));
   end;
 //for msgbufn:=0 to maxbuf-1 do msgbuf[msgbufn]:=0;
-miditime:=round((GetMidiTime()+1)*1000);
+midipos:=round((GetMidiTime()+1)*1000);
 until not(iswin());
 midiOutClose(midiOut);
 CloseRS();

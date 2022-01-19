@@ -1,0 +1,7 @@
+LoadIni
+Erase temp after load
+Command line
+Channel Color
+Menu and Icon
+
+
