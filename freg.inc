@@ -78,9 +78,13 @@ var kmessure:longword;
 var msgvol0:longword;
 var maxkbdc:longword;
 var helpb:longword;
-var vname:unicodestring;
 var spd1:longword=100;
 var fbi:longword=0;
+{$ifdef video}
+var vname:ansistring;
+var vrate:longword=30;
+var vquality:longword=4;
+{$endif}
 
 procedure ResetReg();
 begin
@@ -104,7 +108,11 @@ msgvol0:=2;
 maxkbdc:=$40;
 framerate:=120;
 helpb:=0;
+{$ifdef video}
 vname:='midiplayer.mkv';
+vrate:=30;
+vquality:=4;
+{$endif}
 end;
 
 procedure SaveReg();
@@ -129,7 +137,11 @@ SetKeyI('msgvol0',msgvol0);
 SetKeyI('maxkbdc',maxkbdc);
 SetKeyI('framerate',framerate);
 SetKeyI('helpb',helpb);
-SetKeySW('vname',vname);
+{$ifdef video}
+SetKeyS('vname',vname);
+SetKeyI('vrate',vrate);
+SetKeyI('vquality',vquality);
+{$endif}
 end;
 
 procedure LoadReg();
@@ -154,7 +166,11 @@ GetKeyI('msgvol0',msgvol0);
 GetKeyI('maxkbdc',maxkbdc);
 GetKeyI('framerate',framerate);
 GetKeyI('helpb',helpb);
-GetKeySW('vname',vname);
+{$ifdef video}
+GetKeyS('vname',vname);
+GetKeyI('vrate',vrate);
+GetKeyI('vquality',vquality);
+{$endif}
 end;
 
 procedure LoadIni();

@@ -1,5 +1,5 @@
 {$R midiplayer.res}
-//{$define video}
+{$define video}
 program midiplayer;
 
 uses {$ifdef video}videooutput,{$endif}Windows,MMSystem,Display{$ifdef D3D},Direct3D9,D3Dx9{$endif};
@@ -1730,11 +1730,7 @@ SetTitleW(UnicodeString(stitle0)+GetFileNameW(fnames)+UnicodeString(stitle1));
 end;
 
 {$ifdef video}
-var fnamec:pchar;
-var fname:ansistring='midiplayer.mkv';
-var frate:longword=30;
-var quality:double=4;
-var fvideo:text;
+var vnamec:pchar;
 var vsz:longint=0;
 var videobb:pbitbuf;
 {$endif}
@@ -1753,15 +1749,7 @@ else
 {$ifdef video}
 if videob then
   begin
-  if(IsFileW(fdir+'RECORD_VIDEO')) then
-    begin
-    assign(fvideo,fdir+'RECORD_VIDEO');
-    reset(fvideo);
-    readln(fvideo,fname);fnamec:=PChar(fname);
-    readln(fvideo,frate);
-    readln(fvideo,quality);
-    close(fvideo);
-    end;
+  vnamec:=PChar(vname);
   videotime:=-1;
   while(_w and 1=1)or(_h and 1=1)do
     begin
@@ -1769,7 +1757,7 @@ if videob then
     SetSize((_w shr vsz) shl vsz,(_h shr vsz) shl vsz);
     end;
   videobb:=CreateBB(GetWin());
-  EncodeVideo(fnamec,frate,quality);
+  EncodeVideo(vnamec,vrate,vquality);
   if not(pauseb) then PauseMidi();
   SetMidiTime(-1);
   while (videotime<finaltime) and (IsWin()) do
@@ -1778,7 +1766,7 @@ if videob then
     DrawAll();
     Display.GetBB(videobb);
     EncodeFrame(videobb);
-    videotime:=videotime+1/frate;
+    videotime:=videotime+1/vrate;
     end;
   ReleaseVideo();
   ReleaseBB(videobb);
