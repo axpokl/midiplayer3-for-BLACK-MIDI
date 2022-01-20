@@ -3,5 +3,6 @@ Erase temp after load
 Command line
 Channel Color
 Menu and Icon
+Key hint
 
-
+video output length?

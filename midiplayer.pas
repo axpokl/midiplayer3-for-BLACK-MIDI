@@ -56,9 +56,15 @@ var chancb:packed array[0..maxchan-1]of longword;
 var chani:longword;
 const chanc0:packed array[0..23]of byte=
 (85,170,255,42,127,212,21,63,106,148,191,233,10,31,52,74,95,116,137,159,180,201,222,244);
-var chanc0n:longword=24;
+const chanc0m:longword=24;
+var chanc0n:longword;
 var chanc00:packed array[0..maxchan-1]of byte;
 var chanc0i:longword;
+var chanc0s1,chanc0s2:ansistring;
+var chanc0d:longint;
+var chanc0r:word;
+var chanc0b:boolean;
+var chanc0p:longword;
 
 var chordb:packed array[0..31]of byte=(
 11,06,01,08,03,10,05,00,07,02,09,04,11,06,01,00,
@@ -703,6 +709,55 @@ const kbd1n=21+87;
 var kbd0:byte=kbd0n;
 var kbd1:byte=kbd1n;
 
+procedure InitChannelColor();
+begin
+if length(chancolor)>0 then
+  begin
+  chanc0n:=0;
+  chanc0s1:=chancolor;
+  repeat
+  chanc0b:=false;
+  chanc0p:=pos(',',chanc0s1);
+  if chanc0p>0 then
+    begin
+    chanc0s2:=copy(chanc0s1,chanc0p+1,length(chanc0s1)-chanc0p);
+    delete(chanc0s1,chanc0p,length(chanc0s1)-chanc0p+1);
+    end
+  else
+    chanc0s2:='';
+  if length(chanc0s1)>0 then
+    begin
+    val(chanc0s1,chanc0d,chanc0r);
+    chanc0b:=(chanc0r=0) and (chanc0d<256) and (chanc0d>=0);
+    end;
+  if chanc0b then
+    begin
+    chanc00[chanc0n]:=chanc0d;
+    chanc0n:=chanc0n+1;
+    chanc0s1:=chanc0s2;
+    end;
+  until chanc0b=false;
+  end;
+if chanc0n=0 then
+  begin
+  for chanc0i:=0 to chanc0m-1 do
+    chanc00[chanc0i]:=chanc0[chanc0i];
+  chanc0n:=chanc0m;
+  end;
+end;
+
+procedure ResetChannelColor();
+begin
+for chani:=0 to maxchan-1 do
+  begin
+  chancn[chani]:=0;
+  chanci[chani]:=chani;
+  chancc[chani]:=HSN2RGB(chanc00[chani mod chanc0n]or $9FFF00);
+  chancw[chani]:=chancc[chani];
+  chancb[chani]:=MixColor(chancc[chani],black0,3/4);
+  end;
+end;
+
 procedure AddNoteMap(notei:longword);
 begin
 notem[notei]:=notemapi;
@@ -721,13 +776,8 @@ end;
 procedure CreateNoteMap();
 var ei:longint;
 begin
-chord:=7;
-for chani:=0 to maxchan-1 do chancn[chani]:=0;
-for chani:=0 to maxchan-1 do chanci[chani]:=chani;
-for chani:=0 to maxchan-1 do chancc[chani]:=HSN2RGB(chanc00[chani mod chanc0n]or $9FFF00);
-for chani:=0 to maxchan-1 do chancw[chani]:=chancc[chani];
-for chani:=0 to maxchan-1 do chancb[chani]:=MixColor(chancc[chani],black0,3/4);
 EnterCriticalSection(csfevent0);
+chord:=7;
 eventchi:=0;
 notemapi:=0;
 notemapn:=0;
@@ -838,6 +888,14 @@ begin
 SortNoteMapColorQuick1(0,maxchan-1);
 SortNoteMapColorQuick2(0,maxchan-1);
 SortNoteMapColorQuick1(0,maxchan-1);
+end;
+
+procedure ResetNoteMap();
+begin
+InitChannelColor();
+ResetChannelColor();
+CreateNoteMap();
+SortNoteMapColor();
 end;
 
 type tchord=packed record
@@ -1840,8 +1898,7 @@ if(IsFileW(fname))then
   PrepareMidi();
   LeaveCriticalSection(cs2);
   EnterCriticalSection(cs1);
-  CreateNoteMap();
-  SortNoteMapColor();
+  ResetNoteMap();
   //MakeChord();
   ResetMidi();
   initb:=false;
@@ -1932,7 +1989,7 @@ if iskey() then
   if iskey(K_F11) then framerate:=max(5,framerate-((framerate-1) div 60+1));
   if iskey(K_F12) then framerate:=min(480,framerate+(framerate div 60+1));
   if iskey(K_F1) then newthread(@helpproc);
-  if iskey(K_R) then begin ResetReg();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
+  if iskey(K_R) then begin ResetReg();ResetNoteMap();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
   {$ifdef video}if iskey(K_V) then begin bnoteb:=true;videob:=true;end;{$endif}
 
   if iskey(K_ESC) then CloseWin();
@@ -1995,24 +2052,6 @@ fb:=(fbi>0);
 if helpb=0 then newthread(@helpproc);
 end;
 
-procedure InitChannelColor();
-var fchan:text;
-begin
-for chanc0i:=0 to chanc0n-1 do chanc00[chanc0i]:=chanc0[chanc0i];
-if(IsFileW(fdir+'CHANNEL_COLOR')) then
-  begin
-  assign(fchan,fdir+'CHANNEL_COLOR');
-  reset(fchan);
-  chanc0n:=0;
-  while not(eof(fchan)) do
-    begin
-    readln(fchan,chanc00[chanc0n]);
-    chanc0n:=chanc0n+1;
-    end;
-  close(fchan);
-  end;
-end;
-
 procedure InitCS();
 begin
 InitializeCriticalSection(cs1);
@@ -2033,7 +2072,6 @@ sendmessage(_hw,WM_SETICON,ICON_SMALL,longint(_wc.HIcon));
 SetFontName('Consolas');
 InitkbdPos();
 InitkbdColor();
-InitChannelColor();
 //InitBtn();
 NewThread(@DrawProc);
 end;

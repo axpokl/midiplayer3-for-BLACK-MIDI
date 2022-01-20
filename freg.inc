@@ -80,6 +80,7 @@ var maxkbdc:longword;
 var helpb:longword;
 var spd1:longword=100;
 var fbi:longword=0;
+var chancolor:ansistring;
 {$ifdef video}
 var vname:ansistring;
 var vrate:longword=30;
@@ -108,6 +109,7 @@ msgvol0:=2;
 maxkbdc:=$40;
 framerate:=120;
 helpb:=0;
+chancolor:='85,170,255,42,127,212,21,63,106,148,191,233,10,31,52,74,95,116,137,159,180,201,222,244';
 {$ifdef video}
 vname:='midiplayer.mkv';
 vrate:=30;
@@ -137,6 +139,7 @@ SetKeyI('msgvol0',msgvol0);
 SetKeyI('maxkbdc',maxkbdc);
 SetKeyI('framerate',framerate);
 SetKeyI('helpb',helpb);
+SetKeyS('chancolor',chancolor);
 {$ifdef video}
 SetKeyS('vname',vname);
 SetKeyI('vrate',vrate);
@@ -166,6 +169,7 @@ GetKeyI('msgvol0',msgvol0);
 GetKeyI('maxkbdc',maxkbdc);
 GetKeyI('framerate',framerate);
 GetKeyI('helpb',helpb);
+GetKeyS('chancolor',chancolor);
 {$ifdef video}
 GetKeyS('vname',vname);
 GetKeyI('vrate',vrate);
