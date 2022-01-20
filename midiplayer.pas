@@ -1,5 +1,5 @@
 {$R midiplayer.res}
-{$define video}
+//{$define video}
 program midiplayer;
 
 uses {$ifdef video}videooutput,{$endif}Windows,MMSystem,Display{$ifdef D3D},Direct3D9,D3Dx9{$endif};
