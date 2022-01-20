@@ -65,7 +65,7 @@ Key Control
 
 Start with Configuration
 -------------
-There are 3 ways to start midiplayer3 with configuration with priority of below order:
+* There are 3 ways to start midiplayer3 with configuration with priority of below order:
 1. Add a parameter after the command line with the format of: `-<key> <value>`  
   `midiplayer3.exe filename.mid -spd1 200`
 2. Add a line under the file `.\midiplayer.ini` with the format of: `<key>=<value>`  
@@ -171,7 +171,7 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 
 使用配置启动
 -------------
-有 3 种方法来启动 midiplayer3，配置优先级如下：
+* 有 3 种方法来启动 midiplayer3，配置优先级如下：
 1. 在命令行后添加参数，格式为：`-<key> <value>`  
   `midiplayer3.exe filename.mid -spd1 200`
 2. 在`.\midiplayer.ini`文件下添加一行，格式为：`<key>=<value>`  
