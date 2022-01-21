@@ -53,33 +53,26 @@ procedure SetKeyI(kname:ansistring;i:longword);
 begin
 RegSetValueEx(regkey,PChar(kname),0,REG_DWORD,@i,sizeof(DWORD));
 end;
-
-var rs:ansistring;
-var fnames:unicodestring;
-var framerate:longword;
-var loop:longword;
 var midipos:longword;
 var voli:longword;
+var spd1:longword=100;
+var kchord0:longword;
+var kkey0:longword;
+var fnames:unicodestring;
+var midiouti:longword;
+var autofresh:longword;
+var mult:longword;
 var kbdcb:longword;
 var kchb:longword=0;
 var kchb2:longword=0;
-var para:unicodestring;
-var parai:longword;
-var fdir:unicodestring;
-var hwm:longword;
-const mult0=600;
-var mult:longword;
-var autofresh:longword;
-var midiOuti:longword;
-var msgbufn0:longword;
-var kchord0:longword;
-var kkey0:longword;
 var kmessure:longword;
+var loop:longword;
+var fbi:longword=0;
+var msgbufn0:longword;
 var msgvol0:longword;
 var maxkbdc:longword;
+var framerate:longword;
 var helpb:longword;
-var spd1:longword=100;
-var fbi:longword=0;
 var chancolor:ansistring;
 {$ifdef video}
 var vname:ansistring;
@@ -119,6 +112,7 @@ end;
 
 procedure SaveReg();
 begin
+OpenReg();
 SetKeyI('midipos',midipos);
 SetKeyI('voli',voli);
 SetKeyI('spd1',spd1);
@@ -145,10 +139,12 @@ SetKeyS('vname',vname);
 SetKeyI('vrate',vrate);
 SetKeyI('vquality',vquality);
 {$endif}
+CloseReg();
 end;
 
 procedure LoadReg();
 begin
+OpenReg();
 GetKeyI('midipos',midipos);
 GetKeyI('voli',voli);
 GetKeyI('spd1',spd1);
@@ -175,8 +171,5 @@ GetKeyS('vname',vname);
 GetKeyI('vrate',vrate);
 GetKeyI('vquality',vquality);
 {$endif}
-end;
-
-procedure LoadIni();
-begin
+CloseReg();
 end;

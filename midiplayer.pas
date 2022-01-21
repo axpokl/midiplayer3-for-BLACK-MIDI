@@ -7,6 +7,7 @@ uses {$ifdef video}videooutput,{$endif}Windows,MMSystem,Display{$ifdef D3D},Dire
 var maxevent:longword=$1;
 var fb:boolean=true;
 var midiOut:longword=0;
+var rs:ansistring;
 
 {$i freg.inc}
 {$i flist.inc}
@@ -999,6 +1000,7 @@ var kleny1:double=4.5;
 var kbdi,kbdn:byte;
 
 const fhr=0.7;
+const mult0=600;
 
 const maxbnote=$80;
 const maxbnotebuf=$100000;
@@ -1918,10 +1920,15 @@ if(IsFileW(fname))then
   end;
 end;
 
+var fdir:unicodestring;
+var para:unicodestring;
+var parai:longword;
+
+
 procedure helpproc();
 begin
-  if IsFileW(fdir+'README.md') then
-    ShellExecuteW(0,nil,PWChar('notepad.exe'),PWChar(fdir+'README.md'),nil,1)
+  if IsFileW(fdir+UnicodeString('README.md')) then
+    ShellExecuteW(0,nil,PWChar('notepad.exe'),PWChar(fdir+UnicodeString('README.md')),nil,1)
   else
     MsgboxW(UnicodeString('Missing help file: ')+fdir+UnicodeString('README.md'),UnicodeString('Help file not found!'));
   helpb:=1;
@@ -2029,14 +2036,25 @@ if IsMouseWheel() then
   end;
 end;
 
-Procedure DoCommandLine();
+procedure LoadIni();
+var fini:text;
 begin
-hwm:=FindWindow('MidiPlayer3Class',nil);
-fdir:=UnicodeString(GetParaW(0));
+assign(fini,fdir+UnicodeString('midiplayer.ini'))
+end;
+
+procedure GetDirPath();
+begin
+fdir:=UnicodeString(paramstr(0));
 repeat
 if length(fdir)>0 then delete(fdir,length(fdir),1);
 until (length(fdir)<=1) or (fdir[length(fdir)]='\');
-para:=UnicodeString(GetParaW(1));
+end;
+
+Procedure DoCommandLine();
+var hwm:longword;
+begin
+para:=UnicodeString(paramstr(1));
+hwm:=FindWindow('MidiPlayer3Class',nil);
 if hwm<>0 then
   if para<>'' then
     begin
@@ -2048,8 +2066,6 @@ if hwm<>0 then
     SendMessage(hwm,WM_USER,0,2);
     halt;
     end;
-fb:=(fbi>0);
-if helpb=0 then newthread(@helpproc);
 end;
 
 procedure InitCS();
@@ -2112,10 +2128,12 @@ end;
 begin
 GetTempPath($100,tempdirs);tempdir:=tempdirs;
 ResetReg();
-OpenReg();
 LoadReg();
+GetDirPath();
 LoadIni();
 DoCommandLine();
+fb:=(fbi>0);
+if helpb=0 then newthread(@helpproc);
 OpenRS();
 {$ifdef D3D}InitD3D();{$endif}
 InitCS();
@@ -2259,5 +2277,4 @@ until not(iswin());
 midiOutClose(midiOut);
 CloseRS();
 SaveReg();
-CloseReg();
 end.
