@@ -75,7 +75,8 @@ Start with Configuration
 
 Memory or File
 -------------
-* midiplayer3 needs to load MIDI file information in to memory before playing. If the memory is not enough in the system, we can force it to save the information in file.
+* midiplayer3 needs to load MIDI file information in to memory before playing
+* If the memory is not enough in the system, we can force it to save the information in file
 * midiplayer3 creates 3 temporary files in %temp% folder to store the information
 * You can switch between memory and file by pressing F2, or add a key called fbi
 
@@ -89,8 +90,10 @@ MIDI software synthesizer and MIDI Long Message
 
 Channel Color
 -------------
-* You can change the Track/Channel color by changing the content of file `CHANNEL_COLOR`
-* Each line represent a color which has a Hue value from 0-255. E.g. 0=Red, 85=Green and 170=Blue
+* You can change the Track/Channel color by add a key called chancolor
+* It is a string value, consisting of numbers and separated by commas:  
+  `chancolor=85,170,255,42,127,212,21,63,106,148,191,233,10,31,52,74,95,116,137,159,180,201,222,244`
+* Each number represent a color which has a Hue value from 0-255. E.g. 0=Red, 85=Green and 170=Blue
 * The Track/Channel will sort by it's note count, then use the color in order
 * The color will repeat if there is less color in the file defined than Track/Channel number
 
@@ -98,7 +101,8 @@ Record Video
 -------------
 * You must use the video version of midiplayer3.exe with all the necessary DLL files to record video
 * You can record video by pressing V, midiplayer3 will reset all notes before record
-* midiplayer3 support mkv format. You can change the output video name, framerate and quality by add keys with like:  
+* midiplayer3 support mkv format
+* You can change the output video name, framerate and quality by add keys:  
   `vname=midiplayer.mkv`  
   `vrate=30`  
   `vquality=4`
@@ -181,7 +185,8 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 
 内存或文件
 -------------
-* midiplayer3 播放前需要将 MIDI 文件信息加载到内存中。如果系统内存不够，我们可以强制将信息保存在文件中。
+* midiplayer3 播放前需要将 MIDI 文件信息加载到内存中
+* 如果系统内存不够，我们可以强制将信息保存在文件中。
 * midiplayer3 在 %temp% 文件夹中创建 3 个临时文件来存储信息
 * 可以按F2在内存和文件之间切换，或者添加一个叫fbi的键
 
@@ -195,16 +200,20 @@ MIDI软件合成器与MIDI长消息输出
 
 声道颜色
 -------------
-* 您可以通过更改文件`CHANNEL_COLOR`的内容来更改轨道/通道颜色
-* 每条线代表一种颜色，其色调值介于 0-255 之间。 例如。 0=红色，85=绿色，170=蓝色
-* 音轨/频道将按其音符数排序，然后按顺序使用颜色
-* 如果文件中定义的颜色少于音轨/频道编号，颜色将重复
+* 您可以通过添加一个名为 chancolor 的键来更改音轨/声道颜色
+* 它是一个字符串值，由数字组成并以逗号分隔：
+  `chancolor=85,170,255,42,127,212,21,63,106,148,191,233,10,31,52,74,95,116,137,159,180,201,222,244`
+* 每个数字代表一种颜色，其色调值介于 0-255 之间。 例如。 0=红色，85=绿色，170=蓝色
+* 音轨/声道将按其音符数排序，然后按顺序使用颜色
+* 如果文件中定义的颜色少于音轨/声道编号，颜色将重复 
+
 
 录制视频
 -------------
 * 您必须使用 midiplayer3.exe 的视频版本以及所有必要的 DLL 文件来录制视频
 * 可以按V录制视频，midiplayer3会在录制前重置所有音符
-* midiplayer3 支持 mkv 格式。 您可以通过添加以下键来更改输出视频名称、帧速率和质量：  
+* midiplayer3 支持 mkv 格式
+* 您可以通过添加以下键来更改输出视频名称、帧速率和质量：  
   `vname=midiplayer.mkv`  
   `vrate=30`  
   `vquality=4`

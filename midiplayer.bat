@@ -20,9 +20,6 @@ if not exist midiplayer64.exe exit
 mkdir midiplayer3
 copy midiplayer.ico midiplayer3\midiplayer.ico
 copy midiplayer.txt midiplayer3\midiplayer.txt
-copy FORCE_MEMORY midiplayer3\FORCE_MEMORY
-copy CHANNEL_COLOR midiplayer3\CHANNEL_COLOR
-copy RECORD_VIDEO midiplayer3\RECORD_VIDEO
 copy README.md midiplayer3\README.md
 copy LICENSE midiplayer3\LICENSE
 mkdir midiplayer3_video
