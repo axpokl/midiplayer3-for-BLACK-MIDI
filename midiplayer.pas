@@ -2038,8 +2038,61 @@ end;
 
 procedure LoadIni();
 var fini:text;
+var line0,line1,line2:UnicodeString;
+var linep:longword;
+var linev:longint;
+var liner:word;
 begin
-assign(fini,fdir+UnicodeString('midiplayer.ini'))
+assign(fini,fdir+UnicodeString('midiplayer.ini'));
+if IsFileW(fdir+UnicodeString('midiplayer.ini')) then
+  begin
+  reset(fini);
+  while not(eof(fini)) do
+    begin
+    readln(fini,line0);
+    linep:=pos('=',line0);
+    if linep>0 then
+      begin
+      line1:=copy(line0,1,linep-1);
+      line2:=copy(line0,linep+1,length(line0)-linep);
+      val(line2,linev,liner);
+      case line1 of
+        'fnames':fnames:=line2;
+        'chancolor':chancolor:=ansistring(line2);
+        {$ifdef video}
+        'vname':vname:=ansistring(line2);
+        {$endif}
+        end;
+      if (length(line2)>0) and (liner=0) and (linev>0) then
+      case line1 of
+        'midipos':midipos:=linev;
+        'voli':voli:=linev;
+        'spd1':spd1:=linev;
+        'kchord0':kchord0:=linev;
+        'kkey0':kkey0:=linev;
+        'midiouti':midiouti:=linev;
+        'autofresh':autofresh:=linev;
+        'mult':mult:=linev;
+        'kbdcb':kbdcb:=linev;
+        'kchb':kchb:=linev;
+        'kchb2':kchb2:=linev;
+        'kmessure':kmessure:=linev;
+        'loop':loop:=linev;
+        'fbi':fbi:=linev;
+        'msgbufn0':msgbufn0:=linev;
+        'msgvol0':msgvol0:=linev;
+        'maxkbdc':maxkbdc:=linev;
+        'framerate':framerate:=linev;
+        'helpb':helpb:=linev;
+        {$ifdef video}
+        'vrate':vrate:=linev;
+        'vquality':vquality:=linev;
+        {$endif}
+        end;
+      end;
+    end;
+  close(fini);
+  end;
 end;
 
 procedure GetDirPath();

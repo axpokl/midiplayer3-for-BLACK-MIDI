@@ -1,7 +1,9 @@
-LoadIni
-Erase temp after load
+
 Command line
+
 Menu
 Key hint
+
+Erase temp after load
 
 video output length?
