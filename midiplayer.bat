@@ -18,7 +18,6 @@ start midiplayer64.exe
 if not exist midiplayer64.exe pause
 if not exist midiplayer64.exe exit
 mkdir midiplayer3
-copy midiplayer.ico midiplayer3\midiplayer.ico
 copy midiplayer.txt midiplayer3\midiplayer.txt
 copy README.md midiplayer3\README.md
 copy LICENSE midiplayer3\LICENSE

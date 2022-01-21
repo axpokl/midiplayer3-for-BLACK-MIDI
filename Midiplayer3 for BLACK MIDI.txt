@@ -45,7 +45,6 @@ Max notes (64 bit file): [[Note Limits for MIDI Players|8 Million / 1GB File]]
 '''Cons'''
 *Requires a lot of time and space to load.
 *Only available on the Windows Platform
-*Can't change the track or channel color.
 
 '''Trivia'''
 *Uses the Windows GUI to draw graphics.
