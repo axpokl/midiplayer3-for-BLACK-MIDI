@@ -381,7 +381,7 @@ type
     AV_PIX_FMT_VAAPI_IDCT, ///< HW acceleration through VA API at IDCT entry-point, Picture.data[3] contains a vaapi_render_state struct which contains fields extracted from headers
     AV_PIX_FMT_VAAPI_VLD,  ///< HW decoding through VA API, Picture.data[3] contains a VASurfaceID
     (**@}*)
-    AV_PIX_FMT_VAAPI = AV_PIX_FMT_VAAPI_VLD,
+    AV_PIX_FMT_VAAPI, // = AV_PIX_FMT_VAAPI_VLD
 {$ELSE}
     (**
      *  Hardware acceleration through VA-API, data[3] contains a

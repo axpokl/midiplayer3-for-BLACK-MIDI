@@ -1886,7 +1886,7 @@ var startb:boolean=true;
 
 procedure PlayMidi(fname:UnicodeString);
 begin
-if(IsFileW(fname))then
+if IsFileW(fname) then
   begin
   if pauseb=false then PauseMidi();
   SetMidiTime(-1);
@@ -1921,9 +1921,7 @@ if(IsFileW(fname))then
 end;
 
 var fdir:unicodestring;
-var para:unicodestring;
-var parai:longword;
-
+var fpara:unicodestring='';
 
 procedure helpproc();
 begin
@@ -1938,9 +1936,9 @@ procedure DoAct();
 begin
 if ismsg(WM_USER) then
   begin
-  if _ms.lParam=0 then para:=para+widechar(_ms.wParam mod $10000);
-  if _ms.lParam=1 then para:='';
-  if _ms.lParam=2 then PlayMidi(para);
+  if _ms.lParam=0 then fpara:=fpara+widechar(_ms.wParam mod $10000);
+  if _ms.lParam=1 then fpara:='';
+  if _ms.lParam=2 then PlayMidi(fpara);
   end;
 if isDropFile() then
   PlayMidi(GetDropFileW());
@@ -1971,7 +1969,7 @@ if iskey() then
   if iskey(K_PGDN) then PlayMidi(get_file(find_current+1));
   if iskey(K_HOME) then PlayMidi(get_file(1));
   if iskey(K_END) then PlayMidi(get_file(find_count));
-  if iskey(K_F) then PlayMidi(fnames);
+  if iskey(K_F) then PlayMidi(get_file(find_current));
   if iskey(K_H) then ResetMidiHard(midiOuti);
   if iskey(K_S) and not(k_shift) and not(k_ctrl) then ResetMidiHard(midiOuti+1);
   if iskey(K_S) and not(k_shift) and (k_ctrl) then ResetMidiHard(midiOuti,true);
@@ -1998,7 +1996,6 @@ if iskey() then
   if iskey(K_F1) then newthread(@helpproc);
   if iskey(K_R) then begin ResetReg();ResetNoteMap();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
   {$ifdef video}if iskey(K_V) then begin bnoteb:=true;videob:=true;end;{$endif}
-
   if iskey(K_ESC) then CloseWin();
   end;
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
@@ -2036,12 +2033,50 @@ if IsMouseWheel() then
   end;
 end;
 
+procedure SetKey(skey,sval:UnicodeString);
+var ival:longint;
+var sret:word;
+begin
+val(sval,ival,sret);
+case skey of
+  'fnames':fnames:=sval;
+  'chancolor':chancolor:=ansistring(sval);
+  {$ifdef video}
+  'vname':vname:=ansistring(sval);
+  {$endif}
+  end;
+if (length(sval)>0) and (sret=0) and (ival>0) then
+case skey of
+  'midipos':midipos:=ival;
+  'voli':voli:=ival;
+  'spd1':spd1:=ival;
+  'kchord0':kchord0:=ival;
+  'kkey0':kkey0:=ival;
+  'midiouti':midiouti:=ival;
+  'autofresh':autofresh:=ival;
+  'mult':mult:=ival;
+  'kbdcb':kbdcb:=ival;
+  'kchb':kchb:=ival;
+  'kchb2':kchb2:=ival;
+  'kmessure':kmessure:=ival;
+  'loop':loop:=ival;
+  'fbi':fbi:=ival;
+  'msgbufn0':msgbufn0:=ival;
+  'msgvol0':msgvol0:=ival;
+  'maxkbdc':maxkbdc:=ival;
+  'framerate':framerate:=ival;
+  'helpb':helpb:=ival;
+  {$ifdef video}
+  'vrate':vrate:=ival;
+  'vquality':vquality:=ival;
+  {$endif}
+  end;
+end;
+
 procedure LoadIni();
 var fini:text;
 var line0,line1,line2:UnicodeString;
 var linep:longword;
-var linev:longint;
-var liner:word;
 begin
 assign(fini,fdir+UnicodeString('midiplayer.ini'));
 if IsFileW(fdir+UnicodeString('midiplayer.ini')) then
@@ -2055,40 +2090,7 @@ if IsFileW(fdir+UnicodeString('midiplayer.ini')) then
       begin
       line1:=copy(line0,1,linep-1);
       line2:=copy(line0,linep+1,length(line0)-linep);
-      val(line2,linev,liner);
-      case line1 of
-        'fnames':fnames:=line2;
-        'chancolor':chancolor:=ansistring(line2);
-        {$ifdef video}
-        'vname':vname:=ansistring(line2);
-        {$endif}
-        end;
-      if (length(line2)>0) and (liner=0) and (linev>0) then
-      case line1 of
-        'midipos':midipos:=linev;
-        'voli':voli:=linev;
-        'spd1':spd1:=linev;
-        'kchord0':kchord0:=linev;
-        'kkey0':kkey0:=linev;
-        'midiouti':midiouti:=linev;
-        'autofresh':autofresh:=linev;
-        'mult':mult:=linev;
-        'kbdcb':kbdcb:=linev;
-        'kchb':kchb:=linev;
-        'kchb2':kchb2:=linev;
-        'kmessure':kmessure:=linev;
-        'loop':loop:=linev;
-        'fbi':fbi:=linev;
-        'msgbufn0':msgbufn0:=linev;
-        'msgvol0':msgvol0:=linev;
-        'maxkbdc':maxkbdc:=linev;
-        'framerate':framerate:=linev;
-        'helpb':helpb:=linev;
-        {$ifdef video}
-        'vrate':vrate:=linev;
-        'vquality':vquality:=linev;
-        {$endif}
-        end;
+      SetKey(line1,line2);
       end;
     end;
   close(fini);
@@ -2103,22 +2105,56 @@ if length(fdir)>0 then delete(fdir,length(fdir),1);
 until (length(fdir)<=1) or (fdir[length(fdir)]='\');
 end;
 
-Procedure DoCommandLine();
+procedure SendToInstance(iname:UnicodeString);
 var hwm:longword;
+var inamei:longword;
 begin
-para:=UnicodeString(paramstr(1));
 hwm:=FindWindow('MidiPlayer3Class',nil);
 if hwm<>0 then
-  if para<>'' then
+  begin
+  SendMessage(hwm,WM_USER,0,1);
+  for inamei:=1 to length(iname) do
     begin
-    SendMessage(hwm,WM_USER,0,1);
-    for parai:=1 to length(para) do
-    begin
-      SendMessage(hwm,WM_USER,longword(word(para[parai])),0);
-      end;
-    SendMessage(hwm,WM_USER,0,2);
-    halt;
+    SendMessage(hwm,WM_USER,longword(word(iname[inamei])),0);
     end;
+  SendMessage(hwm,WM_USER,0,2);
+  halt;
+  end;
+end;
+
+Procedure DoCommandLine();
+var para,parakey,parafname:UnicodeString;
+var parai:longword;
+begin
+para:='';
+parakey:='';
+parafname:='';
+for parai:=1 to ParamCount() do
+  begin
+  para:=UnicodeString(ParamStr(parai));
+  if (para[1]='-') or (para[1]='/') then
+    parakey:=para
+  else
+    begin
+    if parakey<>'' then
+      begin
+      delete(parakey,1,1);
+      SetKey(parakey,para);
+      end
+    else
+      parafname:=para;
+    parakey:='';
+    end;
+  end;
+if (parafname<>'') and (parafname<>fnames) then
+  begin
+  if IsFileW(parafname) then SendToInstance(parafname);
+  fnames:=parafname;
+  midipos:=0;
+  startb:=false;
+  end
+else
+  if helpb=0 then newthread(@helpproc);
 end;
 
 procedure InitCS();
@@ -2186,12 +2222,10 @@ GetDirPath();
 LoadIni();
 DoCommandLine();
 fb:=(fbi>0);
-if helpb=0 then newthread(@helpproc);
 OpenRS();
 {$ifdef D3D}InitD3D();{$endif}
 InitCS();
 InitDraw();
-if (para<>'') and (para<>fnames) then begin fnames:=para;midipos:=0;startb:=false;end;
 if IsFileW(fnames) then
   begin
   PlayMidi(fnames);
