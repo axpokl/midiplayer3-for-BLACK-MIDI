@@ -1,9 +1,4 @@
-
-Command line
-
 Menu
 Key hint
-
 Erase temp after load
-
 video output length?
