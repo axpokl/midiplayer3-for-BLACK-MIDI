@@ -389,6 +389,12 @@ while (eventj<eventn) do
   eventj:=eventj+1;
   end;
 if not(fb) then setlength(event,0);
+if fb then
+  begin
+  EnterCriticalSection(csfevent0);
+  close(fevent);rewrite(fevent);feventw:=false;for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+  LeaveCriticalSection(csfevent0);
+  end;
 if fb then FlushFEvent0();
 drawr:=0;
 tempo:=500000;
@@ -1905,6 +1911,17 @@ if IsFileW(fname) then
   maxevent:=1;
   event:=nil;setlength(event,maxevent);
   event0:=nil;setlength(event0,maxevent);
+  //notemap:=nil;setlength(notemap,maxevent);
+  if fb then
+    begin
+    EnterCriticalSection(csfevent0);
+    feventw:=false;close(fevent);rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+    fevent0w:=false;close(fevent0);rewrite(fevent0);bjfevent0:=-1;
+    //EnterCriticalSection(csnote);
+    //fnotew:=false;close(fnote);rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
+    //LeaveCriticalSection(csnote);
+    LeaveCriticalSection(csfevent0);
+    end;
   LoadMidi(fname);
   PrepareMidi();
   LeaveCriticalSection(cs2);

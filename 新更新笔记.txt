@@ -1,3 +1,4 @@
 Menu
 Key hint
+Reset crash (fnote?)
 video output length?
