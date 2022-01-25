@@ -85,6 +85,7 @@ var cs2:TRTLCriticalSection;
 var cs3:TRTLCriticalSection;
 var cs4:TRTLCriticalSection;
 var csfevent0:TRTLCriticalSection;
+var csnote:TRTLCriticalSection;
 
 var len0,head:longword;
 var fpos,flen:longword;
@@ -817,8 +818,10 @@ eventtmi:=0;
 //eventmui:=0;
 eventchi:=0;
 drawr:=0;
+EnterCriticalSection(csnote);
 if fb then FlushFNoteAll();
 if fb then begin fnotew:=false;close(fnote);reset(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;end;
+LeaveCriticalSection(csnote);
 LeaveCriticalSection(csfevent0);
 notemapn:=notemapi;
 end;
@@ -1251,7 +1254,12 @@ for keyi:=0 to $7F do
     h:=0;
     end;
   end;
-if fb then if flushb then FlushFNoteAll();
+if flushb then
+  begin
+  EnterCriticalSection(csnote);
+  if fb then FlushFNoteAll();
+  LeaveCriticalSection(csnote);
+  end;
 end;
 
 procedure DrawBNote(ni:longword);
@@ -1495,7 +1503,9 @@ EnterCriticalSection(cs4);
 InitBnote0(force);
 DrawMessureLineAll();
 InitFNoteDraw(0,notemapn-1);
+EnterCriticalSection(csnote);
 if fb then FlushFNoteAll();
+LeaveCriticalSection(csnote);
 scrtime:=(GetHeight()-round(GetKeynoteW0()*kleny0))/(mult*GetWidth()/mult0);
 delaytime:=scrtime;
 if not(force) then
@@ -2164,6 +2174,7 @@ InitializeCriticalSection(cs2);
 InitializeCriticalSection(cs3);
 InitializeCriticalSection(cs4);
 InitializeCriticalSection(csfevent0);
+InitializeCriticalSection(csnote);
 end;
 
 procedure InitDraw();
