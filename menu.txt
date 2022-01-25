@@ -1,0 +1,57 @@
+Help	Setting
+
+
+Home/Last/This/Next/End
+|< < . > >|
+
+--- Play --- 
+Volumn | + Bar - | Number
+Speed | + Bar - | Number
+Chord | + Bar - | Number
+Pitch | + Bar - | Number
+
+--- Device --- 
+MIDI Synthesizer | + Name - | Number
+MIDI Event | Long Msg / Stream
+Combine Same Notes | Yes / No (reverse)
+
+--- Display --- 
+Draw All Notes | Auto / Manual | Draw Now
+Note Length |  + Bar - | Number
+Note Color | Chord / Track Black / Track
+Note Text | Number / Letter / Blank
+Information Text | All / No Track / No Message / Key / None
+Messure/Chord Line | Minor / All / Major / Chord / None
+Loop Mode | None / Single / All
+
+--- Option --- 
+Storage | Memory / File
+Short Event Buffer | + Bar - | Number
+Min Event Volume | + Bar - | Number
+Max Key Buffer | + Bar - | Number
+Max Frame Rate | + Bar - | Number
+
+--- Others ---
+Record Video
+Reset All Setting
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
