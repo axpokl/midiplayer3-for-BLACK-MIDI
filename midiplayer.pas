@@ -8,6 +8,7 @@ var maxevent:longword=$1;
 var fb:boolean=true;
 var midiOut:longword=0;
 var rs:ansistring;
+var tempdirs:array[0..$FF]of char;
 
 {$i freg.inc}
 {$i flist.inc}
@@ -240,7 +241,7 @@ eventi:=0;
 eventtmi:=0;
 eventchi:=0;
 finaltick:=0;
-if fb then begin close(fevent);feventw:=true;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
+if fb then begin close(fevent);rewrite(fevent);feventw:=true;for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
 while GetFilePos<len0 do
   begin
   curtick:=0;
@@ -355,7 +356,7 @@ procedure PrepareMidi();
 begin
 trackn:=tracki;
 if fb then FlushFEvent(0);
-if fb then begin close(fevent);feventw:=false;reset(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
+if fb then begin feventw:=false;close(fevent);reset(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;end;
 eventn:=eventi;
 eventtmn:=eventtmi;
 eventmun:=0;
@@ -363,7 +364,7 @@ eventchn:=eventchi;
 track0[0]:=0;
 for tracki:=1 to trackn-1 do track0[tracki]:=track1[tracki-1];
 EnterCriticalSection(csfevent0);
-if fb then begin close(fevent0);fevent0w:=true;rewrite(fevent0);bjfevent0:=-1;end;
+if fb then begin close(fevent0);rewrite(fevent0);fevent0w:=true;bjfevent0:=-1;end;
 eventj:=0;
 trackheapi:=0;
 for tracki:=0 to trackn-1 do
@@ -451,7 +452,7 @@ eventchi:=0;
 drawr:=0;
 if tempo00=0 then tempo00:=500000;
 if fb then FlushFEvent0();
-if fb then begin close(fevent0);fevent0w:=false;reset(fevent0);bjfevent0:=-1;end;
+if fb then begin fevent0w:=false;close(fevent0);reset(fevent0);bjfevent0:=-1;end;
 LeaveCriticalSection(csfevent0);
 end;
 
@@ -787,7 +788,7 @@ for notei:=0 to maxnote-1 do notem[notei]:=0;
 setlength(notemap,maxevent);
 kbd0:=kbd0n;
 kbd1:=kbd1n;
-if fb then begin close(fnote);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;end;
+if fb then begin close(fnote);rewrite(fnote);fnotew:=true;for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;end;
 for fi:=0 to eventn-1 do
   begin
   if eventn>0 then if fi and $FFF=0 then begin drawr:=fi/eventn;DrawTitle();end;
@@ -817,7 +818,7 @@ eventtmi:=0;
 eventchi:=0;
 drawr:=0;
 if fb then FlushFNoteAll();
-if fb then begin close(fnote);fnotew:=false;reset(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;end;
+if fb then begin fnotew:=false;close(fnote);reset(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;end;
 LeaveCriticalSection(csfevent0);
 notemapn:=notemapi;
 end;
@@ -1018,8 +1019,6 @@ var initb:boolean=false;
 var bnoteb0:longint;
 var bnoteb1:array[0..1]of longint;
 var bmpname:ansistring;
-var tempdir:ansistring;
-var tempdirs:array[0..$FF]of char;
 
 type tbnotekey=packed record
 x,y,w,h:longint;bi:shortint;cbg,cfg:longword;
@@ -2040,6 +2039,7 @@ begin
 val(sval,ival,sret);
 case skey of
   'fnames':fnames:=sval;
+  'tempdir':tempdir:=ansistring(sval);
   'chancolor':chancolor:=ansistring(sval);
   {$ifdef video}
   'vname':vname:=ansistring(sval);
@@ -2203,9 +2203,9 @@ procedure CloseRS();
 begin
 if fb then
   begin
-  close(fevent0);DeleteFile(tempdir+'fevent0'+rs);
-  close(fevent);DeleteFile(tempdir+'fevent'+rs);
-  close(fnote);DeleteFile(tempdir+'fnote'+rs);
+  feventw:=false;close(fevent0);DeleteFile(tempdir+'fevent0'+rs);
+  fevent0w:=false;close(fevent);DeleteFile(tempdir+'fevent'+rs);
+  fnotew:=false;close(fnote);DeleteFile(tempdir+'fnote'+rs);
   end;
 for bnotej:=-1 to bnoten00 do
   begin
