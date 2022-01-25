@@ -1,4 +1,9 @@
 Menu
 Key hint
+title
+fps bnotebb
+fps keybd
+
 Reset crash (fnote?)
 video output length?
+note play lag? (black midi)

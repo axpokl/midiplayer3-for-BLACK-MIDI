@@ -1393,13 +1393,11 @@ for kbd:=kbd0 to kbd1 do
   end;
 end;
 
-procedure DrawKeyboard();
+procedure DrawKeyBoardKeys(opt:shortint);
+var kbd0i,kbd1i:byte;
 var kbdi:byte;
 var x,w,w0:longint;
-var kbd0i,kbd1i:byte;
 begin
-EnterCriticalSection(cs3);
-ResetKbdC();
 kbd0i:=kbd0;
 kbd1i:=kbd1;
 if IsKeynoteBlack(kbd0i)=1 then kbd0i:=max($00,kbd0i-1);
@@ -1409,39 +1407,39 @@ for kbdi:=kbd0i to kbd1i do
   x:=GetKeynoteX(kbdi);
   w:=GetKeynoteX0(kbdi)-GetKeynoteX(kbdi);
   w0:=GetKeynoteW0();
-  if IsKeynoteBlack(kbdi)=0 then
-    begin
-    if kbdc[kbdi]=-1 then
-      begin
-      _Bar(x,0,w,round(w0*kleny0),black,white);
-      if kchb<=1 then _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,4,MixColor(white,black,1/2));
-      end
-    else
-      begin
-      _Bar(x,0,w,round(w0*kleny0),black,kbdc[kbdi]);
-      if kchb<=1 then _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,0,black);
-      end;
+  case opt of
+    1:if (IsKeynoteBlack(kbdi)=0) and (kbdc[kbdi]=-1) then 
+	    begin 
+	    _Bar(x,0,w,round(w0*kleny0),black,white);
+	    if kchb<=1 then _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,4,MixColor(white,black,1/2));
+	    end;
+    2:if (IsKeynoteBlack(kbdi)=0) and (kbdc[kbdi]<>-1) then 
+	    begin 
+	    _Bar(x,0,w,round(w0*kleny0),black,kbdc[kbdi]);
+	    if kchb<=1 then _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,0,black);
+	    end;
+    3:if (IsKeynoteBlack(kbdi)=1) and (kbdc[kbdi]=-1) then 
+	    begin 
+	    _Bar(x,round(w0*(kleny0-kleny1)),w,round(w0*kleny1),black,black);
+		_DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,round(w0*(kleny0-kleny1))+4,MixColor(black,white,1/2));
+		end;
+    4:if (IsKeynoteBlack(kbdi)=1) and (kbdc[kbdi]<>-1) then 
+	    begin 
+		_Bar(x,round(w0*(kleny0-kleny1)),w,round(w0*kleny1),black,kbdc[kbdi]);
+        _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,round(w0*(kleny0-kleny1)),black);
+        end;
     end;
   end;
-for kbdi:=kbd0i to kbd1i do
-  begin
-  x:=GetKeynoteX(kbdi);
-  w:=GetKeynoteX0(kbdi)-GetKeynoteX(kbdi);
-  w0:=GetKeynoteW0();
-  if IsKeynoteBlack(kbdi)=1 then
-    begin
-    if kbdc[kbdi]=-1 then
-      begin
-      _Bar(x,round(w0*(kleny0-kleny1)),w,round(w0*kleny1),black,black);
-      _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,round(w0*(kleny0-kleny1))+4,MixColor(black,white,1/2));
-      end
-    else
-      begin
-      _Bar(x,round(w0*(kleny0-kleny1)),w,round(w0*kleny1),black,kbdc[kbdi]);
-      _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,round(w0*(kleny0-kleny1)),black);
-      end;
-    end;
-  end;
+end;
+
+procedure DrawKeyboard();
+begin
+EnterCriticalSection(cs3);
+ResetKbdC();
+DrawKeyBoardKeys(1);
+DrawKeyBoardKeys(2);
+DrawKeyBoardKeys(3);
+DrawKeyBoardKeys(4);
 LeaveCriticalSection(cs3);
 end;
 
@@ -1696,69 +1694,6 @@ if drawr>0 then
   end;
 end;
 
-type Tbtn=record x,y,w,h:double;id:longword;b:boolean;end;
-
-const maxbtn=$100;
-var btn:array[1..maxbtn]of Tbtn;
-var btni,btnn,btnb:longword;
-var btnBMP:pbitmap;
-const btnsz=32;
-
-procedure InitBtn();
-begin
-btnBMP:=LoadBMP('midiplayer3_btn.png');
-btnn:=8;
-for btni:=1 to btnn do
-  with btn[btni] do
-    begin
-    x:=btni*0.1;
-    y:=btni*0.1;
-    w:=0.05;
-    h:=0.05;
-    id:=btni;
-    b:=true;
-    end;
-end;
-
-function InBtn(btni:longword;ix,iy:longint):boolean;
-var rx,ry:double;
-begin
-rx:=ix/GetWidth();
-ry:=iy/GetHeight();
-InBtn:=true;
-with btn[btni] do
-  begin
-  if rx<x then InBtn:=false;
-  if rx>x+w then InBtn:=false;
-  if ry<y then InBtn:=false;
-  if ry>y+h then InBtn:=false;
-  end;
-end;
-
-procedure GetBtn();
-begin
-btnb:=0;
-for btni:=1 to btnn do
-  if btn[btni].b then
-    if InBtn(btni,GetMousePosX(),GetMousePosY()) then
-      btnb:=btni;
-end;
-
-procedure DrawBtn(btni:longword);
-begin
-if btn[btni].b then
-  with btn[btni] do
-    DrawBMP(btnBMP,_pmain,btnsz*(btni-1),0,btnsz,btnsz,round(x*GetWidth),round(y*GetHeight),round(w*GetWidth),round(h*GetHeight));
-end;
-
-procedure DrawBtnAll();
-begin
-GetBtn();
-if btnb>0 then
-  for btni:=1 to btnn do
-    DrawBtn(btni);
-end;
-
 procedure DrawAll();
 begin
 SetDrawFont();
@@ -1778,7 +1713,6 @@ if kchb2<=2 then DrawLongMsg();
 if kchb2<=1 then {$ifdef video}if not(videob)then{$endif}DrawFPS();
 {$ifdef video}if not(videob)then{$endif}DrawDevice();
 DrawReal();
-//DrawBtnAll();
 FreshWin();
 end;
 
@@ -2207,7 +2141,6 @@ sendmessage(_hw,WM_SETICON,ICON_SMALL,longint(_wc.HIcon));
 SetFontName('Consolas');
 InitkbdPos();
 InitkbdColor();
-//InitBtn();
 NewThread(@DrawProc);
 end;
 
