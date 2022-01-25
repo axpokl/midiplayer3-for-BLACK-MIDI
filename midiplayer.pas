@@ -937,7 +937,7 @@ for notetimechi:=0 to 11 do
 notetimechmin:=notetimech[0];
 for notetimechi:=1 to 11 do notetimechmin:=min(notetimechmin,notetimech[notetimechi]);
 for notetimechi:=0 to 11 do notetimech[notetimechi]:=notetimech[notetimechi]-notetimechmin;
-for notetimechi:=0 to 11 do if notetimech[(notetimechi*5)mod 12]>0 then write(notetimech[(notetimechi*5)mod 12]:0:2,' ') else write('     ');writeln();
+//for notetimechi:=0 to 11 do if notetimech[(notetimechi*5)mod 12]>0 then write(notetimech[(notetimechi*5)mod 12]:0:2,' ') else write('     ');writeln();
 for notetimej:=0 to 11 do notetime[notetimei,notetimej]:=0;
 chordmui:=chordmui+1;
 end;
@@ -1911,15 +1911,15 @@ if IsFileW(fname) then
   maxevent:=1;
   event:=nil;setlength(event,maxevent);
   event0:=nil;setlength(event0,maxevent);
-  //notemap:=nil;setlength(notemap,maxevent);
   if fb then
     begin
     EnterCriticalSection(csfevent0);
-    feventw:=false;close(fevent);rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
-    fevent0w:=false;close(fevent0);rewrite(fevent0);bjfevent0:=-1;
-    //EnterCriticalSection(csnote);
-    //fnotew:=false;close(fnote);rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
-    //LeaveCriticalSection(csnote);
+    close(fevent);rewrite(fevent);feventw:=true;for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+    close(fevent0);rewrite(fevent0);fevent0w:=true;bjfevent0:=-1;
+    EnterCriticalSection(csnote);
+    notemap:=nil;setlength(notemap,maxevent);
+    close(fnote); rewrite(fnote);fnotew:=true;for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
+    LeaveCriticalSection(csnote);
     LeaveCriticalSection(csfevent0);
     end;
   LoadMidi(fname);
