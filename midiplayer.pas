@@ -1591,7 +1591,7 @@ if y>0 then
   h:=0;
   repeat
   h0:=bnoteh0-y0;
-  h0:=min(h0,GetHeight()-h);
+  h0:=min(h0,max(0,GetHeight()-h));
   FreshBMP(0,bnotej);DrawBMP(bnote[0,bnotej1[0,bnotej]],0,y0,GetWidth(),h0,0,h,GetWidth(),h0);
   FreshBMP(1,bnotej);DrawBMP(bnote[1,bnotej1[1,bnotej]],0,y0,GetWidth(),h0,0,h,GetWidth(),h0);
   bnotej:=bnotej-1;
@@ -1763,7 +1763,7 @@ begin if v=0 then log2i:=0 else log2i:=round(ln(v)/ln(2))+1;end;
 procedure DrawMenu();
 begin
 menui:=menuy;
-fh:=max(1,round(menuh*klen1*GetWidth()*0.8));
+fh:=max(1,round(menuh*GetHeight()*klen1*1.5));
 fw:=max(1,round(fh/2.2));
 SetFontSize(fw,fh);
 SetFont();
