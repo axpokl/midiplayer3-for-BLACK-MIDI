@@ -3,6 +3,7 @@ Key hint
 title
 fps bnotebb
 fps keybd
+reg detect?
 
 Reset crash (fnote?)
 video output length?

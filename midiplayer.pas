@@ -707,11 +707,11 @@ var kbdc0n,kbdc0n0:longword;
 var kbdc0m,kbdc0m0:longword;
 var kbdc0p:longword;
 
-const black0=$0F0F0F;
-const black1=$0F0F0F;
-const gray0=$1F1F1F;
-const gray1=$3F3F3F;
-const gray2=$9F9F9F;
+const black0=$0F0F0F;//chan mix
+const black1=$0F0F0F;//bmp bg
+const gray0=$1F1F1F;//text bg
+const gray1=$3F3F3F;//messure dark
+const gray2=$9F9F9F;//messure light
 
 const kbd0n=21;
 const kbd1n=21+87;
@@ -994,8 +994,8 @@ var devicetime:double=0;
 var k_shift,k_ctrl:boolean;
 var k_pos:double;
 
-const klen0:double=1.15;
-const klen1:double=0.65;
+const klen0:double=1.15;//black key pos
+const klen1:double=0.65;//font size
 var kbd:packed array[0..11]of double;
 const keyblack:packed array[0..11]of byte=(0,1,0,1,0,0,1,0,1,0,1,0);
 const keychord:packed array[0..3,0..11]of char=(
@@ -1408,23 +1408,23 @@ for kbdi:=kbd0i to kbd1i do
   w:=GetKeynoteX0(kbdi)-GetKeynoteX(kbdi);
   w0:=GetKeynoteW0();
   case opt of
-    1:if (IsKeynoteBlack(kbdi)=0) and (kbdc[kbdi]=-1) then 
-	    begin 
+    1:if (IsKeynoteBlack(kbdi)=0) and (kbdc[kbdi]=-1) then
+	    begin
 	    _Bar(x,0,w,round(w0*kleny0),black,white);
 	    if kchb<=1 then _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,4,MixColor(white,black,1/2));
 	    end;
-    2:if (IsKeynoteBlack(kbdi)=0) and (kbdc[kbdi]<>-1) then 
-	    begin 
+    2:if (IsKeynoteBlack(kbdi)=0) and (kbdc[kbdi]<>-1) then
+	    begin
 	    _Bar(x,0,w,round(w0*kleny0),black,kbdc[kbdi]);
 	    if kchb<=1 then _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,0,black);
 	    end;
-    3:if (IsKeynoteBlack(kbdi)=1) and (kbdc[kbdi]=-1) then 
-	    begin 
+    3:if (IsKeynoteBlack(kbdi)=1) and (kbdc[kbdi]=-1) then
+	    begin
 	    _Bar(x,round(w0*(kleny0-kleny1)),w,round(w0*kleny1),black,black);
 		_DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,round(w0*(kleny0-kleny1))+4,MixColor(black,white,1/2));
 		end;
-    4:if (IsKeynoteBlack(kbdi)=1) and (kbdc[kbdi]<>-1) then 
-	    begin 
+    4:if (IsKeynoteBlack(kbdi)=1) and (kbdc[kbdi]<>-1) then
+	    begin
 		_Bar(x,round(w0*(kleny0-kleny1)),w,round(w0*kleny1),black,kbdc[kbdi]);
         _DrawTextXY(GetKeyChord(kbdi),x+(w-fw)div 2,round(w0*(kleny0-kleny1)),black);
         end;
@@ -1694,6 +1694,109 @@ if drawr>0 then
   end;
 end;
 
+var ctrlb:boolean=false;
+var menub:boolean=false;
+var menui:real;
+const menuh:real=0.03;
+const menug:real=0.015;
+const menuy:real=0.05;
+
+procedure DrawTextPercent(x1,x2,y1,y2:double;s:ansistring;c:longword);
+begin DrawTextXY(s,round(((x1+x2)*GetWidth()-GetStringWidth(s))/2),round(((y1+y2)*GetHeight()-GetStringHeight(s))/2),c);end;
+
+procedure DrawTextPercent(x1,x2,y:double;s:ansistring;c:longword);
+begin DrawTextXY(s,round(((x1+x2)*GetWidth()-GetStringWidth(s))/2),round(y*GetHeight()-GetStringHeight(s)/2),c);end;
+
+procedure DrawTextPercent(x,y:double;s:ansistring;c:longword);
+begin DrawTextXY(s,round(x*GetWidth()),round(y*GetHeight()-GetStringHeight(s)/2),c);end;
+
+procedure DrawBarPercent(x1,x2,y1,y2:double;cf,cg:longword);
+begin Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(x1*GetWidth()),round(y2*GetHeight())-round(y1*GetHeight()),cg,cf);end;
+
+procedure DrawBarPercent(x1,x2,y1,y2:double;c:longword);
+begin Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(x1*GetWidth()),round(y2*GetHeight())-round(y1*GetHeight()),c);end;
+
+procedure DrawCirclePrecent(x,y,r:double;cf,cg:longword);
+begin Circle(round(x*GetWidth()),round(y*GetHeight()),round(r*GetWidth()),cf,cg);end;
+
+procedure DrawCtrl();
+begin
+end;
+
+procedure DrawMenuTitle(s:ansistring);
+begin
+menui:=menui+menug;
+DrawBarPercent(0.2,0.8,menui-menug,menui+menuh+menug,gray1);
+DrawTextPercent(0.2,0.8,menui,menui+menuh,s,white);
+menui:=menui+menuh;
+menui:=menui+menug;
+end;
+
+procedure DrawMenuBar(s:ansistring;v,m:longword;n:ansistring);
+begin
+DrawTextPercent(0.2,menui+menuh/2,s,white);
+//DrawBarPercent(0.3,menui,0.4,menui+menuh,gray1);
+menui:=menui+menuh;
+end;
+
+procedure DrawMenuBtn(s:ansistring;v,m:longword;n1,n2,n3,n4,n5:ansistring);
+begin
+DrawTextPercent(0.2,menui+menuh/2,s,white);
+DrawBarPercent(0.3+v*0.1,0.4+v*0.1,menui,menui+menuh,gray1,gray0);
+DrawTextPercent(0.3,0.4,menui+menuh/2,n1,white);
+DrawTextPercent(0.4,0.5,menui+menuh/2,n2,white);
+DrawTextPercent(0.5,0.6,menui+menuh/2,n3,white);
+DrawTextPercent(0.6,0.7,menui+menuh/2,n4,white);
+DrawTextPercent(0.7,0.8,menui+menuh/2,n5,white);
+menui:=menui+menuh;
+end;
+
+procedure DrawMenuLine(s:ansistring);
+begin
+DrawTextPercent(0.2,0.8,menui,menui+menuh,s,white);
+menui:=menui+menuh;
+end;
+
+function log2i(v:longword):longword;
+begin if v=0 then log2i:=0 else log2i:=round(ln(v)/ln(2))+1;end;
+
+procedure DrawMenu();
+begin
+menui:=menuy;
+fh:=max(1,round(menuh*klen1*GetWidth()*0.8));
+fw:=max(1,round(fh/2.2));
+SetFontSize(fw,fh);
+SetFont();
+DrawBarPercent(0.2,0.8,menuy,menuy+menuh*26+menug*5*2,gray0);
+DrawMenuTitle('Play');
+DrawMenuBar('Volumn',voli,16,i2s(longword(round(vola[voli]*100)))+'%');
+DrawMenuBar('Speed',spd1,1601,i2s(spd1)+'%');
+DrawMenuBar('Chord',kchord0,12,i2s(kchord0));
+DrawMenuBar('Pitch',kkey0,256,i2s(kkey0-127));
+DrawMenuTitle('Device');
+DrawMenuBar('Synthesizer',midiouti,midiOutGetNumDevs,i2s(midiouti)+'/'+i2s(midiOutGetNumDevs));
+DrawMenuBtn('MIDI Event',longword(not(msgbufb1)),2,'Stream','Long','','','');
+DrawMenuBtn('Combine Notes',longword(not(msgbufb0)),2,'No','Yes','','','');
+DrawMenuTitle('Display');
+DrawMenuBtn('Draw Notes',1-autofresh,2,'Auto','Manual','','','');
+DrawMenuBar('Note Length',mult,1001,i2s(mult)+'%');
+DrawMenuBtn('Note Color',kbdcb,3,'Chord','Track Black','Track','','');
+DrawMenuBtn('Note Text',kchb,3,'Number','Letter','Blank','','');
+DrawMenuBtn('Info Text',kchb2,5,'All','No Track','No Message','Key','None');
+DrawMenuBtn('Messur Line',kmessure,5,'Minor','All','Major','Chord','None');
+DrawMenuBtn('Loop Mode',(loop+2)mod 3,3,'Single','All','None','','');
+DrawMenuTitle('Options');
+DrawMenuBtn('Storage',fbi,2,'Memory','File','','','');
+DrawMenuBar('Short Event',log2i(msgbufn0)-1,24,i2s(msgbufn0));
+DrawMenuBar('Min Volume',log2i(msgvol0),9,i2s(msgvol0));
+DrawMenuBar('Max Key',log2i(maxkbdc)-1,16,i2s(maxkbdc));
+DrawMenuBar('Frame Rate',framerate-5,476,i2s(framerate));
+DrawMenuTitle('Others');
+DrawMenuLine('Reset All Settings');
+DrawMenuLine('Record Video');
+SetDrawFont();
+end;
+
 procedure DrawAll();
 begin
 SetDrawFont();
@@ -1712,6 +1815,8 @@ if kchb2<=3 then DrawNoteN();
 if kchb2<=2 then DrawLongMsg();
 if kchb2<=1 then {$ifdef video}if not(videob)then{$endif}DrawFPS();
 {$ifdef video}if not(videob)then{$endif}DrawDevice();
+if menub then DrawMenu();
+if ctrlb or menub then DrawCtrl();
 DrawReal();
 FreshWin();
 end;
@@ -1932,8 +2037,8 @@ if iskey() then
   if iskey(K_F) then PlayMidi(get_file(find_current));
   if iskey(K_H) then ResetMidiHard(midiOuti);
   if iskey(K_S) and not(k_shift) and not(k_ctrl) then ResetMidiHard(midiOuti+1);
-  if iskey(K_S) and not(k_shift) and (k_ctrl) then ResetMidiHard(midiOuti,true);
-  if iskey(K_S) and (k_shift) and not(k_ctrl) then msgbufb0:=not(msgbufb0);
+  if iskey(K_S) and not(k_shift) and (k_ctrl) then begin msgbufb1:=not(msgbufb1);ResetMidiHard(midiOuti,msgbufb1);end;
+  if iskey(K_S) and (k_shift) and not(k_ctrl) then begin msgbufb0:=not(msgbufb0);end;
   if iskey(K_D) then bnoteb:=true;
   if iskey(K_A) then autofresh:=1-autofresh;
   if iskey(188) or iskey(190) then begin k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;end;
@@ -1954,6 +2059,7 @@ if iskey() then
   if iskey(K_F11) then framerate:=max(5,framerate-((framerate-1) div 60+1));
   if iskey(K_F12) then framerate:=min(480,framerate+(framerate div 60+1));
   if iskey(K_F1) then newthread(@helpproc);
+  if iskey(K_F9) then menub:=not(menub);
   if iskey(K_R) then begin ResetReg();ResetNoteMap();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
   {$ifdef video}if iskey(K_V) then begin bnoteb:=true;videob:=true;end;{$endif}
   if iskey(K_ESC) then CloseWin();

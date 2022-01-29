@@ -26,7 +26,7 @@ Key Control
 * Space                 Pause
 * Left/Right            Seek                    midipos          0
 * Up/Down               Volumn                  voli             100%(14)       0%-200%(1-16)
-* +/-                   Speed                   spd              100%           0%-1600%
+* +/-                   Speed                   spd1             100%           0%-1600%
 * [/]                   Chord                   kchord0
 * ;/'                   Pitch                   kkey0            127            0-255
 
@@ -43,7 +43,7 @@ Key Control
 
 **Display**
 * D                     Draw All Notes
-* A                     Draw All Notes Auto     autorefresh      1              0=Off,1=On
+* A                     Draw All Notes Auto     autofresh        1              0=Manual,1=Auto
 * ,/.                   Set Note Length         mult             100%           0%-1000%
 * C                     Set Note Color          kbdcb            0              0=Chord,1=Track(Black Key),2=Track
 * T                     Set Note Text           kchb             0              0=Number,1=Letter,2=Blank
@@ -60,6 +60,7 @@ Key Control
 
 **Others**
 * F1                    Help                    helpb            0              0=On,1=Off
+* F10                   Menu                    menub
 * R                     Reset All Setting
 * V                     Record Video            vname/vrate/vquality
 
@@ -136,7 +137,7 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 * 空格                  暂停
 * 左/右                 定位                    midipos          0
 * 上/下                 音量                    voli             100%(14)       0%-200%(1-16)
-* +/-                   速度                    spd              100%           0%-1600%
+* +/-                   速度                    spd1             100%           0%-1600%
 * [/]                   和弦                    kchord0
 * ;/'                   音调                    kkey0            127            0-255
 
@@ -153,7 +154,7 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 
 **显示**
 * D                     画出所有音符
-* A                     自动画出所有音符        autorefresh      1              0=关,1=开
+* A                     自动画出所有音符        autofresh        1              0=关,1=开
 * ,/.                   设置音符长度            mult             100%           0%-1000%
 * C                     设置音符颜色            kbdcb            0              0=Chord,1=Track(Black Key),2=Track
 * T                     设置注释文本            kchb             0              0=数字,1=字母,2=空白
@@ -170,6 +171,7 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 
 **其他**
 * F1                    帮助                    helpb            0              0=开,1=关
+* F10                   菜单                    menub
 * R                     重置所有设置
 * V                     录制视频                vname/vrate/vquality 
 
