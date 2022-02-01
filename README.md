@@ -53,9 +53,9 @@ Key Control
 
 **Optimization**
 * F2                    Switch Memory or File   fbi              0              0-1
-* F3/F4                 Set Short Event Buffer  msgbufn0         128            1-16777216
-* F5/F6                 Set Min Event Volume    msgvol0          2              0-127
-* F7/F8                 Set Max Key Buffer      maxkbdc          64             1-65536
+* F3/F4                 Set Short Event Buffer  msgbufn0         7(128)         0-24(1-16777216)
+* F5/F6                 Set Min Event Volume    msgvol0          3              0-127
+* F7/F8                 Set Max Key Buffer      maxkbdc          6(64)          0-16(1-65536)
 * F11/F12               Set Max Frame Rate      framerate        120            5-480
 
 **Others**
@@ -164,9 +164,9 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 
 **优化**
 * F2                    切换内存或文件          fbi              0              0-1
-* F3/F4                 设置短事件缓冲区        msgbufn0         128            1-16777216
-* F5/F6                 设置最小事件音量        msgvol0          2              0-127
-* F7/F8                 设置最大琴键缓冲区      maxkbdc          64             1-65536
+* F3/F4                 设置短事件缓冲区        msgbufn0         7(128)         0-24(1-16777216)
+* F5/F6                 设置最小事件音量        msgvol0          3              0-127
+* F7/F8                 设置最大琴键缓冲区      maxkbdc          6(64)          0-16(1-65536)
 * F11/F12               设置最大帧率帧率        framerate        120            5-480
 
 **其他**

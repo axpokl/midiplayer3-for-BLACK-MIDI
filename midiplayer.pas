@@ -105,6 +105,7 @@ var chord:byte=7;
 var tempo0:longword;
 var tempo00:longword;
 var drawr:double;
+var sdevice:ansistring;
 
 type tnotemap=packed record note:byte;note0,note1:double;notec:longword;chord:byte;end;
 var notemap:packed array of tnotemap;
@@ -469,6 +470,7 @@ var pausetime:double;
 {$ifdef video}var videotime:double;{$endif}
 {$ifdef video}var videob:boolean=false;{$endif}
 var spd0:double=1;
+var spd2:double=0;
 
 const volamax=16;
 const vola:packed array[1..volamax]of double=
@@ -1673,7 +1675,8 @@ if deviceb=2 then begin devicetime:=GetTimeR();deviceb:=1;end;
 if deviceb=1 then
   begin
   midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
-  devs:=caps.szPname+'('+i2s(midiOuti+1)+'/'+i2s(midiOutGetNumDevs)+')'+'['+i2s(msgbufn0)+'/'+i2s(msgvol0)+'/'+i2s(maxkbdc)+'/'+i2s(caps.wNotes)+']';
+  sdevice:=caps.szPname;
+  devs:=sdevice+'('+i2s(midiOuti+1)+'/'+i2s(midiOutGetNumDevs)+')'+'['+i2s(msgbufn0)+'/'+i2s(msgvol0)+'/'+i2s(maxkbdc)+'/'+i2s(caps.wNotes)+']';
   _DrawTextXY0(devs,GetWidth()-fw*length(devs),0,white);
   if GetTimeR()>=devicetime+3 then deviceb:=0;
   end;
@@ -1698,8 +1701,8 @@ var ctrlb:boolean=false;
 var menub:boolean=false;
 var menui:real;
 const menuh:real=0.03;
-const menug:real=0.015;
-const menuy:real=0.05;
+const menug:real=0.01;
+const menuy:real=0.06;
 
 procedure DrawTextPercent(x1,x2,y1,y2:double;s:ansistring;c:longword);
 begin DrawTextXY(s,round(((x1+x2)*GetWidth()-GetStringWidth(s))/2),round(((y1+y2)*GetHeight()-GetStringHeight(s))/2),c);end;
@@ -1716,8 +1719,8 @@ begin Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(
 procedure DrawBarPercent(x1,x2,y1,y2:double;c:longword);
 begin Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(x1*GetWidth()),round(y2*GetHeight())-round(y1*GetHeight()),c);end;
 
-procedure DrawCirclePrecent(x,y,r:double;cf,cg:longword);
-begin Circle(round(x*GetWidth()),round(y*GetHeight()),round(r*GetWidth()),cf,cg);end;
+procedure DrawCirclePercent(x,y,r:double;cf,cg:longword);
+begin Circle(round(x*GetWidth()),round(y*GetHeight()),round(r*GetHeight()),cg,cf);end;
 
 procedure DrawCtrl();
 begin
@@ -1732,16 +1735,33 @@ menui:=menui+menuh;
 menui:=menui+menug;
 end;
 
-procedure DrawMenuBar(s:ansistring;v,m:longword;n:ansistring);
+procedure DrawMenuBar(s:ansistring;v:double;m:longword;n:ansistring);
+var vi:longword;
+var menuw,menur,menuwb:real;
 begin
 DrawTextPercent(0.2,menui+menuh/2,s,white);
-//DrawBarPercent(0.3,menui,0.4,menui+menuh,gray1);
+menur:=menuh/2;
+menuw:=menuh/GetWidth()*GetHeight();
+menuwb:=menuw*1.5;
+if m>0 then begin
+  if m<=50 then for vi:=0 to m do
+    DrawCirclePercent(0.3+menuwb+menuw/2+(0.75-0.3-menuw-menuwb*2)/m*vi,menui+menur,menur/3*2,gray0,gray1);
+  DrawCirclePercent(0.3+menuwb+menuw/2+(0.75-0.3-menuw-menuwb*2)/m*v,menui+menur,menur/3*2,gray2,gray1);
+  end
+else
+  DrawTextPercent(0.3+menuwb,0.75-menuwb,menui,menui+menuh,sdevice,white);
+DrawBarPercent(0.3,0.3+menuwb,menui,menui+menuh,gray1,gray0);
+DrawBarPercent(0.75-menuwb,0.75,menui,menui+menuh,gray1,gray0);
+DrawTextPercent(0.3,0.3+menuwb,menui,menui+menuh,'-',white);
+DrawTextPercent(0.75-menuwb,0.75,menui,menui+menuh,'+',white);
+DrawTextPercent(0.75,0.8,menui+menuh/2,n,white);
 menui:=menui+menuh;
 end;
 
 procedure DrawMenuBtn(s:ansistring;v,m:longword;n1,n2,n3,n4,n5:ansistring);
 begin
 DrawTextPercent(0.2,menui+menuh/2,s,white);
+//DrawBarPercent(0.3,0.8,menui,menui+menuh,gray0,gray1);
 DrawBarPercent(0.3+v*0.1,0.4+v*0.1,menui,menui+menuh,gray1,gray0);
 DrawTextPercent(0.3,0.4,menui+menuh/2,n1,white);
 DrawTextPercent(0.4,0.5,menui+menuh/2,n2,white);
@@ -1757,8 +1777,7 @@ DrawTextPercent(0.2,0.8,menui,menui+menuh,s,white);
 menui:=menui+menuh;
 end;
 
-function log2i(v:longword):longword;
-begin if v=0 then log2i:=0 else log2i:=round(ln(v)/ln(2))+1;end;
+function log2(v:double):double;begin if v=0 then log2:=0;if v>0 then log2:=ln(v)/ln(2)+1;if v<0 then log2:=-ln(-v)/ln(2)-1;end;
 
 procedure DrawMenu();
 begin
@@ -1769,17 +1788,18 @@ SetFontSize(fw,fh);
 SetFont();
 DrawBarPercent(0.2,0.8,menuy,menuy+menuh*26+menug*5*2,gray0);
 DrawMenuTitle('Play');
-DrawMenuBar('Volumn',voli,16,i2s(longword(round(vola[voli]*100)))+'%');
-DrawMenuBar('Speed',spd1,1601,i2s(spd1)+'%');
-DrawMenuBar('Chord',kchord0,12,i2s(kchord0));
-DrawMenuBar('Pitch',kkey0,256,i2s(kkey0-127));
+DrawMenuBar('Volumn',voli-1,15,i2s(longword(round(vola[voli]*100)))+'%');
+if spd1>100 then spd2:=log2(spd1/100)+4 else spd2:=spd1/20;
+DrawMenuBar('Speed',spd2,9,i2s(spd1)+'%');
+DrawMenuBar('Chord',kchord0,11,i2s(kchord0));
+DrawMenuBar('Pitch',log2(kkey0-127)+8,16,i2s(longint(kkey0-127)));
 DrawMenuTitle('Device');
-DrawMenuBar('Synthesizer',midiouti,midiOutGetNumDevs,i2s(midiouti)+'/'+i2s(midiOutGetNumDevs));
+DrawMenuBar('Synthesizer',0,0,i2s(midiouti+1)+'/'+i2s(midiOutGetNumDevs));
 DrawMenuBtn('MIDI Event',longword(not(msgbufb1)),2,'Stream','Long','','','');
 DrawMenuBtn('Combine Notes',longword(not(msgbufb0)),2,'No','Yes','','','');
 DrawMenuTitle('Display');
 DrawMenuBtn('Draw Notes',1-autofresh,2,'Auto','Manual','','','');
-DrawMenuBar('Note Length',mult,1001,i2s(mult)+'%');
+DrawMenuBar('Note Length',mult/100,10,i2s(mult)+'%');
 DrawMenuBtn('Note Color',kbdcb,3,'Chord','Track Black','Track','','');
 DrawMenuBtn('Note Text',kchb,3,'Number','Letter','Blank','','');
 DrawMenuBtn('Info Text',kchb2,5,'All','No Track','No Message','Key','None');
@@ -1787,10 +1807,10 @@ DrawMenuBtn('Messur Line',kmessure,5,'Minor','All','Major','Chord','None');
 DrawMenuBtn('Loop Mode',(loop+2)mod 3,3,'Single','All','None','','');
 DrawMenuTitle('Options');
 DrawMenuBtn('Storage',fbi,2,'Memory','File','','','');
-DrawMenuBar('Short Event',log2i(msgbufn0)-1,24,i2s(msgbufn0));
-DrawMenuBar('Min Volume',log2i(msgvol0),9,i2s(msgvol0));
-DrawMenuBar('Max Key',log2i(maxkbdc)-1,16,i2s(maxkbdc));
-DrawMenuBar('Frame Rate',framerate-5,476,i2s(framerate));
+DrawMenuBar('Short Event',log2(msgbufn0)-1,24,i2s(round(log2(msgbufn0))-1));
+DrawMenuBar('Min Volume',log2(msgvol0+1)-1,7,i2s(msgvol0));
+DrawMenuBar('Max Key',log2(maxkbdc)-1,16,i2s(round(log2(maxkbdc))-1));
+DrawMenuBar('Frame Rate',framerate/60,8,i2s(framerate));
 DrawMenuTitle('Others');
 DrawMenuLine('Reset All Settings');
 DrawMenuLine('Record Video');
@@ -2056,7 +2076,7 @@ if iskey() then
   if iskey(K_F6) then begin msgvol0:=min($7F,msgvol0+1);deviceb:=2;end;
   if iskey(K_F7) then begin maxkbdc:=max(1,maxkbdc shr 1);InitKbdC();deviceb:=2;end;
   if iskey(K_F8) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();deviceb:=2;end;
-  if iskey(K_F11) then framerate:=max(5,framerate-((framerate-1) div 60+1));
+  if iskey(K_F11) then framerate:=max(1,framerate-((framerate-1) div 60+1));
   if iskey(K_F12) then framerate:=min(480,framerate+(framerate div 60+1));
   if iskey(K_F1) then newthread(@helpproc);
   if iskey(K_F9) then menub:=not(menub);
