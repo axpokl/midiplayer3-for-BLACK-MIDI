@@ -1698,6 +1698,9 @@ if drawr>0 then
   end;
 end;
 
+var menuw_,menuh_:longword;
+var menuwh_:double;
+
 var moused:boolean;
 var moused1:boolean;
 var mousex,mousey:double;
@@ -1712,25 +1715,37 @@ var menui:real;
 const menuh:real=0.03;
 const menug:real=0.01;
 const menuy:real=0.06;
+const menul0:real=0.2;
+const menul1:real=0.3;
+const menur1:real=0.75;
+const menur0:real=0.8;
+const menum:real=0.1;
+const menum0:real=0.5;
+const menum1:real=0.525;
+
 
 var vi:longint;
 var menuw,menur,menuwb:real;
 const menut:array[1..7]of ansistring=('?','|<','<','.','>','>|','*');
 
 procedure DrawTextPercent(x1,x2,y1,y2:double;s:ansistring;c:longword);
-begin DrawTextXY(s,round(((x1+x2)*GetWidth()-length(s)*fw)/2),round(((y1+y2)*GetHeight()-fh)/2),c);end;
+begin DrawTextXY(s,round(((x1+x2)*menuw_-length(s)*fw)/2),round(((y1+y2)*menuh_-fh)/2),c);end;
 
 procedure DrawTextPercent(x1,x2,y:double;s:ansistring;c:longword);
-begin DrawTextXY(s,round(((x1+x2)*GetWidth()-length(s)*fw)/2),round(y*GetHeight()-fh/2),c);end;
+begin DrawTextXY(s,round(((x1+x2)*menuw_-length(s)*fw)/2),round(y*menuh_-fh/2),c);end;
 
 procedure DrawTextPercent(x,y:double;s:ansistring;c:longword);
-begin DrawTextXY(s,round(x*GetWidth()),round(y*GetHeight()-fh/2),c);end;
+begin DrawTextXY(s,round(x*menuw_),round(y*menuh_-fh/2),c);end;
 
-procedure DrawBarPercent(x1,x2,y1,y2:double;cf,cg:longword);
+procedure DrawBarPercent(x1,x2,y1,y2:double;cf,cg:longword;p:shortint);
 begin
 if (x1<=mousex) and (mousex<=x2) and (y1<=mousey) and (mousey<=y2) then
   begin
-  mousepx0:=round(x1*1000);
+  case p of
+    1:mousepx0:=round(x1*1000);
+    2:mousepx0:=round((x1+x2)/2*1000);
+    3:mousepx0:=round(x2*1000);
+    end;
   mousepy0:=round(y1*1000);
   cg:=gray2;
   moused:=(moused1) and (mousepx1=mousepx0) and (mousepy1=mousepy0);
@@ -1739,81 +1754,81 @@ if (x1<=mousex) and (mousex<=x2) and (y1<=mousey) and (mousey<=y2) then
     if (cf<>transparent) then cf:=gray2;
     end;
   end;
-Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(x1*GetWidth()),round(y2*GetHeight())-round(y1*GetHeight()),cg,cf);
+Bar(round(x1*menuw_),round(y1*menuh_),round(x2*menuw_)-round(x1*menuw_),round(y2*menuh_)-round(y1*menuh_),cg,cf);
 end;
 
 procedure DrawBarPercent(x1,x2,y1,y2:double;c:longword);
-begin Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(x1*GetWidth()),round(y2*GetHeight())-round(y1*GetHeight()),c);end;
+begin Bar(round(x1*menuw_),round(y1*menuh_),round(x2*menuw_)-round(x1*menuw_),round(y2*menuh_)-round(y1*menuh_),c);end;
 
 procedure DrawCirclePercent(x,y,r:double;cf,cg:longword);
 begin
-if (x-r/GetWidth()*GetHeight()<=mousex) and (mousex<=x+r/GetWidth()*GetHeight()) and (y-r<=mousey) and (mousey<=y+r) then 
+if (x-r/menuwh_<=mousex) and (mousex<=x+r/menuwh_) and (y-r<=mousey) and (mousey<=y+r) then
   begin
   cg:=gray2;
   if moused then cf:=gray2;
-  Bar(round(x*GetWidth()-r*GetHeight()),round(y*GetHeight()-r*GetHeight()),round(r*2*GetHeight()),round(r*2*GetHeight()),cg,gray0);
+  Bar(round(x*menuw_-r*menuh_),round(y*menuh_-r*menuh_),round(r*2*menuh_),round(r*2*menuh_),cg,gray0);
   end;
-Circle(round(x*GetWidth()),round(y*GetHeight()),round(r/3*2*GetHeight()),cg,cf);
+Circle(round(x*menuw_),round(y*menuh_),round(r/3*2*menuh_),cg,cf);
 end;
 
 procedure DrawMenuTitle(s:ansistring);
 begin
 menui:=menui+menug;
-DrawBarPercent(0.2,0.8,menui-menug,menui+menuh+menug,gray1);
-DrawTextPercent(0.2,0.8,menui,menui+menuh,s,white);
+DrawBarPercent(menul0,menur0,menui-menug,menui+menuh+menug,gray1);
+DrawTextPercent(menul0,menur0,menui,menui+menuh,s,white);
 menui:=menui+menuh;
 menui:=menui+menug;
 end;
 
 procedure DrawMenuBar(s:ansistring;v:double;m:longword;n:ansistring);
 begin
-DrawTextPercent(0.2,menui+menuh/2,s,white);
+DrawTextPercent(menul0,menui+menuh/2,s,white);
 menur:=menuh/2;
-menuw:=menuh/GetWidth()*GetHeight();
+menuw:=menuh/menuwh_;
 menuwb:=menuw*1.5;
-DrawBarPercent(0.3+menuwb,0.75-menuwb,menui,menui+menuh,transparent,graym);
+DrawBarPercent(menul1+menuwb,menur1-menuwb,menui,menui+menuh,transparent,graym,2);
 if m>0 then begin
   if m<=50 then for vi:=0 to m do
-    DrawCirclePercent(0.3+menuwb+menuw/2+(0.75-0.3-menuw-menuwb*2)/m*vi,menui+menur,menur,gray0,gray1);
-  DrawCirclePercent(0.3+menuwb+menuw/2+(0.75-0.3-menuw-menuwb*2)/m*v,menui+menur,menur,gray1,gray1);
+    DrawCirclePercent(menul1+menuwb+menuw/2+(menur1-menul1-menuw-menuwb*2)/m*vi,menui+menur,menur,gray0,gray1);
+  DrawCirclePercent(menul1+menuwb+menuw/2+(menur1-menul1-menuw-menuwb*2)/m*v,menui+menur,menur,gray1,gray1);
   end
 else
   begin
-  DrawBarPercent(0.3+menuwb,0.75-menuwb,menui,menui+menuh,gray0,graym);
-  DrawTextPercent(0.3+menuwb,0.75-menuwb,menui,menui+menuh,sdevice,white);
+  DrawBarPercent(menul1+menuwb,menur1-menuwb,menui,menui+menuh,gray0,graym,2);
+  DrawTextPercent(menul1+menuwb,menur1-menuwb,menui,menui+menuh,sdevice,white);
   end;
-DrawBarPercent(0.3,0.3+menuwb,menui,menui+menuh,gray1,graym);
-DrawBarPercent(0.75-menuwb,0.75,menui,menui+menuh,gray1,graym);
-DrawTextPercent(0.3,0.3+menuwb,menui,menui+menuh,'-',white);
-DrawTextPercent(0.75-menuwb,0.75,menui,menui+menuh,'+',white);
-DrawTextPercent(0.75,0.8,menui+menuh/2,n,white);
+DrawBarPercent(menul1,menul1+menuwb,menui,menui+menuh,gray1,graym,1);
+DrawBarPercent(menur1-menuwb,menur1,menui,menui+menuh,gray1,graym,3);
+DrawTextPercent(menul1,menul1+menuwb,menui,menui+menuh,'-',white);
+DrawTextPercent(menur1-menuwb,menur1,menui,menui+menuh,'+',white);
+DrawTextPercent(menur1,menur0,menui+menuh/2,n,white);
 menui:=menui+menuh;
 end;
 
 procedure DrawMenuBtn(s:ansistring;v,m:longword;n1,n2,n3,n4,n5:ansistring);
 begin
-DrawTextPercent(0.2,menui+menuh/2,s,white);
-DrawBarPercent(0.3+v*0.1,0.4+v*0.1,menui,menui+menuh,gray1,graym);
-for vi:=1 to m-1 do
-  DrawBarPercent(0.3+vi*0.1,0.4+vi*0.1,menui,menui+menuh,gray0,graym);
-if m>=1 then DrawTextPercent(0.3,0.4,menui+menuh/2,n1,white);
-if m>=2 then DrawTextPercent(0.4,0.5,menui+menuh/2,n2,white);
-if m>=3 then DrawTextPercent(0.5,0.6,menui+menuh/2,n3,white);
-if m>=4 then DrawTextPercent(0.6,0.7,menui+menuh/2,n4,white);
-if m>=5 then DrawTextPercent(0.7,0.8,menui+menuh/2,n5,white);
+DrawTextPercent(menul0,menui+menuh/2,s,white);
+for vi:=0 to m-1 do
+  DrawBarPercent(menul1+vi*menum,menul1+(vi+1)*menum,menui,menui+menuh,gray0,graym,1);
+DrawBarPercent(menul1+v*menum,menul1+(v+1)*menum,menui,menui+menuh,gray1,graym,1);
+if m>=1 then DrawTextPercent(menul1+menum*0,menul1+menum*1,menui+menuh/2,n1,white);
+if m>=2 then DrawTextPercent(menul1+menum*1,menul1+menum*2,menui+menuh/2,n2,white);
+if m>=3 then DrawTextPercent(menul1+menum*2,menul1+menum*3,menui+menuh/2,n3,white);
+if m>=4 then DrawTextPercent(menul1+menum*3,menul1+menum*4,menui+menuh/2,n4,white);
+if m>=5 then DrawTextPercent(menul1+menum*4,menul1+menum*5,menui+menuh/2,n5,white);
 menui:=menui+menuh;
 end;
 
 procedure DrawMenuLine(x1,x2,y1,y2:double;s:ansistring);
 begin
-DrawBarPercent(x1,x2,y1,y2,gray0,graym);
+DrawBarPercent(x1,x2,y1,y2,gray0,graym,1);
 DrawTextPercent(x1,x2,y1,y2,s,white);
 end;
 
 procedure SetMenuFont();
 begin
 menui:=menuy;
-fh:=max(1,round(menuh*GetHeight()*klen1*1.5));
+fh:=max(1,round(menuh*menuh_*klen1*1.5));
 fw:=max(1,round(fh/2.2));
 SetFontSize(fw,fh);
 SetFont();
@@ -1822,7 +1837,7 @@ end;
 procedure SetCtrlFont();
 begin
 menui:=menuy;
-fh:=max(1,round(menuh*GetHeight()*klen1*3));
+fh:=max(1,round(menuh*menuh_*klen1*3));
 fw:=max(1,round(fh/2.2));
 SetFontSize(fw,fh);
 SetFont();
@@ -1833,7 +1848,7 @@ function log2(v:double):double;begin if v=0 then log2:=0;if v>0 then log2:=ln(v)
 procedure DrawMenu();
 begin
 SetMenuFont();
-DrawBarPercent(0.2,0.8,menuy,menuy+menuh*26+menug*5*2,gray0);
+DrawBarPercent(menul0,menur0,menuy,menuy+menuh*26+menug*5*2,gray0);
 DrawMenuTitle('Play');
 DrawMenuBar('Volumn',voli-1,15,i2s(longword(round(vola[voli]*100)))+'%');
 if spd1>100 then spd2:=log2(spd1/100)+4 else spd2:=spd1/20;
@@ -1859,8 +1874,8 @@ DrawMenuBar('Min Volume',log2(msgvol0+1)-1,7,i2s(msgvol0));
 DrawMenuBar('Max Key',log2(maxkbdc)-1,16,i2s(round(log2(maxkbdc))-1));
 DrawMenuBar('Frame Rate',framerate/60,8,i2s(framerate));
 DrawMenuTitle('Others');
-DrawMenuLine(0.2,0.5,menui,menui+menuh*2,'Record Video');
-DrawMenuLine(0.5,0.8,menui,menui+menuh*2,'Reset All Settings');
+DrawMenuLine(menul0,menum0,menui,menui+menuh*2,'Record Video');
+DrawMenuLine(menum0,menur0,menui,menui+menuh*2,'Reset All Settings');
 SetDrawFont();
 end;
 
@@ -1868,15 +1883,21 @@ procedure DrawCtrl();
 begin
 SetCtrlFont();
 for vi:=1 to 7 do
-  DrawMenuLine(0.2+(vi-1)*0.6/7,0.2+vi*0.6/7,1-menuy,1,menut[vi]);
+  DrawMenuLine(menul0+(vi-1)*(menur0-menul0)/7,menul0+vi*(menur0-menul0)/7,1-menuy,1,menut[vi]);
 SetDrawFont();
 end;
 
 procedure DrawMenuAll();
 begin
-if (GetMousePosX/GetWidth<>mousex) and (GetMousePosY/GetHeight()<>mousey) then
-  begin ctrlb:=true;ctrlt:=GetTimeR();end;
-mousex:=GetMousePosX/GetWidth();mousey:=GetMousePosY/GetHeight();
+if GetWidth()>0 then menuw_:=GetWidth();
+if GetHeight()>0 then menuh_:=GetHeight();
+if (menuw_>0) and (menuh_>0) then
+  begin
+  menuwh_:=menuw_/menuh_;
+  if (GetMousePosX/menuw_<>mousex) and (GetMousePosY/menuh_<>mousey) then
+    begin ctrlb:=true;ctrlt:=GetTimeR();end;
+  mousex:=GetMousePosX/menuw_;mousey:=GetMousePosY/menuh_;
+  end;
 if GetTimeR()>ctrlt+0.5 then ctrlb:=false;
 if mousey>=1-menuy then ctrlb:=true;
 mousepx0:=0;mousepy0:=0;
@@ -1998,11 +2019,11 @@ SetMidiTime(-1);
 SetMidiTime(tmptime);
 end;
 
-procedure ResetMidiHard(i:longword;b:boolean);
+procedure ResetMidiHard(i:longint;b:boolean);
 var n:longword;
 begin
 n:=midiOutGetNumDevs();
-if n>0 then midiOuti:=i mod n else midiOuti:=0;
+if n>0 then midiOuti:=(i+n) mod n else midiOuti:=0;
 if midiOut>0 then
   if msgbufb1=true then
     midiOutClose(midiOut)
@@ -2124,7 +2145,7 @@ if iskey() then
   if iskey(K_F) then PlayMidi(get_file(find_current));
   if iskey(K_H) then ResetMidiHard(midiOuti);
   if iskey(K_S) and not(k_shift) and not(k_ctrl) then ResetMidiHard(midiOuti+1);
-  if iskey(K_S) and not(k_shift) and (k_ctrl) then begin msgbufb1:=not(msgbufb1);ResetMidiHard(midiOuti,msgbufb1);end;
+  if iskey(K_S) and not(k_shift) and (k_ctrl) then begin ResetMidiHard(midiOuti,true);end;
   if iskey(K_S) and (k_shift) and not(k_ctrl) then begin msgbufb0:=not(msgbufb0);end;
   if iskey(K_D) then bnoteb:=true;
   if iskey(K_A) then autofresh:=1-autofresh;
@@ -2152,8 +2173,93 @@ if iskey() then
   if iskey(K_ESC) then CloseWin();
   end;
 if not((mousepx1=mousepx) and (mousepy1=mousepy)) then moused1:=false;
-if IsMsg(WM_LBUTTONDOWN) then begin mousepx1:=mousepx;mousepy1:=mousepy;if (mousepx>0) or (mousepy>0) then moused1:=true;end;
-if IsMsg(WM_LBUTTONUP) then begin moused1:=false;mousepx1:=0;mousepy1:=0;end;
+if IsMsg(WM_LBUTTONDOWN) then
+  begin
+  mousepx1:=mousepx;
+  mousepy1:=mousepy;
+  if (mousepx>0) or (mousepy>0) then moused1:=true;
+  end;
+if IsMsg(WM_LBUTTONUP) then
+  begin
+  if moused1 then
+    begin
+    k_shift:=GetKeyState(VK_SHIFT)<0;
+    k_ctrl:=GetKeyState(VK_CONTROL)<0;
+    if (mousepx1=0) and (mousepy1=0) then ;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then SetMidiVol(max(1,voli-1));
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then SetMidiVol(min(volamax,voli+1));
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then ;
+    k_pos:=0.1;if k_ctrl then k_pos:=0.03;if k_shift then k_pos:=0.01;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*2)*1000)) then begin spd1:=max(0,round((spd0-k_pos)*100));firsttime:=firsttime+GetTimeR()*(spd1/100-spd0);spd0:=spd1/100;end;
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*2)*1000)) then begin spd1:=min(1600,round((spd0+k_pos)*100));firsttime:=firsttime+GetTimeR()*(spd1/100-spd0);spd0:=spd1/100;end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*2)*1000)) then ;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*3)*1000)) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*3)*1000)) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*3)*1000)) then ;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*4)*1000)) then begin kkey0:=max(0,(kkey0-1));kchord0:=(kchord0+5) mod 12;initb:=false;ResetMidiKeyVol();end;
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*4)*1000)) then begin kkey0:=min(255,(kkey0+1));kchord0:=(kchord0+7) mod 12;initb:=false;ResetMidiKeyVol();end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*4)*1000)) then ;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then ResetMidiHard(midiOuti-1);
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then ResetMidiHard(midiOuti+1);
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then ResetMidiHard(midiOuti);
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*7)*1000)) then begin if msgbufb1=false then ResetMidiHard(midiOuti,true);end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*7)*1000)) then begin if msgbufb1=true then ResetMidiHard(midiOuti,true);end;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*8)*1000)) then begin msgbufb0:=true;end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*8)*1000)) then begin msgbufb0:=false;end;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*10)*1000)) then autofresh:=1;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*10)*1000)) then autofresh:=0;
+    k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*11)*1000)) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*11)*1000)) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*11)*1000)) then ;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*12)*1000)) then begin kbdcb:=0;initb:=false;end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*12)*1000)) then begin kbdcb:=1;initb:=false;end;
+    if (mousepx1=round((menul1+menum*2)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*12)*1000)) then begin kbdcb:=2;initb:=false;end;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*13)*1000)) then begin kchb:=0;initb:=false;end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*13)*1000)) then begin kchb:=1;initb:=false;end;
+    if (mousepx1=round((menul1+menum*2)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*13)*1000)) then begin kchb:=2;initb:=false;end;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*14)*1000)) then begin kchb2:=0;end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*14)*1000)) then begin kchb2:=1;end;
+    if (mousepx1=round((menul1+menum*2)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*14)*1000)) then begin kchb2:=2;end;
+    if (mousepx1=round((menul1+menum*3)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*14)*1000)) then begin kchb2:=3;end;
+    if (mousepx1=round((menul1+menum*4)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*14)*1000)) then begin kchb2:=4;end;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*15)*1000)) then begin kmessure:=0;initb:=false;end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*15)*1000)) then begin kmessure:=1;initb:=false;end;
+    if (mousepx1=round((menul1+menum*2)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*15)*1000)) then begin kmessure:=2;initb:=false;end;
+    if (mousepx1=round((menul1+menum*3)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*15)*1000)) then begin kmessure:=3;initb:=false;end;
+    if (mousepx1=round((menul1+menum*4)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*15)*1000)) then begin kmessure:=4;initb:=false;end;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*16)*1000)) then loop:=1;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*16)*1000)) then loop:=2;
+    if (mousepx1=round((menul1+menum*2)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*16)*1000)) then loop:=0;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*18)*1000)) then begin fbi:=0;end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*18)*1000)) then begin fbi:=1;end;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*19)*1000)) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*19)*1000)) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*19)*1000)) then ;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*20)*1000)) then begin msgvol0:=max(0,msgvol0-1);deviceb:=2;end;
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*20)*1000)) then begin msgvol0:=min($7F,msgvol0+1);deviceb:=2;end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*20)*1000)) then ;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*21)*1000)) then begin maxkbdc:=max(1,maxkbdc shr 1);InitKbdC();deviceb:=2;end;
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*21)*1000)) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();deviceb:=2;end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*21)*1000)) then ;
+    if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*22)*1000)) then framerate:=max(1,framerate-((framerate-1) div 60+1));
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*22)*1000)) then framerate:=min(480,framerate+(framerate div 60+1));
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*22)*1000)) then ;
+    if (mousepx1=round(menul0*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*24)*1000)) then {$ifdef video}begin bnoteb:=true;videob:=true;end{$endif};
+    if (mousepx1=round(menum0*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*24)*1000)) then begin ResetReg();ResetNoteMap();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
+    if (mousepx1=round((menul0*7+menur0*0)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then newthread(@helpproc);
+    if (mousepx1=round((menul0*6+menur0*1)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then PlayMidi(get_file(1));
+    if (mousepx1=round((menul0*5+menur0*2)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then PlayMidi(get_file(find_current-1));
+    if (mousepx1=round((menul0*4+menur0*3)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then PlayMidi(get_file(find_current));
+    if (mousepx1=round((menul0*3+menur0*4)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then PlayMidi(get_file(find_current+1));
+    if (mousepx1=round((menul0*2+menur0*5)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then PlayMidi(get_file(find_count));
+    if (mousepx1=round((menul0*1+menur0*6)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then menub:=not(menub);
+    end;
+  moused1:=false;
+  mousepx1:=0;
+  mousepy1:=0;
+  end;
+if not(menub) then
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
   begin
   if ismouseleft() or (ismousemove() and (_ms.wparam=1)) and (max(0,finaltime-1)>0) then
@@ -2163,7 +2269,7 @@ if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
     while IsNextMsg() do ;
     end;
   end
-else
+else if not((GetMousePosX()>=menul0*GetWidth()) and (GetMousePosX()<=menur0*GetWidth()) and (GetMousePosY()>=(1-menuy)*GetHeight())) then
   begin
   if IsMsg(WM_LBUTTONDOWN) then
     begin
@@ -2181,7 +2287,7 @@ else
     midiOutShortMsg(midiOut,$000080 or kbdn shl 8);
   end;
 if ismouseright() then
-  PauseMidi();
+  if menub then menub:=not(menub) else PauseMidi();
 if IsMouseWheel() then
   begin
   if longint(_ms.wParam)>0 then SetMidiVol(min(volamax,voli+1));
