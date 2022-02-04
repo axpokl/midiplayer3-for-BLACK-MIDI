@@ -59,10 +59,10 @@ Key Control
 * F11/F12               Set Max Frame Rate      framerate        120            5-480
 
 **Others**
-* F1                    Help                    helpb            0              0=On,1=Off
-* F10                   Menu                    menub
 * R                     Reset All Setting
 * V                     Record Video            vname/vrate/vquality
+* F1                    Help                    helpb            0              0=On,1=Off
+* F9                    Menu                    menub
 
 Start with Configuration
 -------------
@@ -170,10 +170,10 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 * F11/F12               设置最大帧率帧率        framerate        120            5-480
 
 **其他**
-* F1                    帮助                    helpb            0              0=开,1=关
-* F10                   菜单                    menub
 * R                     重置所有设置
 * V                     录制视频                vname/vrate/vquality 
+* F1                    帮助                    helpb            0              0=开,1=关
+* F9                    菜单                    menub
 
 使用配置启动
 -------------

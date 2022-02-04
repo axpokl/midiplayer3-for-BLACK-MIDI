@@ -1699,7 +1699,11 @@ if drawr>0 then
 end;
 
 var moused:boolean;
+var moused1:boolean;
 var mousex,mousey:double;
+var mousepx,mousepy:longword;
+var mousepx0,mousepy0:longword;
+var mousepx1,mousepy1:longword;
 
 var ctrlt:double;
 var ctrlb:boolean=false;
@@ -1723,17 +1727,34 @@ procedure DrawTextPercent(x,y:double;s:ansistring;c:longword);
 begin DrawTextXY(s,round(x*GetWidth()),round(y*GetHeight()-fh/2),c);end;
 
 procedure DrawBarPercent(x1,x2,y1,y2:double;cf,cg:longword);
-begin if (x1<=mousex) and (mousex<=x2) and (y1<=mousey) and (mousey<=y2) then begin cg:=gray2;if moused and (cf<>transparent) then cf:=gray2;end;
-Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(x1*GetWidth()),round(y2*GetHeight())-round(y1*GetHeight()),cg,cf);end;
+begin
+if (x1<=mousex) and (mousex<=x2) and (y1<=mousey) and (mousey<=y2) then
+  begin
+  mousepx0:=round(x1*1000);
+  mousepy0:=round(y1*1000);
+  cg:=gray2;
+  moused:=(moused1) and (mousepx1=mousepx0) and (mousepy1=mousepy0);
+  if moused then
+    begin
+    if (cf<>transparent) then cf:=gray2;
+    end;
+  end;
+Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(x1*GetWidth()),round(y2*GetHeight())-round(y1*GetHeight()),cg,cf);
+end;
 
 procedure DrawBarPercent(x1,x2,y1,y2:double;c:longword);
 begin Bar(round(x1*GetWidth()),round(y1*GetHeight()),round(x2*GetWidth())-round(x1*GetWidth()),round(y2*GetHeight())-round(y1*GetHeight()),c);end;
 
 procedure DrawCirclePercent(x,y,r:double;cf,cg:longword);
-begin if (x-r/GetWidth()*GetHeight()<=mousex) and (mousex<=x+r/GetWidth()*GetHeight()) and (y-r<=mousey) and (mousey<=y+r) then 
-begin cg:=gray2;if moused then cf:=gray2;
-Bar(round(x*GetWidth()-r*GetHeight()),round(y*GetHeight()-r*GetHeight()),round(r*2*GetHeight()),round(r*2*GetHeight()),cg,gray0);end;
-Circle(round(x*GetWidth()),round(y*GetHeight()),round(r/3*2*GetHeight()),cg,cf);end;
+begin
+if (x-r/GetWidth()*GetHeight()<=mousex) and (mousex<=x+r/GetWidth()*GetHeight()) and (y-r<=mousey) and (mousey<=y+r) then 
+  begin
+  cg:=gray2;
+  if moused then cf:=gray2;
+  Bar(round(x*GetWidth()-r*GetHeight()),round(y*GetHeight()-r*GetHeight()),round(r*2*GetHeight()),round(r*2*GetHeight()),cg,gray0);
+  end;
+Circle(round(x*GetWidth()),round(y*GetHeight()),round(r/3*2*GetHeight()),cg,cf);
+end;
 
 procedure DrawMenuTitle(s:ansistring);
 begin
@@ -1783,16 +1804,25 @@ if m>=5 then DrawTextPercent(0.7,0.8,menui+menuh/2,n5,white);
 menui:=menui+menuh;
 end;
 
-procedure DrawMenuLine(x1,x2:double;s:ansistring);
+procedure DrawMenuLine(x1,x2,y1,y2:double;s:ansistring);
 begin
-DrawBarPercent(x1,x2,menui,menui+menuh*2,gray0,graym);
-DrawTextPercent(x1,x2,menui,menui+menuh*2,s,white);
+DrawBarPercent(x1,x2,y1,y2,gray0,graym);
+DrawTextPercent(x1,x2,y1,y2,s,white);
 end;
 
 procedure SetMenuFont();
 begin
 menui:=menuy;
 fh:=max(1,round(menuh*GetHeight()*klen1*1.5));
+fw:=max(1,round(fh/2.2));
+SetFontSize(fw,fh);
+SetFont();
+end;
+
+procedure SetCtrlFont();
+begin
+menui:=menuy;
+fh:=max(1,round(menuh*GetHeight()*klen1*3));
 fw:=max(1,round(fh/2.2));
 SetFontSize(fw,fh);
 SetFont();
@@ -1829,37 +1859,30 @@ DrawMenuBar('Min Volume',log2(msgvol0+1)-1,7,i2s(msgvol0));
 DrawMenuBar('Max Key',log2(maxkbdc)-1,16,i2s(round(log2(maxkbdc))-1));
 DrawMenuBar('Frame Rate',framerate/60,8,i2s(framerate));
 DrawMenuTitle('Others');
-DrawMenuLine(0.2,0.5,'Record Video');
-DrawMenuLine(0.5,0.8,'Reset All Settings');
+DrawMenuLine(0.2,0.5,menui,menui+menuh*2,'Record Video');
+DrawMenuLine(0.5,0.8,menui,menui+menuh*2,'Reset All Settings');
 SetDrawFont();
-end;
-
-procedure SetCtrlFont();
-begin
-menui:=menuy;
-fh:=max(1,round(menuh*GetHeight()*klen1*3));
-fw:=max(1,round(fh/2.2));
-SetFontSize(fw,fh);
-SetFont();
 end;
 
 procedure DrawCtrl();
 begin
 SetCtrlFont();
 for vi:=1 to 7 do
-  DrawBarPercent(0.2+(vi-1)*0.6/7,0.2+vi*0.6/7,1-menuy,1,gray0,graym);
-for vi:=1 to 7 do
-  DrawTextPercent(0.2+(vi-1)*0.6/7,0.2+vi*0.6/7,1-menuy,1,menut[vi],white);
+  DrawMenuLine(0.2+(vi-1)*0.6/7,0.2+vi*0.6/7,1-menuy,1,menut[vi]);
 SetDrawFont();
 end;
 
-procedure GetMenuTime();
+procedure DrawMenuAll();
 begin
 if (GetMousePosX/GetWidth<>mousex) and (GetMousePosY/GetHeight()<>mousey) then
   begin ctrlb:=true;ctrlt:=GetTimeR();end;
-if GetTimeR()>ctrlt+1 then ctrlb:=false;
 mousex:=GetMousePosX/GetWidth();mousey:=GetMousePosY/GetHeight();
+if GetTimeR()>ctrlt+0.5 then ctrlb:=false;
 if mousey>=1-menuy then ctrlb:=true;
+mousepx0:=0;mousepy0:=0;
+if menub then DrawMenu();
+if ctrlb or menub then DrawCtrl();
+mousepx:=mousepx0;mousepy:=mousepy0;
 end;
 
 procedure DrawAll();
@@ -1867,7 +1890,6 @@ begin
 SetDrawFont();
 Clear();
 GetDrawTime();
-GetMenuTime();
 DrawNoteLine();
 DrawBNoteAll0();
 DrawBNoteAll();
@@ -1881,8 +1903,7 @@ if kchb2<=3 then DrawNoteN();
 if kchb2<=2 then DrawLongMsg();
 if kchb2<=1 then {$ifdef video}if not(videob)then{$endif}DrawFPS();
 {$ifdef video}if not(videob)then{$endif}DrawDevice();
-if menub then DrawMenu();
-if ctrlb or menub then DrawCtrl();
+DrawMenuAll();
 DrawReal();
 FreshWin();
 end;
@@ -2130,8 +2151,9 @@ if iskey() then
   {$ifdef video}if iskey(K_V) then begin bnoteb:=true;videob:=true;end;{$endif}
   if iskey(K_ESC) then CloseWin();
   end;
-if IsMsg(WM_LBUTTONDOWN) then moused:=true;
-if IsMsg(WM_LBUTTONUP) then moused:=false;
+if not((mousepx1=mousepx) and (mousepy1=mousepy)) then moused1:=false;
+if IsMsg(WM_LBUTTONDOWN) then begin mousepx1:=mousepx;mousepy1:=mousepy;if (mousepx>0) or (mousepy>0) then moused1:=true;end;
+if IsMsg(WM_LBUTTONUP) then begin moused1:=false;mousepx1:=0;mousepy1:=0;end;
 if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
   begin
   if ismouseleft() or (ismousemove() and (_ms.wparam=1)) and (max(0,finaltime-1)>0) then
