@@ -28,7 +28,7 @@ Key Control
 * Up/Down               Volumn                  voli             100%(14)       0%-200%(1-16)
 * +/-                   Speed                   spd1             100%           0%-1600%
 * [/]                   Chord                   kchord0
-* ;/'                   Pitch                   kkey0            127            0-255
+* ;/'                   Pitch                   kkey0            128            0-256
 
 **File**
 * PgUp/PgDn             Prev/Next
@@ -56,7 +56,7 @@ Key Control
 * F3/F4                 Set Short Event Buffer  msgbufn0         7(128)         0-24(1-16777216)
 * F5/F6                 Set Min Event Volume    msgvol0          3              0-127
 * F7/F8                 Set Max Key Buffer      maxkbdc          6(64)          0-16(1-65536)
-* F11/F12               Set Max Frame Rate      framerate        120            5-480
+* F11/F12               Set Max Frame Rate      framerate        120            1-480
 
 **Others**
 * R                     Reset All Setting
@@ -139,7 +139,7 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 * 上/下                 音量                    voli             100%(14)       0%-200%(1-16)
 * +/-                   速度                    spd1             100%           0%-1600%
 * [/]                   和弦                    kchord0
-* ;/'                   音调                    kkey0            127            0-255
+* ;/'                   音调                    kkey0            128            0-256
 
 **文件**
 * PgUp/PgDn             上一个/下一个
@@ -167,7 +167,7 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 * F3/F4                 设置短事件缓冲区        msgbufn0         7(128)         0-24(1-16777216)
 * F5/F6                 设置最小事件音量        msgvol0          3              0-127
 * F7/F8                 设置最大琴键缓冲区      maxkbdc          6(64)          0-16(1-65536)
-* F11/F12               设置最大帧率帧率        framerate        120            5-480
+* F11/F12               设置最大帧率帧率        framerate        120            1-480
 
 **其他**
 * R                     重置所有设置

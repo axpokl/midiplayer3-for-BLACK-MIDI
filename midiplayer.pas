@@ -470,7 +470,7 @@ var pausetime:double;
 {$ifdef video}var videotime:double;{$endif}
 {$ifdef video}var videob:boolean=false;{$endif}
 var spd0:double=1;
-var spd2:double=0;
+var spdx:double=5;
 
 const volamax=16;
 const vola:packed array[1..volamax]of double=
@@ -1077,7 +1077,7 @@ function IsKeynoteBlack(k:byte):byte;
 begin IsKeynoteBlack:=keyblack[k mod 12];end;
 
 function GetKeykey(k:byte):byte;var key:longint;
-begin key:=k+kkey0-127;while key<0 do key:=key+12;while key>$7F do key:=key-12;GetKeykey:=key;end;
+begin key:=k+kkey0-128;while key<0 do key:=key+12;while key>$7F do key:=key-12;GetKeykey:=key;end;
 
 function GetKeynote(k:byte):double;
 begin GetKeynote:=7*(k div 12)+kbd[k mod 12];end;
@@ -1707,6 +1707,7 @@ var mousex,mousey:double;
 var mousepx,mousepy:longword;
 var mousepx0,mousepy0:longword;
 var mousepx1,mousepy1:longword;
+var mousexc,mousexcp:double;
 
 var ctrlt:double;
 var ctrlb:boolean=false;
@@ -1720,7 +1721,9 @@ const menul1:real=0.3;
 const menur1:real=0.75;
 const menur0:real=0.8;
 const menum:real=0.1;
+{$ifdef video}
 const menum0:real=0.5;
+{$endif}
 const menum1:real=0.525;
 
 
@@ -1750,9 +1753,7 @@ if (x1<=mousex) and (mousex<=x2) and (y1<=mousey) and (mousey<=y2) then
   cg:=gray2;
   moused:=(moused1) and (mousepx1=mousepx0) and (mousepy1=mousepy0);
   if moused then
-    begin
     if (cf<>transparent) then cf:=gray2;
-    end;
   end;
 Bar(round(x1*menuw_),round(y1*menuh_),round(x2*menuw_)-round(x1*menuw_),round(y2*menuh_)-round(y1*menuh_),cg,cf);
 end;
@@ -1764,9 +1765,12 @@ procedure DrawCirclePercent(x,y,r:double;cf,cg:longword);
 begin
 if (x-r/menuwh_<=mousex) and (mousex<=x+r/menuwh_) and (y-r<=mousey) and (mousey<=y+r) then
   begin
-  cg:=gray2;
-  if moused then cf:=gray2;
-  Bar(round(x*menuw_-r*menuh_),round(y*menuh_-r*menuh_),round(r*2*menuh_),round(r*2*menuh_),cg,gray0);
+  if (cf=transparent) then
+    begin
+    cg:=gray2;
+    if moused then cf:=gray2;
+    //Bar(round(x*menuw_-r*menuh_),round(y*menuh_-r*menuh_),round(r*2*menuh_),round(r*2*menuh_),cg,gray0);
+    end;
   end;
 Circle(round(x*menuw_),round(y*menuh_),round(r/3*2*menuh_),cg,cf);
 end;
@@ -1791,6 +1795,8 @@ if m>0 then begin
   if m<=50 then for vi:=0 to m do
     DrawCirclePercent(menul1+menuwb+menuw/2+(menur1-menul1-menuw-menuwb*2)/m*vi,menui+menur,menur,gray0,gray1);
   DrawCirclePercent(menul1+menuwb+menuw/2+(menur1-menul1-menuw-menuwb*2)/m*v,menui+menur,menur,gray1,gray1);
+  if (menui<=mousey) and (mousey<=menui+menur*2) then
+    DrawCirclePercent(mousexc,menui+menur,menur,transparent,gray1);
   end
 else
   begin
@@ -1844,6 +1850,9 @@ SetFont();
 end;
 
 function log2(v:double):double;begin if v=0 then log2:=0;if v>0 then log2:=ln(v)/ln(2)+1;if v<0 then log2:=-ln(-v)/ln(2)-1;end;
+function exp2r(v:double):double;begin if v=0 then exp2r:=0;if v>0 then exp2r:=exp((v-1)*ln(2));if v<0 then exp2r:=-exp((-v-1)*ln(2));end;
+function exp2(v:double):longword;begin exp2:=round(exp2r(v));end;
+function sgn(v:double):longint;begin if v>=0 then sgn:=1 else sgn:=0;end;
 
 procedure DrawMenu();
 begin
@@ -1851,10 +1860,9 @@ SetMenuFont();
 DrawBarPercent(menul0,menur0,menuy,menuy+menuh*26+menug*5*2,gray0);
 DrawMenuTitle('Play');
 DrawMenuBar('Volumn',voli-1,15,i2s(longword(round(vola[voli]*100)))+'%');
-if spd1>100 then spd2:=log2(spd1/100)+4 else spd2:=spd1/20;
-DrawMenuBar('Speed',spd2,9,i2s(spd1)+'%');
+DrawMenuBar('Speed',sgn(spd1-100)*(log2(spd1/100)+4)+sgn(99.99-spd1)*(spd1/20),9,i2s(spd1)+'%');
 DrawMenuBar('Chord',kchord0,11,i2s(kchord0));
-DrawMenuBar('Pitch',log2(kkey0-127)+8,16,i2s(longint(kkey0-127)));
+DrawMenuBar('Pitch',log2(kkey0-128)+8,16,i2s(longint(kkey0-128)));
 DrawMenuTitle('Device');
 DrawMenuBar('Synthesizer',0,0,i2s(midiouti+1)+'/'+i2s(midiOutGetNumDevs));
 DrawMenuBtn('MIDI Event',longword(not(msgbufb1)),2,'Stream','Long','','','');
@@ -1874,8 +1882,12 @@ DrawMenuBar('Min Volume',log2(msgvol0+1)-1,7,i2s(msgvol0));
 DrawMenuBar('Max Key',log2(maxkbdc)-1,16,i2s(round(log2(maxkbdc))-1));
 DrawMenuBar('Frame Rate',framerate/60,8,i2s(framerate));
 DrawMenuTitle('Others');
+{$ifdef video}
 DrawMenuLine(menul0,menum0,menui,menui+menuh*2,'Record Video');
 DrawMenuLine(menum0,menur0,menui,menui+menuh*2,'Reset All Settings');
+{$else}
+DrawMenuLine(menul0,menur0,menui,menui+menuh*2,'Reset All Settings');
+{$endif}
 SetDrawFont();
 end;
 
@@ -1897,6 +1909,8 @@ if (menuw_>0) and (menuh_>0) then
   if (GetMousePosX/menuw_<>mousex) and (GetMousePosY/menuh_<>mousey) then
     begin ctrlb:=true;ctrlt:=GetTimeR();end;
   mousex:=GetMousePosX/menuw_;mousey:=GetMousePosY/menuh_;
+  mousexc:=min(max(mousex,menul1+menuwb+menuw/2),menur1-menuwb-menuw/2);
+  mousexcp:=(mousexc-(menul1+menuwb+menuw/2))/((menur1-menuwb-menuw/2)-(menul1+menuwb+menuw/2));
   end;
 if GetTimeR()>ctrlt+0.5 then ctrlb:=false;
 if mousey>=1-menuy then ctrlb:=true;
@@ -2081,7 +2095,7 @@ if IsFileW(fname) then
     begin
     spd1:=100;
     kchord0:=0;
-    kkey0:=127;
+    kkey0:=128;
     end;
   spd0:=spd1/100;
   startb:=false;
@@ -2091,6 +2105,17 @@ if IsFileW(fname) then
   SaveReg();
   while IsNextMsg() do ;
   end;
+end;
+
+procedure ResetAll();
+begin
+ResetReg();
+ResetNoteMap();
+SetMidiVol(volamax-2);
+ResetMidiHard(midiOuti);
+SaveReg();
+initb:=false;
+PlayMidi(fnames);
 end;
 
 var fdir:unicodestring;
@@ -2136,7 +2161,7 @@ if iskey() then
   if iskey(K_ADD) or iskey(K_SUB) or iskey(187) or iskey(189) then begin firsttime:=firsttime+GetTimeR()*(spd1/100-spd0);spd0:=spd1/100;end;
   if iskey(221) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
   if iskey(219) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
-  if iskey(222) then begin kkey0:=min(255,(kkey0+1));kchord0:=(kchord0+7) mod 12;initb:=false;ResetMidiKeyVol();end;
+  if iskey(222) then begin kkey0:=min(256,(kkey0+1));kchord0:=(kchord0+7) mod 12;initb:=false;ResetMidiKeyVol();end;
   if iskey(186) then begin kkey0:=max(0,(kkey0-1));kchord0:=(kchord0+5) mod 12;initb:=false;ResetMidiKeyVol();end;
   if iskey(K_PGUP) then PlayMidi(get_file(find_current-1));
   if iskey(K_PGDN) then PlayMidi(get_file(find_current+1));
@@ -2168,7 +2193,7 @@ if iskey() then
   if iskey(K_F12) then framerate:=min(480,framerate+(framerate div 60+1));
   if iskey(K_F1) then newthread(@helpproc);
   if iskey(K_F9) then menub:=not(menub);
-  if iskey(K_R) then begin ResetReg();ResetNoteMap();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
+  if iskey(K_R) then ResetAll();
   {$ifdef video}if iskey(K_V) then begin bnoteb:=true;videob:=true;end;{$endif}
   if iskey(K_ESC) then CloseWin();
   end;
@@ -2188,17 +2213,17 @@ if IsMsg(WM_LBUTTONUP) then
     if (mousepx1=0) and (mousepy1=0) then ;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then SetMidiVol(max(1,voli-1));
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then SetMidiVol(min(volamax,voli+1));
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then ;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then SetMidiVol(round(mousexcp*15)+1);
     k_pos:=0.1;if k_ctrl then k_pos:=0.03;if k_shift then k_pos:=0.01;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*2)*1000)) then begin spd1:=max(0,round((spd0-k_pos)*100));firsttime:=firsttime+GetTimeR()*(spd1/100-spd0);spd0:=spd1/100;end;
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*2)*1000)) then begin spd1:=min(1600,round((spd0+k_pos)*100));firsttime:=firsttime+GetTimeR()*(spd1/100-spd0);spd0:=spd1/100;end;
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*2)*1000)) then ;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*2)*1000)) then begin spdx:=mousexcp*9;spd1:=round(sgn(spdx-5)*exp2r(spdx-4)*100+sgn(4.999-spdx)*(spdx*20));firsttime:=firsttime+GetTimeR()*(spd1/100-spd0);spd0:=spd1/100;end;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*3)*1000)) then begin kchord0:=(kchord0+11) mod 12;initb:=false;end;
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*3)*1000)) then begin kchord0:=(kchord0+1) mod 12;initb:=false;end;
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*3)*1000)) then ;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*3)*1000)) then begin kchord0:=round(mousexcp*11);initb:=false;end;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*4)*1000)) then begin kkey0:=max(0,(kkey0-1));kchord0:=(kchord0+5) mod 12;initb:=false;ResetMidiKeyVol();end;
-    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*4)*1000)) then begin kkey0:=min(255,(kkey0+1));kchord0:=(kchord0+7) mod 12;initb:=false;ResetMidiKeyVol();end;
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*4)*1000)) then ;
+    if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*4)*1000)) then begin kkey0:=min(256,(kkey0+1));kchord0:=(kchord0+7) mod 12;initb:=false;ResetMidiKeyVol();end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*4)*1000)) then begin kkey0:=exp2(mousexcp*16-8)+128;initb:=false;ResetMidiKeyVol();end;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then ResetMidiHard(midiOuti-1);
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then ResetMidiHard(midiOuti+1);
     if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then ResetMidiHard(midiOuti);
@@ -2211,7 +2236,7 @@ if IsMsg(WM_LBUTTONUP) then
     k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*11)*1000)) then begin EnterCriticalSection(cs4);mult:=max(0,mult-round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*11)*1000)) then begin EnterCriticalSection(cs4);mult:=min(1000,mult+round(k_pos));initb:=false;LeaveCriticalSection(cs4);end;
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*11)*1000)) then ;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*11)*1000)) then begin EnterCriticalSection(cs4);mult:=round(mousexcp*1000);initb:=false;LeaveCriticalSection(cs4);end;
     if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*12)*1000)) then begin kbdcb:=0;initb:=false;end;
     if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*12)*1000)) then begin kbdcb:=1;initb:=false;end;
     if (mousepx1=round((menul1+menum*2)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*12)*1000)) then begin kbdcb:=2;initb:=false;end;
@@ -2235,18 +2260,22 @@ if IsMsg(WM_LBUTTONUP) then
     if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*18)*1000)) then begin fbi:=1;end;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*19)*1000)) then begin msgbufn0:=max(1,msgbufn0 shr 1);deviceb:=2;end;
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*19)*1000)) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);deviceb:=2;end;
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*19)*1000)) then ;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*19)*1000)) then begin msgbufn0:=exp2(round(mousexcp*24)+1);deviceb:=2;end;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*20)*1000)) then begin msgvol0:=max(0,msgvol0-1);deviceb:=2;end;
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*20)*1000)) then begin msgvol0:=min($7F,msgvol0+1);deviceb:=2;end;
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*20)*1000)) then ;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*20)*1000)) then begin msgvol0:=exp2(mousexcp*7+1)-1;deviceb:=2;end;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*21)*1000)) then begin maxkbdc:=max(1,maxkbdc shr 1);InitKbdC();deviceb:=2;end;
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*21)*1000)) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();deviceb:=2;end;
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*21)*1000)) then ;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*21)*1000)) then begin maxkbdc:=exp2(round(mousexcp*16)+1);InitKbdC();deviceb:=2;end;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*22)*1000)) then framerate:=max(1,framerate-((framerate-1) div 60+1));
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*22)*1000)) then framerate:=min(480,framerate+(framerate div 60+1));
-    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*22)*1000)) then ;
-    if (mousepx1=round(menul0*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*24)*1000)) then {$ifdef video}begin bnoteb:=true;videob:=true;end{$endif};
-    if (mousepx1=round(menum0*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*24)*1000)) then begin ResetReg();ResetNoteMap();SetMidiVol(volamax-2);ResetMidiHard(midiOuti);SaveReg();initb:=false;PlayMidi(fnames);end;
+    if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*4*2+menuh*22)*1000)) then framerate:=round(mousexcp*479)+1;
+    {$ifdef video}
+    if (mousepx1=round(menul0*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*24)*1000)) then begin bnoteb:=true;videob:=true;end;
+    if (mousepx1=round(menum0*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*24)*1000)) then ResetAll();
+    {$else}
+    if (mousepx1=round(menul0*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*24)*1000)) then ResetAll();
+    {$endif};
     if (mousepx1=round((menul0*7+menur0*0)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then newthread(@helpproc);
     if (mousepx1=round((menul0*6+menur0*1)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then PlayMidi(get_file(1));
     if (mousepx1=round((menul0*5+menur0*2)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then PlayMidi(get_file(find_current-1));
