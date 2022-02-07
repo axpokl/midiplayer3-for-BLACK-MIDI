@@ -78,8 +78,6 @@ var chord0,chord1:shortint;
 var chordtmp:shortint=-1;
 var sig0,sig1:byte;
 
-const loops:packed array[0..2]of char=('N','S','A');
-
 var cs1:TRTLCriticalSection;
 var cs2:TRTLCriticalSection;
 var cs3:TRTLCriticalSection;
@@ -1991,23 +1989,23 @@ end;
 
 procedure DrawTitle();
 var stitle0,stitle1:ansistring;
+var miditime,curtime:double;
 begin
 stitle0:='';
 stitle1:='';
-if (max(0,finaltime-1)>0) then
+miditime:=max(0,finaltime-1);
+curtime:=max(0,min(miditime,GetMidiTime()));
+if (miditime>0) then
   begin
-  stitle0:='('+i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)';
-  stitle1:='<'+i2s(find_current)+'/'+i2s(find_count)+'/'+loops[loop]+'>';
+  stitle0:='('+i2s(trunc(curtime/miditime*100))+'%)';
+  stitle1:='<'+i2s(find_current)+'/'+i2s(find_count)+':'+loop_s[(loop+2)mod 3]+'>';
   stitle1:=stitle1+'['+GetKeyChordS(chord)+']';
   end;
-if voli>0 then if round(vola[voli]*100)<>100 then
-  stitle1:=stitle1+'('+i2s(longword(round(vola[voli]*100)))+'%)';
-if spd0>0 then if round(spd0*100)<>100 then
-  stitle1:=stitle1+'['+i2s(longword(round(spd0*100)))+'%]';
-if mult>0 then if mult<>100 then
-  stitle1:=stitle1+'<'+i2s(mult)+'%>';
-if drawr>0 then
-  stitle0:='['+i2s(trunc(drawr*100))+'%]'+stitle0;
+if voli<>14 then stitle1:=stitle1+'(volumn:'+i2s(longword(round(vola[voli]*100)))+'%)';
+if spd1<>100 then stitle1:=stitle1+'[speed:'+i2s(spd1)+'%]';
+if kkey0<>128 then stitle1:=stitle1+'<pitch:'+i2s(longint(kkey0-128))+'>';
+if mult<>100 then stitle1:=stitle1+'<note:'+i2s(mult)+'%>';
+if drawr>0 then stitle0:='<load:'+i2s(trunc(drawr*100))+'%>'+stitle0;
 SetTitleW(UnicodeString(stitle0)+GetFileNameW(fnames)+UnicodeString(stitle1));
 end;
 
