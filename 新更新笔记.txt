@@ -1,4 +1,3 @@
-Menu
 Key hint
 title
 fps bnotebb
