@@ -38,8 +38,8 @@ Key Control
 **Device**
 * H                     Reset MIDI Device
 * S                     Switch MIDI Device      midiouti         0
-* Ctrl + S              Switch Long Msg/Stream  msgbufb1
-* Shift + S             Combine Same Notes      msgbufb0
+* Ctrl + S              Switch Long Msg/Stream  msgbufb1         1              0=Stream,1=Long
+* Shift + S             Combine Same Notes      msgbufb0         1              0=No,1=Yes
 
 **Display**
 * D                     Draw All Notes
@@ -47,7 +47,7 @@ Key Control
 * ,/.                   Set Note Length         mult             100%           0%-1000%
 * C                     Set Note Color          kbdcb            0              0=Chord,1=Track(Black Key),2=Track
 * T                     Set Note Text           kchb             0              0=Number,1=Letter,2=Blank
-* I                     Set Information Text    kchb2            0              0=All,1=No Track,2=No Msg,3=Key,4=None
+* I                     Set Information Text    kchb2            0              0=All,1=No Track,2=No Msg,3=Note,4=None
 * L                     Set Messure/Chord Line  kmessure         0              0=Minor,1=All,2=Major,3=Chord,4=None
 * M                     Set Loop Mode           loop             1              0=None,1=Single,2=All
 
@@ -148,19 +148,19 @@ ax_pokl 特制 Free Pascal 黑乐谱MIDI播放器 midiplayer3
 
 **设备**
 * H                     重置 MIDI 设备
-* S                     切换 MIDI 设备          midiouti        0
-* Ctrl + S              切换长消息/流           msgbufb1
-* Shift + S             合并相同的注释          msgbufb0
+* S                     切换 MIDI 设备          midiouti         0
+* Ctrl + S              切换长消息/流           msgbufb1         1              0=流,1=长消息
+* Shift + S             合并相同的注释          msgbufb0         1              0=否,1=是
 
 **显示**
 * D                     画出所有音符
 * A                     自动画出所有音符        autofresh        1              0=关,1=开
 * ,/.                   设置音符长度            mult             100%           0%-1000%
-* C                     设置音符颜色            kbdcb            0              0=Chord,1=Track(Black Key),2=Track
+* C                     设置音符颜色            kbdcb            0              0=和弦,1=音轨(黑键),2=音轨
 * T                     设置注释文本            kchb             0              0=数字,1=字母,2=空白
-* I                     设置信息文本            kchb2            0              0=All,1=No Track,2=No Msg,3=Key,4=None
-* L                     设置小结/调式线         kmessure         0              0=Minor,1=All,2=Major,3=Chord,4=None
-* M                     设置循环模式            loop             1              0=None,1=Single,2=All
+* I                     设置信息文本            kchb2            0              0=全部,1=无音轨,2=无消息,3=音符,4=无
+* L                     设置小结/调式线         kmessure         0              0=次要,1=全部,2=主要,3=和弦,4=无
+* M                     设置循环模式            loop             1              0=不循环,1=单曲循环,2=全部循环
 
 **优化**
 * F2                    切换内存或文件          fbi              0              0-1
