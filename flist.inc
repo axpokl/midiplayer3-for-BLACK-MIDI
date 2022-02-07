@@ -37,8 +37,9 @@ if find_current>find_count then
   end;
 end;
 
-function get_file(n:longword):unicodestring;
+function get_file(n:longint):unicodestring;
 begin
+if n<0 then n:=0;
 if n<1 then n:=n+find_count;
 if n>find_count then n:=n-find_count;
 find_current:=n;

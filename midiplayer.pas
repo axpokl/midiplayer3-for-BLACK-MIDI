@@ -487,8 +487,6 @@ var msgbuf1,msgbuf2,msgbuf3:byte;
 var msgbufn,msgbufnmax:longint;
 var msgbufi:shortint;
 var msgbufb:boolean;
-var msgbufb0:boolean=true;
-var msgbufb1:boolean=true;
 var msgchan:array[0..$F,0..$FF,0..1]of byte;
 var msgchan0:array[0..$F,0..$FF,0..1]of boolean;
 var msgchani,msgchanj,msgchank:byte;
@@ -521,7 +519,7 @@ end;
 
 procedure AddMsgBuf(buf1,buf2,buf3:byte);
 begin
-if msgbufb1=true then
+if msgbufb1=1 then
   AddMsgBufLong(buf1,buf2,buf3)
 else
   AddMsgBufStream(buf1,buf2,buf3);
@@ -1888,9 +1886,9 @@ SetFontSize(fw,fh);
 SetFont();
 end;
 
-function log2(v:double):double;begin if v=0 then log2:=0;if v>0 then log2:=ln(v)/ln(2)+1;if v<0 then log2:=-ln(-v)/ln(2)-1;end;
-function exp2r(v:double):double;begin if v=0 then exp2r:=0;if v>0 then exp2r:=exp((v-1)*ln(2));if v<0 then exp2r:=-exp((-v-1)*ln(2));end;
-function exp2(v:double):longword;begin exp2:=round(exp2r(v));end;
+function log2(v:double):double;begin log2:=v;if v>=1 then log2:=ln(v)/ln(2)+1;if v<=-1 then log2:=-ln(-v)/ln(2)-1;end;
+function exp2r(v:double):double;begin exp2r:=v;if v>=1 then exp2r:=exp((v-1)*ln(2));if v<=-1 then exp2r:=-exp((-v-1)*ln(2));end;
+function exp2(v:double):longint;begin exp2:=round(exp2r(v));end;
 function sgn(v:double):longint;begin if v>=0 then sgn:=1 else sgn:=0;end;
 
 procedure DrawMenu();
@@ -1904,8 +1902,8 @@ DrawMenuBar('Chord',kchord0,11,i2s(kchord0));
 DrawMenuBar('Pitch',log2(kkey0-128)+8,16,i2s(longint(kkey0-128)));
 DrawMenuTitle('Device');
 DrawMenuBar('Synthesizer',0,0,i2s(midiouti+1)+'/'+i2s(midiOutGetNumDevs));
-DrawMenuBtn('MIDI Event',longword(not(msgbufb1)),2,'Stream','Long','','','');
-DrawMenuBtn('Combine Notes',longword(not(msgbufb0)),2,'No','Yes','','','');
+DrawMenuBtn('MIDI Event',1-msgbufb1,2,'Stream','Long','','','');
+DrawMenuBtn('Combine Notes',1-msgbufb0,2,'No','Yes','','','');
 DrawMenuTitle('Display');
 DrawMenuBtn('Draw Notes',1-autofresh,2,'Auto','Manual','','','');
 DrawMenuBar('Note Length',mult/100,10,i2s(mult)+'%');
@@ -2072,22 +2070,22 @@ SetMidiTime(begintime);
 SetMidiTime(tmptime);
 end;
 
-procedure ResetMidiHard(i:longint;b:boolean);
+procedure ResetMidiHard(i:longint;b:longword);
 var n:longword;
 var caps:MIDIOUTCAPS;
 begin
 n:=midiOutGetNumDevs();
 if n>0 then midiOuti:=(i+n) mod n else midiOuti:=0;
 if midiOut>0 then
-  if msgbufb1=true then
+  if msgbufb1=1 then
     midiOutClose(midiOut)
   else
     midiStreamClose(midiOut);
 midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
 sdevice:=caps.szPname+'(Loading...)';
-//if b then msgbufb1:=not(msgbufb1);
+//if b then msgbufb1:=1-msgbufb1;
 msgbufb1:=b;
-if msgbufb1=true then
+if msgbufb1=1 then
   midiOutOpen(@midiOut,midiOuti,0,0,0)
 else
   midiStreamOpen(@midiOut,@midiOuti,DWORD(1),0,0,0);
@@ -2210,8 +2208,8 @@ if iskey() then
   if iskey(K_F) then begin PlayMidi(get_file(find_current));end;
   if iskey(K_H) then begin ResetMidiHard(midiOuti);end;
   if iskey(K_S) and not(k_shift) and not(k_ctrl) then begin ResetMidiHard(midiOuti+1);end;
-  if iskey(K_S) and not(k_shift) and (k_ctrl) then begin ResetMidiHard(midiOuti,not(msgbufb1));end;
-  if iskey(K_S) and (k_shift) and not(k_ctrl) then begin msgbufb0:=not(msgbufb0);end;
+  if iskey(K_S) and not(k_shift) and (k_ctrl) then begin ResetMidiHard(midiOuti,1-msgbufb1);end;
+  if iskey(K_S) and (k_shift) and not(k_ctrl) then begin msgbufb0:=1-msgbufb0;end;
   if iskey(K_D) then begin bnoteb:=true;end;
   if iskey(K_A) then begin autofresh:=1-autofresh;end;
   k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;
@@ -2269,10 +2267,10 @@ if IsMsg(WM_LBUTTONUP) then
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then begin ResetMidiHard(midiOuti-1);end;
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then begin ResetMidiHard(midiOuti+1);end;
     if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*6)*1000)) then begin ResetMidiHard(midiOuti);end;
-    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*7)*1000)) then begin ResetMidiHard(midiOuti,true);end;
-    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*7)*1000)) then begin ResetMidiHard(midiOuti,false);end;
-    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*8)*1000)) then begin msgbufb0:=true;end;
-    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*8)*1000)) then begin msgbufb0:=false;end;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*7)*1000)) then begin ResetMidiHard(midiOuti,1);end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*7)*1000)) then begin ResetMidiHard(midiOuti,0);end;
+    if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*8)*1000)) then begin msgbufb0:=1;end;
+    if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*2*2+menuh*8)*1000)) then begin msgbufb0:=0;end;
     if (mousepx1=round((menul1+menum*0)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*10)*1000)) then begin autofresh:=1;end;
     if (mousepx1=round((menul1+menum*1)*1000)) and (mousepy1=round((menuy+menug*3*2+menuh*10)*1000)) then begin autofresh:=0;end;
     k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;
@@ -2386,6 +2384,8 @@ case skey of
   'kchord0':kchord0:=ival;
   'kkey0':kkey0:=ival;
   'midiouti':midiouti:=ival;
+  'msgbufb0':msgbufb0:=ival;
+  'msgbufb1':msgbufb1:=ival;
   'autofresh':autofresh:=ival;
   'mult':mult:=ival;
   'kbdcb':kbdcb:=ival;
@@ -2638,7 +2638,7 @@ if eventi<eventn then
               msgbuf1:=(msgbuf0) and $FF;
               msgbuf2:=(msgbuf0 shr 8) and $FF;
               msgbuf3:=(msgbuf0 shr 16) and $FF;
-              if msgbufb0=true then
+              if msgbufb0=1 then
                 begin
                 msgbufb:=true;
                 if msgbuf1 and $F0=$90 then
@@ -2666,7 +2666,7 @@ if eventi<eventn then
     end;
   end;
 LeaveCriticalSection(csfevent0);
-if msgbufb1=true then
+if msgbufb1=1 then
   msgbufnmax:=msgbufn
 else
   msgbufnmax:=msgbufn div 12;
@@ -2682,7 +2682,7 @@ if msgbufn>0 then
     dwOffset:=0;
     end;
   midiOutPrepareHeader(midiOut,@msghdr,sizeof(msghdr));
-  if msgbufb1=true then
+  if msgbufb1=1 then
     midiOutLongMsg(midiOut,@msghdr,sizeof(msghdr))
   else
     begin
