@@ -106,7 +106,7 @@ var chord:byte=7;
 var tempo0:longword;
 var tempo00:longword;
 var drawr:double;
-var sdevice:ansistring;
+var smidiout:ansistring;
 
 type tnotemap=packed record note:byte;note0,note1:double;notec:longword;chord:byte;end;
 var notemap:packed array of tnotemap;
@@ -1019,8 +1019,6 @@ var frametime:double;
 var printtime:double;
 var scrtime:double;
 var delaytime:double=0;
-//var deviceb:shortint=0;
-//var devicetime:double=0;
 
 var k_shift,k_ctrl:boolean;
 var k_pos:double;
@@ -1375,11 +1373,14 @@ end;
 procedure _DrawTextXY(s:ansistring;x,y:longint;c:longword);
 begin DrawTextXY(s,x,GetHeight()-y-fh-2,c);end;
 
-procedure _DrawTextXY1(s:ansistring;x,y:longint;c:longword);
+procedure _DrawTextXY_Top(s:ansistring;x,y:longint;c:longword);
+begin DrawTextXY(s,x,y,c,gray0);end;
+
+procedure _DrawTextXY_Btm(s:ansistring;x,y:longint;c:longword);
 begin DrawTextXY(s,x,GetHeight()-round(GetKeynoteW0()*kleny0)-y-fh-2,c,gray0);end;
 
-procedure _DrawTextXY0(s:ansistring;x,y:longint;c:longword);
-begin DrawTextXY(s,x,y,c,gray0);end;
+procedure _DrawTextXY_Mid(s:ansistring;x,y:longint;c:longword);
+begin DrawTextXY(s,x,(GetHeight()-round(GetKeynoteW0()*kleny0)-fh-2)div 2,c,gray0);end;
 
 procedure DrawMessureLine(t:double;ms:longword;tempo:longword;c:longword);
 var w0,y:longint;
@@ -1645,7 +1646,7 @@ begin
 if max(0,finaltime-1)>0 then
   begin
   _Line(trunc(GetMidiTime()/max(0,finaltime-1)*GetWidth()),0,0,GetHeight(),white);
-  _DrawTextXY0(t2s(min(max(0,finaltime-1),GetMidiTime()))+'/'+t2s(max(0,finaltime-1))+'('
+  _DrawTextXY_Top(t2s(min(max(0,finaltime-1),GetMidiTime()))+'/'+t2s(max(0,finaltime-1))+'('
     +i2s(max(0,trunc(min(max(0,finaltime-1),GetMidiTime())*100/max(0,finaltime-1))))+'%)',0,0,white);
   end;
 end;
@@ -1668,7 +1669,7 @@ end;
 procedure DrawChord();
 begin
 if (max(0,finaltime-1)>0) then
-  _DrawTextXY1(GetKeyChordS(chord),0,0,white);
+  _DrawTextXY_Btm(GetKeyChordS(chord),0,0,white);
 end;
 
 procedure DrawBPM();
@@ -1680,7 +1681,7 @@ if(bpm>=0)then
   begin
   bmps:=r2s(bpm)+' BPM';
   if round(spd0*100)<>100 then bmps:=bmps+'('+i2s(round(spd0*100))+'%)';
-  _DrawTextXY1(bmps,GetWidth()-fw*length(bmps),0,white);
+  _DrawTextXY_Btm(bmps,GetWidth()-fw*length(bmps),0,white);
   end;
 end;
 
@@ -1691,7 +1692,7 @@ begin
 notemapi:=SeekMidiTimeFNote(printtime);
 notes:=i2s(notemapi)+'/'+i2s(notemapn);
 SetDrawFont(1.5);
-_DrawTextXY0(notes,(GetWidth()-fw*length(notes))div 2,0,white);
+_DrawTextXY_Top(notes,(GetWidth()-fw*length(notes))div 2,0,white);
 SetDrawFont();
 end;
 
@@ -1700,30 +1701,30 @@ var fpss:ansistring='';
 begin
 fpss:=i2s(GetFPS())+'/'+i2s(framerate);
 if abs(GetFPSR-framerate)>1 then
-  _DrawTextXY0(fpss,GetWidth()-fw*length(fpss),_fh,white);
+  _DrawTextXY_Top(fpss,GetWidth()-fw*length(fpss),_fh,white);
 end;
 
-{
-procedure DrawDevice();
-var caps:MIDIOUTCAPS;
-var devs:ansistring;
+var hinttime:double=-3;
+var hints:ansistring;
+
+procedure SetHint(s:ansistring;v:ansistring);
 begin
-if deviceb=2 then begin devicetime:=GetTimeR();deviceb:=1;end;
-if deviceb=1 then
+hinttime:=GetTimeR();
+hints:=s+': '+v;
+end;
+
+procedure DrawHint();
+begin
+if GetTimeR()<hinttime+1 then
   begin
-  midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
-  sdevice:=caps.szPname;
-  devs:=sdevice+'('+i2s(midiOuti+1)+'/'+i2s(midiOutGetNumDevs)+')'+'['+i2s(msgbufn0)+'/'+i2s(msgvol0)+'/'+i2s(maxkbdc)+'/'+i2s(caps.wNotes)+']';
-  _DrawTextXY0(devs,GetWidth()-fw*length(devs),0,white);
-  if GetTimeR()>=devicetime+3 then deviceb:=0;
+  _DrawTextXY_Mid(hints,(GetWidth()-fw*length(hints))div 2,0,white);
   end;
 end;
-}
 
 procedure DrawLongMsg();
 begin
-if kbdc0p>0 then _DrawTextXY0(i2s(kbdc0m0)+'/'+i2s(kbdc0p),GetWidth()-fw*length(i2s(kbdc0m0)+'/'+i2s(kbdc0p)),0,white);
-if msgbufnmax>0 then _DrawTextXY0(i2s(msgbufnmax),GetWidth()-fw*length(i2s(msgbufnmax)),_fh*2,white);
+if kbdc0p>0 then _DrawTextXY_Top(i2s(kbdc0m0)+'/'+i2s(kbdc0p),GetWidth()-fw*length(i2s(kbdc0m0)+'/'+i2s(kbdc0p)),0,white);
+if msgbufnmax>0 then _DrawTextXY_Top(i2s(msgbufnmax),GetWidth()-fw*length(i2s(msgbufnmax)),_fh*2,white);
 end;
 
 procedure DrawReal();
@@ -1838,7 +1839,7 @@ if m>0 then begin
 else
   begin
   DrawBarPercent(menul1+menuwb,menur1-menuwb,menui,menui+menuh,gray0,graym,2);
-  DrawTextPercent(menul1+menuwb,menur1-menuwb,menui,menui+menuh,sdevice,white);
+  DrawTextPercent(menul1+menuwb,menur1-menuwb,menui,menui+menuh,smidiout,white);
   end;
 DrawBarPercent(menul1,menul1+menuwb,menui,menui+menuh,gray1,graym,1);
 DrawBarPercent(menur1-menuwb,menur1,menui,menui+menuh,gray1,graym,3);
@@ -1848,17 +1849,15 @@ DrawTextPercent(menur1,menur0,menui+menuh/2,n,white);
 menui:=menui+menuh;
 end;
 
-procedure DrawMenuBtn(s:ansistring;v,m:longword;n1,n2,n3,n4,n5:ansistring);
+procedure DrawMenuBtn(s:ansistring;v,m:longword;n:array of ansistring);
+var ni:longword;
 begin
 DrawTextPercent(menul0,menui+menuh/2,s,white);
 for vi:=0 to m-1 do
   DrawBarPercent(menul1+vi*menum,menul1+(vi+1)*menum,menui,menui+menuh,gray0,graym,1);
 DrawBarPercent(menul1+v*menum,menul1+(v+1)*menum,menui,menui+menuh,gray1,graym,1);
-if m>=1 then DrawTextPercent(menul1+menum*0,menul1+menum*1,menui+menuh/2,n1,white);
-if m>=2 then DrawTextPercent(menul1+menum*1,menul1+menum*2,menui+menuh/2,n2,white);
-if m>=3 then DrawTextPercent(menul1+menum*2,menul1+menum*3,menui+menuh/2,n3,white);
-if m>=4 then DrawTextPercent(menul1+menum*3,menul1+menum*4,menui+menuh/2,n4,white);
-if m>=5 then DrawTextPercent(menul1+menum*4,menul1+menum*5,menui+menuh/2,n5,white);
+for ni:=0 to 4 do
+  if m>=ni+1 then DrawTextPercent(menul1+menum*ni,menul1+menum*(ni+1),menui+menuh/2,n[ni],white);
 menui:=menui+menuh;
 end;
 
@@ -1891,6 +1890,16 @@ function exp2r(v:double):double;begin exp2r:=v;if v>=1 then exp2r:=exp((v-1)*ln(
 function exp2(v:double):longint;begin exp2:=round(exp2r(v));end;
 function sgn(v:double):longint;begin if v>=0 then sgn:=1 else sgn:=0;end;
 
+const msgbufb1_s:array[0..4]of ansistring=('Stream','Long','','','');
+const msgbufb0_s:array[0..4]of ansistring=('No','Yes','','','');
+const autofresh_s:array[0..4]of ansistring=('Auto','Manual','','','');
+const kbdcb_s:array[0..4]of ansistring=('Chord','Track Black','Track','','');
+const kchb_s:array[0..4]of ansistring=('Number','Letter','Blank','','');
+const kchb2_s:array[0..4]of ansistring=('All','No Track','No Message','Key','None');
+const kmessure_s:array[0..4]of ansistring=('Minor','All','Major','Chord','None');
+const loop_s:array[0..4]of ansistring=('Single','All','None','','');
+const fbi_s:array[0..4]of ansistring=('Memory','File','','','');
+
 procedure DrawMenu();
 begin
 SetMenuFont();
@@ -1902,18 +1911,18 @@ DrawMenuBar('Chord',kchord0,11,i2s(kchord0));
 DrawMenuBar('Pitch',log2(kkey0-128)+8,16,i2s(longint(kkey0-128)));
 DrawMenuTitle('Device');
 DrawMenuBar('Synthesizer',0,0,i2s(midiouti+1)+'/'+i2s(midiOutGetNumDevs));
-DrawMenuBtn('MIDI Event',1-msgbufb1,2,'Stream','Long','','','');
-DrawMenuBtn('Combine Notes',1-msgbufb0,2,'No','Yes','','','');
+DrawMenuBtn('MIDI Event',1-msgbufb1,2,msgbufb1_s);
+DrawMenuBtn('Combine Notes',1-msgbufb0,2,msgbufb0_s);
 DrawMenuTitle('Display');
-DrawMenuBtn('Draw Notes',1-autofresh,2,'Auto','Manual','','','');
+DrawMenuBtn('Draw Notes',1-autofresh,2,autofresh_s);
 DrawMenuBar('Note Length',mult/100,10,i2s(mult)+'%');
-DrawMenuBtn('Note Color',kbdcb,3,'Chord','Track Black','Track','','');
-DrawMenuBtn('Note Text',kchb,3,'Number','Letter','Blank','','');
-DrawMenuBtn('Info Text',kchb2,5,'All','No Track','No Message','Key','None');
-DrawMenuBtn('Messur Line',kmessure,5,'Minor','All','Major','Chord','None');
-DrawMenuBtn('Loop Mode',(loop+2)mod 3,3,'Single','All','None','','');
+DrawMenuBtn('Note Color',kbdcb,3,kbdcb_s);
+DrawMenuBtn('Note Text',kchb,3,kchb_s);
+DrawMenuBtn('Info Text',kchb2,5,kchb2_s);
+DrawMenuBtn('Messur Line',kmessure,5,kmessure_s);
+DrawMenuBtn('Loop Mode',(loop+2)mod 3,3,loop_s);
 DrawMenuTitle('Options');
-DrawMenuBtn('Storage',fbi,2,'Memory','File','','','');
+DrawMenuBtn('Storage',fbi,2,fbi_s);
 DrawMenuBar('Short Event',log2(msgbufn0)-1,24,i2s(round(log2(msgbufn0))-1));
 DrawMenuBar('Min Volume',log2(msgvol0+1)-1,7,i2s(msgvol0));
 DrawMenuBar('Max Key',log2(maxkbdc)-1,16,i2s(round(log2(maxkbdc))-1));
@@ -1974,8 +1983,8 @@ if kchb2<=2 then DrawBPM();
 if kchb2<=3 then DrawNoteN();
 if kchb2<=2 then DrawLongMsg();
 if kchb2<=1 then {$ifdef video}if not(videob)then{$endif}DrawFPS();
-//{$ifdef video}if not(videob)then{$endif}DrawDevice();
-DrawMenuAll();
+{$ifdef video}if not(videob) then {$endif}DrawMenuAll();
+{$ifdef video}if not(videob) then {$endif}DrawHint();
 DrawReal();
 FreshWin();
 end;
@@ -2082,14 +2091,14 @@ if midiOut>0 then
   else
     midiStreamClose(midiOut);
 midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
-sdevice:=caps.szPname+'(Loading...)';
+smidiout:=caps.szPname+'(Loading...)';
 //if b then msgbufb1:=1-msgbufb1;
 msgbufb1:=b;
 if msgbufb1=1 then
   midiOutOpen(@midiOut,midiOuti,0,0,0)
 else
   midiStreamOpen(@midiOut,@midiOuti,DWORD(1),0,0,0);
-sdevice:=caps.szPname;
+smidiout:=caps.szPname;
 ResetMidiSoft();
 end;
 
@@ -2192,43 +2201,43 @@ if iskey() then
   k_pos:=1;if k_ctrl then k_pos:=5;if k_shift then k_pos:=30;
   if iskey(K_LEFT) then begin SetMidiTime(GetMidiTime()-k_pos);end;
   if iskey(K_RIGHT) then begin SetMidiTime(GetMidiTime()+k_pos);end;
-  if iskey(K_UP) then begin SetMidiVol(voli+1);end;
-  if iskey(K_DOWN) then begin SetMidiVol(voli-1);end;
+  if iskey(K_UP) then begin SetMidiVol(voli+1);SetHint('Volumn',i2s(longword(round(vola[voli]*100)))+'%');end;
+  if iskey(K_DOWN) then begin SetMidiVol(voli-1);SetHint('Volumn',i2s(longword(round(vola[voli]*100)))+'%');end;
   k_pos:=0.1;if k_ctrl then k_pos:=0.03;if k_shift then k_pos:=0.01;
-  if iskey(K_ADD) or iskey(187) then begin SetMidiSpd(round((spd0+k_pos)*100));end;
-  if iskey(K_SUB) or iskey(189) then begin SetMidiSpd(round((spd0-k_pos)*100));end;
-  if iskey(221) then begin SetMidiChord(kchord0+1);end;
-  if iskey(219) then begin SetMidiChord(kchord0+11);end;
-  if iskey(222) then begin SetMidiPitch(kkey0+1);end;
-  if iskey(186) then begin SetMidiPitch(kkey0-1);end;
+  if iskey(K_ADD) or iskey(187) then begin SetMidiSpd(round((spd0+k_pos)*100));SetHint('Speed',i2s(spd1)+'%');end;
+  if iskey(K_SUB) or iskey(189) then begin SetMidiSpd(round((spd0-k_pos)*100));SetHint('Speed',i2s(spd1)+'%');end;
+  if iskey(221) then begin SetMidiChord(kchord0+1);SetHint('Chord',i2s(kchord0));end;
+  if iskey(219) then begin SetMidiChord(kchord0+11);SetHint('Chord',i2s(kchord0));end;
+  if iskey(222) then begin SetMidiPitch(kkey0+1);SetHint('Pitch',i2s(longint(kkey0-128)));end;
+  if iskey(186) then begin SetMidiPitch(kkey0-1);SetHint('Pitch',i2s(longint(kkey0-128)));end;
   if iskey(K_PGUP) then begin PlayMidi(get_file(find_current-1));end;
   if iskey(K_PGDN) then begin PlayMidi(get_file(find_current+1));end;
   if iskey(K_HOME) then begin PlayMidi(get_file(1));end;
   if iskey(K_END) then begin PlayMidi(get_file(find_count));end;
   if iskey(K_F) then begin PlayMidi(get_file(find_current));end;
-  if iskey(K_H) then begin ResetMidiHard(midiOuti);end;
-  if iskey(K_S) and not(k_shift) and not(k_ctrl) then begin ResetMidiHard(midiOuti+1);end;
-  if iskey(K_S) and not(k_shift) and (k_ctrl) then begin ResetMidiHard(midiOuti,1-msgbufb1);end;
-  if iskey(K_S) and (k_shift) and not(k_ctrl) then begin msgbufb0:=1-msgbufb0;end;
+  if iskey(K_H) then begin ResetMidiHard(midiOuti);SetHint('Synthesizer',smidiout+'('+i2s(midiouti+1)+'/'+i2s(midiOutGetNumDevs)+')');end;
+  if iskey(K_S) and not(k_shift) and not(k_ctrl) then begin ResetMidiHard(midiOuti+1);SetHint('Synthesizer',smidiout+'('+i2s(midiouti+1)+'/'+i2s(midiOutGetNumDevs)+')');end;
+  if iskey(K_S) and not(k_shift) and (k_ctrl) then begin ResetMidiHard(midiOuti,1-msgbufb1);SetHint('MIDI Event',msgbufb1_s[1-msgbufb1]);end;
+  if iskey(K_S) and (k_shift) and not(k_ctrl) then begin msgbufb0:=1-msgbufb0;SetHint('Combine Notes',msgbufb0_s[1-msgbufb0]);end;
   if iskey(K_D) then begin bnoteb:=true;end;
-  if iskey(K_A) then begin autofresh:=1-autofresh;end;
+  if iskey(K_A) then begin autofresh:=1-autofresh;SetHint('Draw Notes',autofresh_s[1-autofresh]);end;
   k_pos:=10;if k_ctrl then k_pos:=3;if k_shift then k_pos:=1;
-  if iskey(188) then begin SetNoteLength(mult-round(k_pos));end;
-  if iskey(190) then begin SetNoteLength(mult+round(k_pos));end;
-  if iskey(K_C) then begin kbdcb:=(kbdcb+1)mod 3;initb:=false;end;
-  if iskey(K_T) then begin kchb:=(kchb+1) mod 3;initb:=false;end;
-  if iskey(K_I) then begin kchb2:=(kchb2+1) mod 5;end;
-  if iskey(K_L) then begin kmessure:=(kmessure+1) mod 5;initb:=false;end;
-  if iskey(K_M) then begin loop:=(loop+1) mod 3;end;
-  if iskey(K_F2) then begin fbi:=1-fbi;end;
-  if iskey(K_F3) then begin msgbufn0:=max(1,msgbufn0 shr 1);end;
-  if iskey(K_F4) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);end;
-  if iskey(K_F5) then begin msgvol0:=max(0,msgvol0-1);end;
-  if iskey(K_F6) then begin msgvol0:=min($7F,msgvol0+1);end;
-  if iskey(K_F7) then begin maxkbdc:=max(1,maxkbdc shr 1);InitKbdC();end;
-  if iskey(K_F8) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();end;
-  if iskey(K_F11) then begin framerate:=max(1,framerate-((framerate-1) div 60+1));end;
-  if iskey(K_F12) then begin framerate:=min(480,framerate+(framerate div 60+1));end;
+  if iskey(188) then begin SetNoteLength(mult-round(k_pos));SetHint('Note Length',i2s(mult)+'%');end;
+  if iskey(190) then begin SetNoteLength(mult+round(k_pos));SetHint('Note Length',i2s(mult)+'%');end;
+  if iskey(K_C) then begin kbdcb:=(kbdcb+1)mod 3;initb:=false;SetHint('Note Color',kbdcb_s[kbdcb]);end;
+  if iskey(K_T) then begin kchb:=(kchb+1) mod 3;initb:=false;SetHint('Note Text',kchb_s[kchb]);end;
+  if iskey(K_I) then begin kchb2:=(kchb2+1) mod 5;SetHint('Info Text',kchb2_s[kchb2]);end;
+  if iskey(K_L) then begin kmessure:=(kmessure+1) mod 5;initb:=false;SetHint('Messur Line',kmessure_s[kmessure]);end;
+  if iskey(K_M) then begin loop:=(loop+1) mod 3;SetHint('Loop Mode',loop_s[(loop+2)mod 3]);end;
+  if iskey(K_F2) then begin fbi:=1-fbi;SetHint('Storage',fbi_s[fbi]);end;
+  if iskey(K_F3) then begin msgbufn0:=max(1,msgbufn0 shr 1);SetHint('Short Event',i2s(round(log2(msgbufn0))-1));end;
+  if iskey(K_F4) then begin msgbufn0:=min($1000000,msgbufn0 shl 1);SetHint('Short Event',i2s(round(log2(msgbufn0))-1));end;
+  if iskey(K_F5) then begin msgvol0:=max(0,msgvol0-1);SetHint('Min Volume',i2s(msgvol0));end;
+  if iskey(K_F6) then begin msgvol0:=min($7F,msgvol0+1);SetHint('Min Volume',i2s(msgvol0));end;
+  if iskey(K_F7) then begin maxkbdc:=max(1,maxkbdc shr 1);InitKbdC();SetHint('Max Key',i2s(round(log2(maxkbdc))-1));end;
+  if iskey(K_F8) then begin maxkbdc:=min(maxkbdc0,maxkbdc shl 1);InitKbdC();SetHint('Max Key',i2s(round(log2(maxkbdc))-1));end;
+  if iskey(K_F11) then begin framerate:=max(1,framerate-((framerate-1) div 60+1));SetHint('Frame Rate',i2s(framerate));end;
+  if iskey(K_F12) then begin framerate:=min(480,framerate+(framerate div 60+1));SetHint('Frame Rate',i2s(framerate));end;
   if iskey(K_F1) then begin newthread(@helpproc);end;
   if iskey(K_F9) then begin menub:=not(menub);end;
   if iskey(K_R) then begin ResetAll();end;
