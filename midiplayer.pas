@@ -1888,8 +1888,8 @@ function exp2r(v:double):double;begin exp2r:=v;if v>=1 then exp2r:=exp((v-1)*ln(
 function exp2(v:double):longint;begin exp2:=round(exp2r(v));end;
 function sgn(v:double):longint;begin if v>=0 then sgn:=1 else sgn:=0;end;
 
-const msgbufb1_s:array[0..4]of ansistring=('Stream','Long','','','');
-const msgbufb0_s:array[0..4]of ansistring=('No','Yes','','','');
+const msgbufb1_s:array[0..4]of ansistring=('Long','Stream','','','');
+const msgbufb0_s:array[0..4]of ansistring=('Yes','No','','','');
 const autofresh_s:array[0..4]of ansistring=('Auto','Manual','','','');
 const kbdcb_s:array[0..4]of ansistring=('Chord','Track Black','Track','','');
 const kchb_s:array[0..4]of ansistring=('Number','Letter','Blank','','');
@@ -1909,8 +1909,8 @@ DrawMenuBar('Chord',kchord0,11,i2s(kchord0));
 DrawMenuBar('Pitch',log2(kkey0-128)+8,16,i2s(longint(kkey0-128)));
 DrawMenuTitle('Device');
 DrawMenuBar('Synthesizer',0,0,i2s(midiouti+1)+'/'+i2s(midiOutGetNumDevs));
-DrawMenuBtn('MIDI Event',msgbufb1,2,msgbufb1_s);
-DrawMenuBtn('Combine Notes',msgbufb0,2,msgbufb0_s);
+DrawMenuBtn('MIDI Event',1-msgbufb1,2,msgbufb1_s);
+DrawMenuBtn('Combine Notes',1-msgbufb0,2,msgbufb0_s);
 DrawMenuTitle('Display');
 DrawMenuBtn('Draw Notes',1-autofresh,2,autofresh_s);
 DrawMenuBar('Note Length',mult/100,10,i2s(mult)+'%');
@@ -2090,7 +2090,6 @@ if midiOut>0 then
     midiStreamClose(midiOut);
 midiOutGetDevCaps(midiOuti,@caps,sizeof(caps));
 smidiout:=caps.szPname+'(Loading...)';
-//if b then msgbufb1:=1-msgbufb1;
 msgbufb1:=b;
 if msgbufb1=1 then
   midiOutOpen(@midiOut,midiOuti,0,0,0)
