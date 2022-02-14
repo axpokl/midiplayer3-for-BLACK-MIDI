@@ -109,9 +109,9 @@ framerate:=120;
 helpb:=0;
 chancolor:='85,170,255,42,127,212,21,63,106,148,191,233,10,31,52,74,95,116,137,159,180,201,222,244';
 {$ifdef video}
-vname:='midiplayer.mkv';
+vname:='midiplayer.mp4';
 vrate:=30;
-vquality:=4;
+vquality:=16;
 {$endif}
 end;
 

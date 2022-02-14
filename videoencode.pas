@@ -22,7 +22,7 @@ end;
 begin
 CreateWin(400,400);
 bb:=CreateBB(GetWin());
-EncodeVideo('T:\1.mkv',25,4);
+EncodeVideo('T:\1.mp4',25,4);
 repeat
 DrawVideo();
 GetBB(bb);

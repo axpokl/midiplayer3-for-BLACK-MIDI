@@ -46,6 +46,7 @@ if(ofmt=nil)then ofmt:=av_guess_format('mpeg',nil,nil);
 fmt:=avformat_alloc_context();
 fmt^.oformat:=ofmt;
 fmt^.video_codec_id:=ofmt^.video_codec;
+//avformat_alloc_output_context2(@fmt,ofmt,nil,fname);
 cdc:=avcodec_find_encoder(ofmt^.video_codec);
 ctx:=avcodec_alloc_context3(cdc);
 ctx^.codec_id:=ofmt^.video_codec;
@@ -55,9 +56,22 @@ ctx^.width:=_w;
 ctx^.height:=_h;
 ctx^.pix_fmt:=AV_PIX_FMT_YUV420P;
 ctx^.time_base:=av_make_q(1,framerate);
+ctx^.framerate:=av_make_q(framerate,1);
 ctx^.max_b_frames:=1;
+if (ofmt^.flags and AVFMT_GLOBALHEADER)>0 then
+  begin
+  ctx^.flags:=ctx^.flags or AV_CODEC_FLAG_GLOBAL_HEADER;
+  ctx^.extradata:=av_malloc(1024);
+  ctx^.extradata_size:=0;
+  end;
 stream:=avformat_new_stream(fmt,cdc);
 stream^.codec:=ctx;
+stream^.time_base:=ctx^.time_base;
+avcodec_parameters_to_context(ctx,stream^.codecpar);
+//stream^.codecpar^.codec_id:=ofmt^.video_codec;
+//stream^.codecpar^.width:=ctx^.width;
+//stream^.codecpar^.height:=ctx^.height;
+av_dump_format(fmt,0,fname,1);
 avcodec_open2(ctx,cdc,nil);
 avio_open2(@(fmt^.pb),fname,AVIO_FLAG_WRITE,nil,nil);
 avformat_write_header(fmt,nil);
@@ -71,13 +85,13 @@ pkt.size:=vbufyuvl;
 pkt.stream_index:=fmt^.streams[0]^.index;
 pkt.flags:=pkt.flags or AV_PKT_FLAG_KEY;
 avcodec_encode_video2(ctx,@pkt,vf,@vfb);
-//writeln(vfb);
 if(vfb<>0)then
   begin
   ctx^.coded_frame^.pts:=idx;
   pkt.pts:=av_rescale_q(idx,ctx^.time_base,fmt^.streams[0]^.time_base);
-  //writeln(pkt.pts,#9,idx);
-  av_interleaved_write_frame(fmt,@pkt);
+  pkt.dts:=pkt.pts;
+  //av_interleaved_write_frame(fmt,@pkt);
+  av_write_frame(fmt,@pkt);
   idx:=idx+1;
   end;
 av_free_packet(@pkt);
@@ -86,12 +100,12 @@ end;
 procedure EncodeFrame(bb:pbitbuf);
 begin
 vfyuv:=av_frame_alloc();
-vbufyuvl:=avpicture_get_size(AV_PIX_FMT_YUV420P,_w,_h);
+vbufyuvl:=avpicture_get_size(ctx^.pix_fmt,ctx^.width,ctx^.height);
 vbufyuv:=av_malloc(vbufyuvl);
-avpicture_fill(PAVPicture(vfyuv),vbufyuv,AV_PIX_FMT_YUV420P,_w,_h);
-vfyuv^.width:=_w;
-vfyuv^.height:=_h;
-vfyuv^.format:=longint(AV_PIX_FMT_YUV420P);
+avpicture_fill(PAVPicture(vfyuv),vbufyuv,AV_PIX_FMT_YUV420P,ctx^.width,ctx^.height);
+vfyuv^.width :=ctx^.width;
+vfyuv^.height:=ctx^.height;
+vfyuv^.format:=longint(ctx^.pix_fmt);
 vfyuv^.data[0]:=vbufyuv;
 vfyuv^.data[1]:=vfyuv^.data[0]+_w*_h;
 vfyuv^.data[2]:=vfyuv^.data[1]+_w*_h shr 2;
@@ -131,8 +145,11 @@ while(vfb<>0)do
   av_free(vbufyuv);
   end;
 av_write_trailer(fmt);
+avio_close(fmt^.pb);
 avcodec_close(ctx);
 av_free(ctx);
+av_packet_free(@pkt);
+avformat_free_context(fmt);
 end;
 
 begin

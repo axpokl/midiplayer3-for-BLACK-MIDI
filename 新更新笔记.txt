@@ -3,7 +3,7 @@ fps keybd
 reg detect?
 
 Reset crash (fnote?)
-video output length?
 note play lag? (black midi)
 
 kar
+ffmpeg complie small
