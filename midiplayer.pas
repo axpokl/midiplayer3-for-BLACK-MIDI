@@ -9,6 +9,7 @@ var fb:boolean=true;
 var midiOut:longword=0;
 var rs:ansistring;
 var tempdirs:array[0..$FF]of char;
+var lock:longword;
 
 {$i freg.inc}
 {$i flist.inc}
@@ -1199,7 +1200,7 @@ procedure ClearBMP(bi,bnoteb0:longint);
 begin
 if bnote[bi,bnoteb0]<>nil then
   begin
-  bmpname:=tempdir+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
+  bmpname:=tempdir+'midiplayer3_bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
   if bnotej0[bi,bnoteb0]>=0 then SaveBMP(bnote[bi,bnoteb0],bmpname);
   ReleaseBMP(bnote[bi,bnoteb0]);
   bnote[bi,bnoteb0]:=nil;
@@ -1222,7 +1223,7 @@ else
   bnoteb0:=bnotej1[bi,bj];
 if bnote[bi,bnoteb0]=nil then
   begin
-  bmpname:=tempdir+'bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
+  bmpname:=tempdir+'midiplayer3_bmp'+'_'+i2s(bi)+'_'+i2s(bnotej0[bi,bnoteb0])+'_'+rs+'.png';
   if IsFile(bmpname) then
     begin
     bnote[bi,bnoteb0]:=LoadBMP(bmpname,black1);
@@ -2444,26 +2445,35 @@ if length(fdir)>0 then delete(fdir,length(fdir),1);
 until (length(fdir)<=1) or (fdir[length(fdir)]='\');
 end;
 
-procedure SendToInstance(iname:UnicodeString);
-var hwm:longword;
+procedure SendToInstance(iname:UnicodeString;hwm:longword);
 var inamei:longword;
 begin
-hwm:=FindWindow('MidiPlayer3Class',nil);
-if hwm<>0 then
+SendMessage(hwm,WM_USER,0,1);
+for inamei:=1 to length(iname) do
   begin
-  SendMessage(hwm,WM_USER,0,1);
-  for inamei:=1 to length(iname) do
-    begin
-    SendMessage(hwm,WM_USER,longword(word(iname[inamei])),0);
-    end;
-  SendMessage(hwm,WM_USER,0,2);
-  halt;
+  SendMessage(hwm,WM_USER,longword(word(iname[inamei])),0);
+  end;
+SendMessage(hwm,WM_USER,0,2);
+halt;
+end;
+
+procedure DeleteFiles(s:ansistring);
+var find_handle:handle;
+var find_info:WIN32_FIND_DATA;
+begin
+find_handle:=FindFirstFile(PChar(s),find_info);
+if find_handle<>INVALID_HANDLE_VALUE then
+  begin
+  repeat
+  DeleteFile(PChar(GetFileDir(s)+'\'+find_info.cFileName));
+  until not(FindNextFile(find_handle,find_info));
   end;
 end;
 
 Procedure DoCommandLine();
 var para,parakey,parafname:UnicodeString;
 var parai:longword;
+var hwm:longword;
 begin
 para:='';
 parakey:='';
@@ -2485,15 +2495,24 @@ for parai:=1 to ParamCount() do
     parakey:='';
     end;
   end;
+OpenReg();lock:=0;GetKeyI('lock',lock);CloseReg();
+hwm:=FindWindow('MidiPlayer3Class',nil);
+if (hwm=0) and (lock>0) then
+  begin
+  lock:=0;
+  DeleteFiles(tempdir+'midiplayer3_*');
+  fnames:='midiplayer by ax_pokl';
+  end;
 if (parafname<>'') and (parafname<>fnames) then
   begin
-  if IsFileW(parafname) then SendToInstance(parafname);
+  if IsFileW(parafname) then if hwm>0 then SendToInstance(parafname,hwm);
   fnames:=parafname;
   midipos:=0;
   startb:=false;
   end
 else
   if helpb=0 then newthread(@helpproc);
+OpenReg();lock:=lock+1;SetKeyI('lock',lock);CloseReg();
 end;
 
 procedure InitCS();
@@ -2524,17 +2543,15 @@ end;
 
 procedure OpenRS();
 begin
-GetKeyS('rs',rs);
-DeleteFile(tempdir+'fevent0'+rs);
-DeleteFile(tempdir+'fevent'+rs);
-DeleteFile(tempdir+'fnote'+rs);
+DeleteFile(tempdir+'midiplayer3_fevent0'+rs);
+DeleteFile(tempdir+'midiplayer3_fevent'+rs);
+DeleteFile(tempdir+'midiplayer3_fnote'+rs);
 randomize();rs:=i2hs(longword(random($FFFFFFFF)));
-SetKeyS('rs',rs);
 if fb then
   begin
-  assign(fevent0,tempdir+'fevent0'+rs);fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
-  assign(fevent,tempdir+'fevent'+rs);fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
-  assign(fnote,tempdir+'fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
+  assign(fevent0,tempdir+'midiplayer3_fevent0'+rs);fillchar(bfevent0_,maxfevent0n*sizeof(tevent),0);fevent0w:=false;rewrite(fevent0);bjfevent0:=-1;
+  assign(fevent,tempdir+'midiplayer3_fevent'+rs);fillchar(bfevent_,maxfeventn*sizeof(tevent),0);feventw:=false;rewrite(fevent);for bjfeventi:=0 to maxfeventm-1 do bjfevent[bjfeventi]:=-1;
+  assign(fnote,tempdir+'midiplayer3_fnote'+rs);fillchar(bfnote_,maxfnoten*sizeof(tnotemap),0);fnotew:=true;rewrite(fnote);for bjfnotei:=0 to maxfnotem-1 do bjfnote[bjfnotei]:=-1;bjfnotek:=-1;
   end;
 end;
 
@@ -2542,14 +2559,14 @@ procedure CloseRS();
 begin
 if fb then
   begin
-  feventw:=false;close(fevent0);DeleteFile(tempdir+'fevent0'+rs);
-  fevent0w:=false;close(fevent);DeleteFile(tempdir+'fevent'+rs);
-  fnotew:=false;close(fnote);DeleteFile(tempdir+'fnote'+rs);
+  feventw:=false;close(fevent0);DeleteFile(tempdir+'midiplayer3_fevent0'+rs);
+  fevent0w:=false;close(fevent);DeleteFile(tempdir+'midiplayer3_fevent'+rs);
+  fnotew:=false;close(fnote);DeleteFile(tempdir+'midiplayer3_fnote'+rs);
   end;
 for bnotej:=-1 to bnoten00 do
   begin
-  bmpname:=tempdir+'bmp'+'_'+i2s(0)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
-  bmpname:=tempdir+'bmp'+'_'+i2s(1)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
+  bmpname:=tempdir+'midiplayer3_bmp'+'_'+i2s(0)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
+  bmpname:=tempdir+'midiplayer3_bmp'+'_'+i2s(1)+'_'+i2s(bnotej)+'_'+rs+'.png';DeleteFile(bmpname);
   end;
 end;
 
@@ -2703,4 +2720,5 @@ until not(iswin());
 midiOutClose(midiOut);
 CloseRS();
 SaveReg();
+OpenReg();GetKeyI('lock',lock);SetKeyI('lock',max(0,lock-1));CloseReg();
 end.

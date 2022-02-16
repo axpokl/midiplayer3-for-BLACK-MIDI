@@ -1,9 +1,10 @@
 fps bnotebb
 fps keybd
-reg detect?
 
 Reset crash (fnote?)
 note play lag? (black midi)
 
 kar
 ffmpeg complie small
+
+exe info, image
