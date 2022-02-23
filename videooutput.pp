@@ -42,7 +42,7 @@ procedure EncodeVideo(fname:pchar;framerate:longword;quality:double);
 begin
 ofmt:=av_guess_format(nil,fname,nil);
 if(ofmt=nil)then ofmt:=av_guess_format('mpeg',nil,nil);
-//ofmt^.video_codec:=AV_CODEC_ID_H264;
+ofmt^.video_codec:=AV_CODEC_ID_H264;
 fmt:=avformat_alloc_context();
 fmt^.oformat:=ofmt;
 fmt^.video_codec_id:=ofmt^.video_codec;
@@ -85,15 +85,15 @@ pkt.size:=vbufyuvl;
 pkt.stream_index:=fmt^.streams[0]^.index;
 pkt.flags:=pkt.flags or AV_PKT_FLAG_KEY;
 avcodec_encode_video2(ctx,@pkt,vf,@vfb);
-if(vfb<>0)then
+if (vfb<>0) then
   begin
   ctx^.coded_frame^.pts:=idx;
   pkt.pts:=av_rescale_q(idx,ctx^.time_base,fmt^.streams[0]^.time_base);
   pkt.dts:=pkt.pts;
   //av_interleaved_write_frame(fmt,@pkt);
   av_write_frame(fmt,@pkt);
-  idx:=idx+1;
   end;
+idx:=idx+1;
 av_free_packet(@pkt);
 end;
 
@@ -154,4 +154,5 @@ end;
 
 begin
 av_register_all();
+avcodec_register_all();
 end.
