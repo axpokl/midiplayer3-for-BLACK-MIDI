@@ -1940,7 +1940,7 @@ procedure DrawCtrl();
 begin
 SetCtrlFont();
 for vi:=1 to 7 do
-  DrawMenuLine(menul0+(vi-1)*(menur0-menul0)/7,menul0+vi*(menur0-menul0)/7,1-menuy,1,menut[vi]);
+  DrawMenuLine(menul0+(vi-1)*(menur0-menul0)/7,menul0+vi*(menur0-menul0)/7,0,menuy,menut[vi]);
 SetDrawFont();
 end;
 
@@ -1958,7 +1958,7 @@ if (menuw_>0) and (menuh_>0) then
   mousexcp:=(mousexc-(menul1+menuwb+menuw/2))/((menur1-menuwb-menuw/2)-(menul1+menuwb+menuw/2));
   end;
 if GetTimeR()>ctrlt+0.5 then ctrlb:=false;
-if mousey>=1-menuy then ctrlb:=true;
+if mousey<=menuy then ctrlb:=true;
 mousepx0:=0;mousepy0:=0;
 if menub then DrawMenu();
 if ctrlb or menub then DrawCtrl();
@@ -2257,7 +2257,13 @@ if IsMsg(WM_LBUTTONUP) then
     begin
     k_shift:=GetKeyState(VK_SHIFT)<0;
     k_ctrl:=GetKeyState(VK_CONTROL)<0;
-    if (mousepx1=0) and (mousepy1=0) then ;
+    if (mousepx1=round((menul0*7+menur0*0)/7*1000)) and (mousepy1=0) then begin newthread(@helpproc);end;
+    if (mousepx1=round((menul0*6+menur0*1)/7*1000)) and (mousepy1=0) then begin PlayMidi(get_file(1));end;
+    if (mousepx1=round((menul0*5+menur0*2)/7*1000)) and (mousepy1=0) then begin PlayMidi(get_file(find_current-1));end;
+    if (mousepx1=round((menul0*4+menur0*3)/7*1000)) and (mousepy1=0) then begin PlayMidi(get_file(find_current));end;
+    if (mousepx1=round((menul0*3+menur0*4)/7*1000)) and (mousepy1=0) then begin PlayMidi(get_file(find_current+1));end;
+    if (mousepx1=round((menul0*2+menur0*5)/7*1000)) and (mousepy1=0) then begin PlayMidi(get_file(find_count));end;
+    if (mousepx1=round((menul0*1+menur0*6)/7*1000)) and (mousepy1=0) then begin menub:=not(menub);end;
     if (mousepx1=round(menul1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then begin SetMidiVol(voli-1);end;
     if (mousepx1=round(menur1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then begin SetMidiVol(voli+1);end;
     if (mousepx1=round(menum1*1000)) and (mousepy1=round((menuy+menug*1*2+menuh*1)*1000)) then begin SetMidiVol(round(mousexcp*15)+1);end;
@@ -2323,13 +2329,6 @@ if IsMsg(WM_LBUTTONUP) then
     {$else}
     if (mousepx1=round(menul0*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*24)*1000)) then begin ResetAll();end;
     {$endif};
-    if (mousepx1=round((menul0*7+menur0*0)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then begin newthread(@helpproc);end;
-    if (mousepx1=round((menul0*6+menur0*1)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then begin PlayMidi(get_file(1));end;
-    if (mousepx1=round((menul0*5+menur0*2)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then begin PlayMidi(get_file(find_current-1));end;
-    if (mousepx1=round((menul0*4+menur0*3)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then begin PlayMidi(get_file(find_current));end;
-    if (mousepx1=round((menul0*3+menur0*4)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then begin PlayMidi(get_file(find_current+1));end;
-    if (mousepx1=round((menul0*2+menur0*5)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then begin PlayMidi(get_file(find_count));end;
-    if (mousepx1=round((menul0*1+menur0*6)/7*1000)) and (mousepy1=round((menuy+menug*5*2+menuh*26)*1000)) then begin menub:=not(menub);end;
     end;
   moused1:=false;
   mousepx1:=0;
@@ -2344,7 +2343,7 @@ if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
     while IsNextMsg() do ;
     end;
   end
-else if not((GetMousePosX()>=menul0*GetWidth()) and (GetMousePosX()<=menur0*GetWidth()) and (GetMousePosY()>=(1-menuy)*GetHeight())) then
+else //if not((GetMousePosX()>=menul0*GetWidth()) and (GetMousePosX()<=menur0*GetWidth()) and (GetMousePosY()>=(1-menuy)*GetHeight())) then
   begin
   if IsMsg(WM_LBUTTONDOWN) then
     begin
