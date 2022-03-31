@@ -2335,13 +2335,14 @@ if IsMsg(WM_LBUTTONUP) then
   mousepy1:=0;
   end;
 if not(menub) then
-if (GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0)) and (GetMousePosY()>GetHeight*menuy) then
+if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
   begin
-  if ismouseleft() or (ismousemove() and (_ms.wparam=1)) and (max(0,finaltime-1)>0) then
-    begin
-    SetMidiTime(GetMousePosX()/GetWidth()*max(0,finaltime-1));
-    while IsNextMsg() do ;
-    end;
+  if GetMousePosY()>GetHeight*menuy then
+    if ismouseleft() or (ismousemove() and (_ms.wparam=1)) and (max(0,finaltime-1)>0) then
+      begin
+      SetMidiTime(GetMousePosX()/GetWidth()*max(0,finaltime-1));
+      while IsNextMsg() do ;
+      end;
   end
 else //if not((GetMousePosX()>=menul0*GetWidth()) and (GetMousePosX()<=menur0*GetWidth()) and (GetMousePosY()>=(1-menuy)*GetHeight())) then
   begin
