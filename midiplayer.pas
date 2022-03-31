@@ -2335,7 +2335,7 @@ if IsMsg(WM_LBUTTONUP) then
   mousepy1:=0;
   end;
 if not(menub) then
-if GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0) then
+if (GetMousePosY()<GetHeight()-round(GetKeynoteW0()*kleny0)) and (GetMousePosY()>GetHeight*menuy) then
   begin
   if ismouseleft() or (ismousemove() and (_ms.wparam=1)) and (max(0,finaltime-1)>0) then
     begin
