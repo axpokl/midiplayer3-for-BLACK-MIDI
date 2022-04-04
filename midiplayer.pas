@@ -2603,7 +2603,7 @@ if eventi<eventn then
   begin
   msgbufn:=-msgbufn0;
 //  msgbufn:=0;
-  while GetMidiTime()>GetFEvent0TickTime(eventi) do
+  while (GetMidiTime()>GetFEvent0TickTime(eventi)) and (msgbufn<(msgbufn0 shl 4)) do
     begin
     if isnextmsg then DoAct();
     if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
