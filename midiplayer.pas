@@ -2603,87 +2603,90 @@ if eventi<eventn then
   begin
   msgbufn:=-msgbufn0;
 //  msgbufn:=0;
-  while (GetMidiTime()>GetFEvent0TickTime(eventi)) and (msgbufn<(msgbufn0 shl 4)) do
+  while (GetMidiTime()>GetFEvent0TickTime(eventi)) do
     begin
-    if isnextmsg then DoAct();
-    if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
-    while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=event0[eventi].curtick) do begin tempo:=eventtm[eventtmi].msg;eventtmi:=eventtmi+1;end;
-    while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[eventi].curtick) do begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
-    if event0[eventi].msg and $F0 shr 4<$F then
+    if (msgbufn<(msgbufn0 shl 4)) then
       begin
-      if(event0[eventi].msg and $F0 shr 4=$B)
-      and(event0[eventi].msg shr 8 and $FF=$07)then
-        SetMidiChanVol(event0[eventi].msg and $F,event0[eventi].msg shr 16 and $FF)
-      else
+      if isnextmsg then DoAct();
+      if fb then begin fi:=eventi;eventi:=0;event0[eventi]:=GetFEvent0(fi);end;
+      while (eventtmi<eventtmn) and (eventtm[eventtmi].curtick<=event0[eventi].curtick) do begin tempo:=eventtm[eventtmi].msg;eventtmi:=eventtmi+1;end;
+      while (eventchi<eventchn) and (eventch[eventchi].curtick<=event0[eventi].curtick) do begin chord:=eventch[eventchi].msg;eventchi:=eventchi+1;end;
+      if event0[eventi].msg and $F0 shr 4<$F then
         begin
-        if (event0[eventi].msg and $F0<>$90) and (event0[eventi].msg and $F0<>$80) then
-          midiOutShortMsg(midiOut,event0[eventi].msg)
+        if(event0[eventi].msg and $F0 shr 4=$B)
+        and(event0[eventi].msg shr 8 and $FF=$07)then
+          SetMidiChanVol(event0[eventi].msg and $F,event0[eventi].msg shr 16 and $FF)
         else
           begin
-          EnterCriticalSection(cs3);
-          if event0[eventi].msg and $F<>$9 then
+          if (event0[eventi].msg and $F0<>$90) and (event0[eventi].msg and $F0<>$80) then
+            midiOutShortMsg(midiOut,event0[eventi].msg)
+          else
             begin
-            notei:=GetKeykey(event0[eventi].msg shr 8 and $7F) or ((event0[eventi].track or event0[eventi].msg and $F shl maxtrack0) shl 8);
-            if event0[eventi].msg and $F0=$90 then
+            EnterCriticalSection(cs3);
+            if event0[eventi].msg and $F<>$9 then
               begin
-              notech[notei]:=chord;
-              notec[notei]:=event0[eventi].track or event0[eventi].msg and $F shl maxtrack0;
-              if kbdcb=0 then
+              notei:=GetKeykey(event0[eventi].msg shr 8 and $7F) or ((event0[eventi].track or event0[eventi].msg and $F shl maxtrack0) shl 8);
+              if event0[eventi].msg and $F0=$90 then
                 begin
-                PushKbdC(notei,GetKeyChordC(notei and $7F,notech[notei]));
-                kbdc[notei and $7F]:=GetKeyChordC(notei and $7F,notech[notei]);
-                end
-              else
+                notech[notei]:=chord;
+                notec[notei]:=event0[eventi].track or event0[eventi].msg and $F shl maxtrack0;
+                if kbdcb=0 then
+                  begin
+                  PushKbdC(notei,GetKeyChordC(notei and $7F,notech[notei]));
+                  kbdc[notei and $7F]:=GetKeyChordC(notei and $7F,notech[notei]);
+                  end
+                else
+                  begin
+                  PushKbdC(notei,GetKeynoteC(notei and $7F,notec[notei]));
+                  kbdc[notei and $7F]:=GetKeynoteC(notei and $7F,notec[notei]);
+                  end;
+                end;
+              if event0[eventi].msg and $F0=$80 then
                 begin
-                PushKbdC(notei,GetKeynoteC(notei and $7F,notec[notei]));
-                kbdc[notei and $7F]:=GetKeynoteC(notei and $7F,notec[notei]);
+                PopKbdC(notei);
+                kbdc[notei and $7F]:=-1;
                 end;
               end;
-            if event0[eventi].msg and $F0=$80 then
+            LeaveCriticalSection(cs3);
+            if (event0[eventi].msg and $F0<>$90) or (event0[eventi].msg shr 16 and $FF>=msgvol0) then
               begin
-              PopKbdC(notei);
-              kbdc[notei and $7F]:=-1;
-              end;
-            end;
-          LeaveCriticalSection(cs3);
-          if (event0[eventi].msg and $F0<>$90) or (event0[eventi].msg shr 16 and $FF>=msgvol0) then
-            begin
-            msgbuf0:=event0[eventi].msg;
-            if event0[eventi].msg and $0F<>$09 then
-              msgbuf0:=msgbuf0 and $FFFF00FF or GetKeykey(msgbuf0 shr 8 and $7F) shl 8;
-            if (msgbufn<0) then
-              begin
-              midiOutShortMsg(midiOut,msgbuf0);
-              msgbufn:=msgbufn+1;
-              end
-            else
-              begin
-              msgbuf1:=(msgbuf0) and $FF;
-              msgbuf2:=(msgbuf0 shr 8) and $FF;
-              msgbuf3:=(msgbuf0 shr 16) and $FF;
-              if msgbufb0=1 then
+              msgbuf0:=event0[eventi].msg;
+              if event0[eventi].msg and $0F<>$09 then
+                msgbuf0:=msgbuf0 and $FFFF00FF or GetKeykey(msgbuf0 shr 8 and $7F) shl 8;
+              if (msgbufn<0) then
                 begin
-                msgbufb:=true;
-                if msgbuf1 and $F0=$90 then
-                  if (msgchan0[msgbuf1 and $F][msgbuf2][0]=true) and (msgchan[msgbuf1 and $F][msgbuf2][0]=msgbuf3) then
-                    msgbufb:=false
-                  else
-                    begin msgchan0[msgbuf1 and $F][msgbuf2][0]:=true;msgchan[msgbuf1 and $F][msgbuf2][0]:=msgbuf3;end;
-                if msgbuf1 and $F0=$80 then
-                  if (msgchan0[msgbuf1 and $F][msgbuf2][1]=true) and (msgchan[msgbuf1 and $F][msgbuf2][1]=msgbuf3) then
-                    msgbufb:=false
-                  else
-                    begin msgchan0[msgbuf1 and $F][msgbuf2][1]:=true;msgchan[msgbuf1 and $F][msgbuf2][1]:=msgbuf3;end;
-                if msgbufb then AddMsgBuf(msgbuf1,msgbuf2,msgbuf3);
+                midiOutShortMsg(midiOut,msgbuf0);
+                msgbufn:=msgbufn+1;
                 end
               else
-                AddMsgBuf(msgbuf1,msgbuf2,msgbuf3);
+                begin
+                msgbuf1:=(msgbuf0) and $FF;
+                msgbuf2:=(msgbuf0 shr 8) and $FF;
+                msgbuf3:=(msgbuf0 shr 16) and $FF;
+                if msgbufb0=1 then
+                  begin
+                  msgbufb:=true;
+                  if msgbuf1 and $F0=$90 then
+                    if (msgchan0[msgbuf1 and $F][msgbuf2][0]=true) and (msgchan[msgbuf1 and $F][msgbuf2][0]=msgbuf3) then
+                      msgbufb:=false
+                    else
+                      begin msgchan0[msgbuf1 and $F][msgbuf2][0]:=true;msgchan[msgbuf1 and $F][msgbuf2][0]:=msgbuf3;end;
+                  if msgbuf1 and $F0=$80 then
+                    if (msgchan0[msgbuf1 and $F][msgbuf2][1]=true) and (msgchan[msgbuf1 and $F][msgbuf2][1]=msgbuf3) then
+                      msgbufb:=false
+                    else
+                      begin msgchan0[msgbuf1 and $F][msgbuf2][1]:=true;msgchan[msgbuf1 and $F][msgbuf2][1]:=msgbuf3;end;
+                  if msgbufb then AddMsgBuf(msgbuf1,msgbuf2,msgbuf3);
+                  end
+                else
+                  AddMsgBuf(msgbuf1,msgbuf2,msgbuf3);
+                end
               end
             end
           end
-        end
+        end;
+      if fb then eventi:=fi;
       end;
-    if fb then eventi:=fi;
     eventi:=eventi+1;
     if eventi>=eventn then break;
     end;
