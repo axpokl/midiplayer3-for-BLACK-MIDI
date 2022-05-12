@@ -2440,7 +2440,7 @@ end;
 
 procedure GetDirPath();
 begin
-fdir:=UnicodeString(paramstr(0));
+fdir:=GetParaW(0);
 repeat
 if length(fdir)>0 then delete(fdir,length(fdir),1);
 until (length(fdir)<=1) or (fdir[length(fdir)]='\');
