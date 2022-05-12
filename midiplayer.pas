@@ -215,6 +215,7 @@ end;
 procedure LoadMidi(fname:UnicodeString);
 begin
 OpenFileW(fname);
+if GetFileLen()=longword(-1) then exit();
 fpos:=0;
 flen:=GetFileLen();
 len0:=GetFileLen();
@@ -2480,7 +2481,8 @@ parakey:='';
 parafname:='';
 for parai:=1 to ParamCount() do
   begin
-  para:=UnicodeString(ParamStr(parai));
+//para:=UnicodeString(ParamStr(parai));
+  para:=GetParaW(parai);
   if (para[1]='-') or (para[1]='/') then
     parakey:=para
   else
