@@ -36,9 +36,8 @@ if not exist midiplayer64.exe exit
 echo ------ Zip ------
 
 mkdir midiplayer3
-copy midiplayer.txt midiplayer3\midiplayer.txt
 copy README.md midiplayer3\README.md
-copy LICENSE midiplayer3\LICENSE
+copy LICENSE.txt midiplayer3\LICENSE.txt
 copy midiplayer32.exe midiplayer3\midiplayer32.exe
 copy midiplayer64.exe midiplayer3\midiplayer64.exe
 xcopy sample\* midiplayer3\sample\ /y /r
@@ -48,15 +47,15 @@ rmdir midiplayer3 /s /q
 echo ------ Zip Video ------
 
 mkdir midiplayer3_video
+copy README.md midiplayer3_video\README.md
+copy LICENSE.txt midiplayer3_video\LICENSE.txt
 mkdir midiplayer3_video\32
 mkdir midiplayer3_video\64
-xcopy midiplayer3\* midiplayer3_video\32 /s /y /r
-xcopy midiplayer3\* midiplayer3_video\64 /s /y /r
-xcopy sample\* midiplayer3_video\sample\ /y /r
 copy midiplayer32_video.exe midiplayer3_video\32\midiplayer32_video.exe
 copy midiplayer64_video.exe midiplayer3_video\64\midiplayer64_video.exe
 xcopy 32\*.dll midiplayer3_video\32\
 xcopy 64\*.dll midiplayer3_video\64\
+xcopy sample\* midiplayer3_video\sample\ /y /r
 mkdir midiplayer3_video\source
 xcopy *.inc midiplayer3_video\source\ /y /r
 xcopy *.pas midiplayer3_video\source\ /y /r
