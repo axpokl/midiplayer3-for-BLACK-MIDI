@@ -290,14 +290,14 @@ type
     AV_OPT_TYPE_BINARY,  ///< offset must point to a pointer immediately followed by an int for the length
     AV_OPT_TYPE_DICT,
     AV_OPT_TYPE_CONST = 128,
-    AV_OPT_TYPE_BOOL       = (Ord('B') shl 24) or (Ord('O') shl 16) or (Ord('O') shl 8) or Ord('L'),
-    AV_OPT_TYPE_CHANNEL_LAYOUT=(Ord('C') shl 24) or (Ord('H') shl 16) or (Ord('L') shl 8) or Ord('A'),
-    AV_OPT_TYPE_COLOR      = (Ord('C') shl 24) or (Ord('O') shl 16) or (Ord('L') shl 8) or Ord('R'),
-    AV_OPT_TYPE_DURATION   = (Ord('D') shl 24) or (Ord('U') shl 16) or (Ord('R') shl 8) or Ord(' '),
+    AV_OPT_TYPE_IMAGE_SIZE = (Ord('S') shl 24) or (Ord('I') shl 16) or (Ord('Z') shl 8) or Ord('E'), ///< offset must point to two consecutive integers
     AV_OPT_TYPE_PIXEL_FMT  = (Ord('P') shl 24) or (Ord('F') shl 16) or (Ord('M') shl 8) or Ord('T'),
     AV_OPT_TYPE_SAMPLE_FMT = (Ord('S') shl 24) or (Ord('F') shl 16) or (Ord('M') shl 8) or Ord('T'),
-    AV_OPT_TYPE_IMAGE_SIZE = (Ord('S') shl 24) or (Ord('I') shl 16) or (Ord('Z') shl 8) or Ord('E'), ///< offset must point to two consecutive integers
-    AV_OPT_TYPE_VIDEO_RATE = (Ord('V') shl 24) or (Ord('R') shl 16) or (Ord('A') shl 8) or Ord('T') ///< offset must point to AVRational
+    AV_OPT_TYPE_VIDEO_RATE = (Ord('V') shl 24) or (Ord('R') shl 16) or (Ord('A') shl 8) or Ord('T'), ///< offset must point to AVRational
+    AV_OPT_TYPE_DURATION   = (Ord('D') shl 24) or (Ord('U') shl 16) or (Ord('R') shl 8) or Ord(' '),
+    AV_OPT_TYPE_COLOR      = (Ord('C') shl 24) or (Ord('O') shl 16) or (Ord('L') shl 8) or Ord('R'),
+    AV_OPT_TYPE_CHANNEL_LAYOUT=(Ord('C') shl 24) or (Ord('H') shl 16) or (Ord('L') shl 8) or Ord('A'),
+    AV_OPT_TYPE_BOOL       = (Ord('B') shl 24) or (Ord('O') shl 16) or (Ord('O') shl 8) or Ord('L')
   );
 {$IFEND}
 

@@ -6,7 +6,7 @@
 {*********************************} (*   LCC-win32 (c) Jacob Navia   *)
                                     (*********************************)
 
-Unit MMSystem;
+Unit mmsystem;
 {$ifndef NO_SMART_LINK}
   {$smartlink on}
 {$endif}
